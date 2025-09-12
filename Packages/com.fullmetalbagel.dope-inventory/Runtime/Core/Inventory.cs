@@ -18,16 +18,11 @@ public struct Inventory : IDisposable
     }
 
     public int ItemCount => ItemShapes.Length;
-    public int FreeSpace => GetFreeCellCount();
+    public int FreeSpace => InventoryGrid.FreeSpaceCount;
 
     public bool IsCellOccupied(int2 pos)
     {
         return InventoryGrid.GetCell(pos);
-    }
-
-    public int GetFreeCellCount()
-    {
-        return InventoryGrid.FreeSpaceCount;
     }
 
     public bool TryAddItem(GridShape2D shape)

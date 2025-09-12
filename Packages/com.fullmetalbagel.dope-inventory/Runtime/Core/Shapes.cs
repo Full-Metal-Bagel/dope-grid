@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Unity.Collections;
 using Unity.Mathematics;
 
@@ -5,6 +6,7 @@ namespace DopeInventory;
 
 public static class Shapes
 {
+    [SuppressMessage("Naming", "CA1720:Identifier contains type name")]
     public static GridShape2D Single(Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape2D(1, 1, allocator);
