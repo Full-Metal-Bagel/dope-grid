@@ -1,0 +1,9 @@
+{
+  "name": "DopeInventory.Runtime",
+  "references": [
+    "Unity.Collections",
+    "Unity.Burst",
+    "Unity.Mathematics"
+  ],
+  "allowUnsafeCode": true
+}
