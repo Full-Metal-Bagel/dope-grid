@@ -1,30 +1,29 @@
-using DopeGrid;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace DopeInventory
+namespace DopeGrid
 {
     public class GridExample : MonoBehaviour
     {
-        private GridContainer _inventorySystem;
+        private GridContainer _gridContainerSystem;
 
         private void Start()
         {
             // Create a 10x10 inventory grid
-            _inventorySystem = new GridContainer(10, 10);
+            _gridContainerSystem = new GridContainer(10, 10);
 
             // Add some items
             AddTestItems();
 
             // Test operations
-            TestInventoryOperations();
+            TestGridContainerOperations();
         }
 
         private void OnDestroy()
         {
             // Clean up native collections
-            _inventorySystem.Dispose();
+            _gridContainerSystem.Dispose();
         }
 
         private void AddTestItems()
@@ -32,46 +31,46 @@ namespace DopeInventory
             // Add a sword (3x1)
             using (var sword = Shapes.Line(3))
             {
-                if (_inventorySystem.TryAddItem(sword))
+                if (_gridContainerSystem.TryAddItem(sword))
                     Debug.Log("Added sword to inventory");
             }
 
             // Add a shield (2x2)
             using (var shield = Shapes.Square(2))
             {
-                if (_inventorySystem.TryAddItem(shield))
+                if (_gridContainerSystem.TryAddItem(shield))
                     Debug.Log("Added shield to inventory");
             }
 
             // Add an L-shaped item
             using (var lItem = Shapes.LShape())
             {
-                if (_inventorySystem.TryAddItem(lItem))
+                if (_gridContainerSystem.TryAddItem(lItem))
                     Debug.Log("Added L-shaped item to inventory");
             }
 
             // Add a cross-shaped item
             using (var cross = Shapes.Cross())
             {
-                if (_inventorySystem.TryAddItem(cross))
+                if (_gridContainerSystem.TryAddItem(cross))
                     Debug.Log("Added cross to inventory");
             }
         }
 
-        private void TestInventoryOperations()
+        private void TestGridContainerOperations()
         {
-            Debug.Log($"Inventory has {_inventorySystem.ItemCount} items");
-            Debug.Log($"Free space: {_inventorySystem.FreeSpace} cells");
+            Debug.Log($"GridContainer has {_gridContainerSystem.ItemCount} items");
+            Debug.Log($"Free space: {_gridContainerSystem.FreeSpace} cells");
 
             // Try to add item at specific position
             using (var smallItem = Shapes.Single())
             {
-                if (_inventorySystem.TryAddItemAt(smallItem, new int2(9, 9)))
+                if (_gridContainerSystem.TryAddItemAt(smallItem, new int2(9, 9)))
                     Debug.Log("Added item at specific position (9,9)");
             }
 
             // Test if position is occupied
-            var occupied = _inventorySystem.IsCellOccupied(new int2(0, 0));
+            var occupied = _gridContainerSystem.IsCellOccupied(new int2(0, 0));
             Debug.Log($"Cell (0,0) is occupied: {occupied}");
         }
 
