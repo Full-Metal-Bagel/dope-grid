@@ -1,23 +1,23 @@
-using DopeInventory;
+using DopeGrid;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
 
-public class InventoryTests
+public class GridContainerTests
 {
-    private Inventory _inventory;
+    private GridContainer _gridContainer;
 
     [SetUp]
     public void Setup()
     {
-        _inventory = new Inventory(10, 10, Allocator.Temp);
+        _gridContainer = new GridContainer(10, 10, Allocator.Temp);
     }
 
     [TearDown]
     public void TearDown()
     {
-        if (_inventory.InventoryGrid.IsCreated)
-            _inventory.Dispose();
+        if (_gridContainer.Grid.IsCreated)
+            _gridContainer.Dispose();
     }
 
     #region Helper Methods
@@ -38,10 +38,10 @@ public class InventoryTests
     [Test]
     public void Constructor_CreatesEmptyInventory()
     {
-        Assert.AreEqual(10, _inventory.InventoryGrid.Width);
-        Assert.AreEqual(10, _inventory.InventoryGrid.Height);
-        Assert.AreEqual(0, _inventory.ItemCount);
-        Assert.AreEqual(100, _inventory.FreeSpace);
+        Assert.AreEqual(10, _gridContainer.Grid.Width);
+        Assert.AreEqual(10, _gridContainer.Grid.Height);
+        Assert.AreEqual(0, _gridContainer.ItemCount);
+        Assert.AreEqual(100, _gridContainer.FreeSpace);
     }
 
     [Test]
@@ -53,11 +53,11 @@ public class InventoryTests
         itemShape.SetCell(new int2(0, 1), true);
         itemShape.SetCell(new int2(1, 1), true);
 
-        var added = _inventory.TryAddItem(itemShape);
+        var added = _gridContainer.TryAddItem(itemShape);
 
         Assert.IsTrue(added);
-        Assert.AreEqual(1, _inventory.ItemCount);
-        Assert.AreEqual(96, _inventory.FreeSpace);
+        Assert.AreEqual(1, _gridContainer.ItemCount);
+        Assert.AreEqual(96, _gridContainer.FreeSpace);
 
         itemShape.Dispose();
     }
@@ -71,14 +71,14 @@ public class InventoryTests
         itemShape.SetCell(new int2(0, 1), true);
         itemShape.SetCell(new int2(1, 1), true);
 
-        var added = _inventory.TryAddItemAt(itemShape, new int2(3, 4));
+        var added = _gridContainer.TryAddItemAt(itemShape, new int2(3, 4));
 
         Assert.IsTrue(added);
-        Assert.AreEqual(1, _inventory.ItemCount);
-        Assert.IsTrue(_inventory.IsCellOccupied(new int2(3, 4)));
-        Assert.IsTrue(_inventory.IsCellOccupied(new int2(4, 4)));
-        Assert.IsTrue(_inventory.IsCellOccupied(new int2(3, 5)));
-        Assert.IsTrue(_inventory.IsCellOccupied(new int2(4, 5)));
+        Assert.AreEqual(1, _gridContainer.ItemCount);
+        Assert.IsTrue(_gridContainer.IsCellOccupied(new int2(3, 4)));
+        Assert.IsTrue(_gridContainer.IsCellOccupied(new int2(4, 4)));
+        Assert.IsTrue(_gridContainer.IsCellOccupied(new int2(3, 5)));
+        Assert.IsTrue(_gridContainer.IsCellOccupied(new int2(4, 5)));
 
         itemShape.Dispose();
     }
@@ -92,11 +92,11 @@ public class InventoryTests
         itemShape.SetCell(new int2(0, 1), true);
         itemShape.SetCell(new int2(1, 1), true);
 
-        _inventory.TryAddItemAt(itemShape, new int2(3, 4));
-        var secondAdd = _inventory.TryAddItemAt(itemShape, new int2(3, 4));
+        _gridContainer.TryAddItemAt(itemShape, new int2(3, 4));
+        var secondAdd = _gridContainer.TryAddItemAt(itemShape, new int2(3, 4));
 
         Assert.IsFalse(secondAdd);
-        Assert.AreEqual(1, _inventory.ItemCount);
+        Assert.AreEqual(1, _gridContainer.ItemCount);
 
         itemShape.Dispose();
     }
@@ -107,10 +107,10 @@ public class InventoryTests
         var itemShape = new GridShape2D(3, 3, Allocator.Temp);
         itemShape.SetCell(new int2(0, 0), true);
 
-        var added = _inventory.TryAddItemAt(itemShape, new int2(8, 8));
+        var added = _gridContainer.TryAddItemAt(itemShape, new int2(8, 8));
 
         Assert.IsFalse(added);
-        Assert.AreEqual(0, _inventory.ItemCount);
+        Assert.AreEqual(0, _gridContainer.ItemCount);
 
         itemShape.Dispose();
     }
@@ -124,15 +124,15 @@ public class InventoryTests
         itemShape.SetCell(new int2(0, 1), true);
         itemShape.SetCell(new int2(1, 1), true);
 
-        _inventory.TryAddItemAt(itemShape, new int2(2, 2));
-        _inventory.RemoveItem(0);
+        _gridContainer.TryAddItemAt(itemShape, new int2(2, 2));
+        _gridContainer.RemoveItem(0);
 
-        Assert.AreEqual(0, _inventory.ItemCount);
-        Assert.AreEqual(100, _inventory.FreeSpace);
-        Assert.IsFalse(_inventory.IsCellOccupied(new int2(2, 2)));
-        Assert.IsFalse(_inventory.IsCellOccupied(new int2(3, 2)));
-        Assert.IsFalse(_inventory.IsCellOccupied(new int2(2, 3)));
-        Assert.IsFalse(_inventory.IsCellOccupied(new int2(3, 3)));
+        Assert.AreEqual(0, _gridContainer.ItemCount);
+        Assert.AreEqual(100, _gridContainer.FreeSpace);
+        Assert.IsFalse(_gridContainer.IsCellOccupied(new int2(2, 2)));
+        Assert.IsFalse(_gridContainer.IsCellOccupied(new int2(3, 2)));
+        Assert.IsFalse(_gridContainer.IsCellOccupied(new int2(2, 3)));
+        Assert.IsFalse(_gridContainer.IsCellOccupied(new int2(3, 3)));
 
         itemShape.Dispose();
     }
@@ -140,10 +140,10 @@ public class InventoryTests
     [Test]
     public void RemoveItem_HandlesInvalidIndex()
     {
-        _inventory.RemoveItem(-1);
-        _inventory.RemoveItem(10);
+        _gridContainer.RemoveItem(-1);
+        _gridContainer.RemoveItem(10);
 
-        Assert.AreEqual(0, _inventory.ItemCount);
+        Assert.AreEqual(0, _gridContainer.ItemCount);
     }
 
     [Test]
@@ -158,15 +158,15 @@ public class InventoryTests
         itemShape2.SetCell(new int2(1, 0), true);
         itemShape2.SetCell(new int2(2, 0), true);
 
-        _inventory.TryAddItem(itemShape1);
-        _inventory.TryAddItem(itemShape2);
+        _gridContainer.TryAddItem(itemShape1);
+        _gridContainer.TryAddItem(itemShape2);
 
-        Assert.AreEqual(2, _inventory.ItemCount);
+        Assert.AreEqual(2, _gridContainer.ItemCount);
 
-        _inventory.Clear();
+        _gridContainer.Clear();
 
-        Assert.AreEqual(0, _inventory.ItemCount);
-        Assert.AreEqual(100, _inventory.FreeSpace);
+        Assert.AreEqual(0, _gridContainer.ItemCount);
+        Assert.AreEqual(100, _gridContainer.FreeSpace);
 
         itemShape1.Dispose();
         itemShape2.Dispose();
@@ -185,20 +185,20 @@ public class InventoryTests
         itemShape.SetCell(new int2(0, 1), true);
         itemShape.SetCell(new int2(1, 1), true);
 
-        _inventory.TryAddItemAt(itemShape, new int2(3, 4));
+        _gridContainer.TryAddItemAt(itemShape, new int2(3, 4));
 
-        var clone = _inventory.Clone(Allocator.Temp);
+        var clone = _gridContainer.Clone(Allocator.Temp);
 
-        Assert.AreEqual(_inventory.ItemCount, clone.ItemCount);
-        Assert.AreEqual(_inventory.FreeSpace, clone.FreeSpace);
-        Assert.AreEqual(_inventory.InventoryGrid.Width, clone.InventoryGrid.Width);
-        Assert.AreEqual(_inventory.InventoryGrid.Height, clone.InventoryGrid.Height);
+        Assert.AreEqual(_gridContainer.ItemCount, clone.ItemCount);
+        Assert.AreEqual(_gridContainer.FreeSpace, clone.FreeSpace);
+        Assert.AreEqual(_gridContainer.Grid.Width, clone.Grid.Width);
+        Assert.AreEqual(_gridContainer.Grid.Height, clone.Grid.Height);
 
         for (var y = 0; y < 10; y++)
         for (var x = 0; x < 10; x++)
         {
             var pos = new int2(x, y);
-            Assert.AreEqual(_inventory.IsCellOccupied(pos), clone.IsCellOccupied(pos));
+            Assert.AreEqual(_gridContainer.IsCellOccupied(pos), clone.IsCellOccupied(pos));
         }
 
         itemShape.Dispose();
@@ -214,14 +214,14 @@ public class InventoryTests
         itemShape.SetCell(new int2(0, 1), true);
         itemShape.SetCell(new int2(1, 1), true);
 
-        _inventory.TryAddItemAt(itemShape, new int2(0, 0));
-        var clone = _inventory.Clone(Allocator.Temp);
+        _gridContainer.TryAddItemAt(itemShape, new int2(0, 0));
+        var clone = _gridContainer.Clone(Allocator.Temp);
 
         clone.RemoveItem(0);
 
-        Assert.AreEqual(1, _inventory.ItemCount);
+        Assert.AreEqual(1, _gridContainer.ItemCount);
         Assert.AreEqual(0, clone.ItemCount);
-        Assert.IsTrue(_inventory.IsCellOccupied(new int2(0, 0)));
+        Assert.IsTrue(_gridContainer.IsCellOccupied(new int2(0, 0)));
         Assert.IsFalse(clone.IsCellOccupied(new int2(0, 0)));
 
         itemShape.Dispose();
@@ -241,11 +241,11 @@ public class InventoryTests
         lShape.SetCell(new int2(0, 2), true);
         lShape.SetCell(new int2(1, 2), true);
 
-        var added = _inventory.TryAddItem(lShape);
+        var added = _gridContainer.TryAddItem(lShape);
 
         Assert.IsTrue(added);
-        Assert.AreEqual(1, _inventory.ItemCount);
-        Assert.AreEqual(96, _inventory.FreeSpace);
+        Assert.AreEqual(1, _gridContainer.ItemCount);
+        Assert.AreEqual(96, _gridContainer.FreeSpace);
 
         lShape.Dispose();
     }
@@ -263,11 +263,11 @@ public class InventoryTests
         hollowSquare.SetCell(new int2(1, 2), true);
         hollowSquare.SetCell(new int2(2, 2), true);
 
-        var added = _inventory.TryAddItem(hollowSquare);
+        var added = _gridContainer.TryAddItem(hollowSquare);
 
         Assert.IsTrue(added);
-        Assert.AreEqual(1, _inventory.ItemCount);
-        Assert.AreEqual(92, _inventory.FreeSpace);
+        Assert.AreEqual(1, _gridContainer.ItemCount);
+        Assert.AreEqual(92, _gridContainer.FreeSpace);
 
         hollowSquare.Dispose();
     }
@@ -284,14 +284,14 @@ public class InventoryTests
 
         var addedCount = 0;
         for (var i = 0; i < 100; i++)
-            if (_inventory.TryAddItem(smallItem))
+            if (_gridContainer.TryAddItem(smallItem))
                 addedCount++;
 
         Assert.AreEqual(100, addedCount);
-        Assert.AreEqual(100, _inventory.ItemCount);
-        Assert.AreEqual(0, _inventory.FreeSpace);
+        Assert.AreEqual(100, _gridContainer.ItemCount);
+        Assert.AreEqual(0, _gridContainer.FreeSpace);
 
-        var extraAdd = _inventory.TryAddItem(smallItem);
+        var extraAdd = _gridContainer.TryAddItem(smallItem);
         Assert.IsFalse(extraAdd);
 
         smallItem.Dispose();
@@ -313,12 +313,12 @@ public class InventoryTests
         for (var y = 0; y < 4; y++)
             line1x4.SetCell(new int2(0, y), true);
 
-        _inventory.TryAddItem(block2x2);
-        _inventory.TryAddItem(line4x1);
-        _inventory.TryAddItem(line1x4);
+        _gridContainer.TryAddItem(block2x2);
+        _gridContainer.TryAddItem(line4x1);
+        _gridContainer.TryAddItem(line1x4);
 
-        Assert.AreEqual(3, _inventory.ItemCount);
-        Assert.AreEqual(88, _inventory.FreeSpace);
+        Assert.AreEqual(3, _gridContainer.ItemCount);
+        Assert.AreEqual(88, _gridContainer.FreeSpace);
 
         block2x2.Dispose();
         line4x1.Dispose();
@@ -332,15 +332,15 @@ public class InventoryTests
         var item2 = CreateSquareShape(3, Allocator.Temp);
         var item3 = CreateSquareShape(1, Allocator.Temp);
 
-        _inventory.TryAddItem(item1);
-        _inventory.TryAddItem(item2);
-        _inventory.TryAddItem(item3);
+        _gridContainer.TryAddItem(item1);
+        _gridContainer.TryAddItem(item2);
+        _gridContainer.TryAddItem(item3);
 
-        Assert.AreEqual(3, _inventory.ItemCount);
+        Assert.AreEqual(3, _gridContainer.ItemCount);
 
-        _inventory.RemoveItem(1);
+        _gridContainer.RemoveItem(1);
 
-        Assert.AreEqual(2, _inventory.ItemCount);
+        Assert.AreEqual(2, _gridContainer.ItemCount);
 
         item1.Dispose();
         item2.Dispose();
@@ -357,10 +357,10 @@ public class InventoryTests
         var largeItem = new GridShape2D(11, 11, Allocator.Temp);
         largeItem.SetCell(new int2(0, 0), true);
 
-        var added = _inventory.TryAddItem(largeItem);
+        var added = _gridContainer.TryAddItem(largeItem);
 
         Assert.IsFalse(added);
-        Assert.AreEqual(0, _inventory.ItemCount);
+        Assert.AreEqual(0, _gridContainer.ItemCount);
 
         largeItem.Dispose();
     }
@@ -373,11 +373,11 @@ public class InventoryTests
         for (var x = 0; x < 10; x++)
             exactFit.SetCell(new int2(x, y), true);
 
-        var added = _inventory.TryAddItem(exactFit);
+        var added = _gridContainer.TryAddItem(exactFit);
 
         Assert.IsTrue(added);
-        Assert.AreEqual(1, _inventory.ItemCount);
-        Assert.AreEqual(0, _inventory.FreeSpace);
+        Assert.AreEqual(1, _gridContainer.ItemCount);
+        Assert.AreEqual(0, _gridContainer.FreeSpace);
 
         exactFit.Dispose();
     }
@@ -387,10 +387,10 @@ public class InventoryTests
     {
         var item = CreateSquareShape(2, Allocator.Temp);
 
-        var added = _inventory.TryAddItemAt(item, new int2(-1, 0));
+        var added = _gridContainer.TryAddItemAt(item, new int2(-1, 0));
         Assert.IsFalse(added);
 
-        added = _inventory.TryAddItemAt(item, new int2(0, -1));
+        added = _gridContainer.TryAddItemAt(item, new int2(0, -1));
         Assert.IsFalse(added);
 
         item.Dispose();

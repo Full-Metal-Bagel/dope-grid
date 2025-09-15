@@ -1,9 +1,9 @@
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace DopeInventory;
+namespace DopeGrid;
 
-public static class InventoryExtension
+public static class GridContainerExtension
 {
     public static int2 FindFirstFit(this GridShape2D inventory, GridShape2D item)
     {

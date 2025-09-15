@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace DopeInventory;
+namespace DopeGrid;
 
 public static class Shapes
 {

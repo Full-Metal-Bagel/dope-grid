@@ -16,6 +16,7 @@
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <NoWarn>$(NoWarn);IDE0161</NoWarn>
+        <RootNamespace>DopeGrid</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

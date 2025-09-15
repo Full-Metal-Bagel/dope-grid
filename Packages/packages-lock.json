@@ -1,7 +1,7 @@
 {
   "dependencies": {
-    "com.fullmetalbagel.dope-inventory": {
-      "version": "file:com.fullmetalbagel.dope-inventory",
+    "com.fullmetalbagel.dope-grid": {
+      "version": "file:com.fullmetalbagel.dope-grid",
       "depth": 0,
       "source": "embedded",
       "dependencies": {

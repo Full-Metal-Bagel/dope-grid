@@ -1,3 +1,4 @@
+using DopeGrid;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -6,12 +7,12 @@ namespace DopeInventory
 {
     public class GridExample : MonoBehaviour
     {
-        private Inventory _inventorySystem;
+        private GridContainer _inventorySystem;
 
         private void Start()
         {
             // Create a 10x10 inventory grid
-            _inventorySystem = new Inventory(10, 10);
+            _inventorySystem = new GridContainer(10, 10);
 
             // Add some items
             AddTestItems();

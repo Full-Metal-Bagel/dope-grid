@@ -1,8 +1,8 @@
 {
-  "name": "com.fullmetalbagel.dope-inventory",
+  "name": "com.fullmetalbagel.dope-grid",
   "version": "1.0.0",
   "unity": "2022.3",
-  "displayName": "Dope Inventory",
+  "displayName": "Dope Grid",
   "repository": {
     "url": "https://github.com/Full-Metal-Bagel/dope-inventory.git",
     "type": "git"

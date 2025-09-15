@@ -1,4 +1,4 @@
-using DopeInventory;
+using DopeGrid;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;

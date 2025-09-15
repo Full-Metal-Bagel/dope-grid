@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DopeInventory", "DopeInventory\DopeInventory.csproj", "{7EFF96FE-8BEC-475D-8F17-1AD988D5C9A8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DopeGrid.Core", "DopeGrid.Core\DopeGrid.Core.csproj", "{7EFF96FE-8BEC-475D-8F17-1AD988D5C9A8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DopeInventory.Tests", "DopeInventory.Tests\DopeInventory.Tests.csproj", "{066B139E-E814-46C5-A395-7C4FC72AE2C2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DopeGrid.Core.Tests", "DopeGrid.Core.Tests\DopeGrid.Core.Tests.csproj", "{066B139E-E814-46C5-A395-7C4FC72AE2C2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

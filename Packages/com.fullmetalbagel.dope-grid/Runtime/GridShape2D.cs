@@ -2,7 +2,7 @@ using System;
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace DopeInventory;
+namespace DopeGrid;
 
 public struct GridShape2D : IDisposable
 {

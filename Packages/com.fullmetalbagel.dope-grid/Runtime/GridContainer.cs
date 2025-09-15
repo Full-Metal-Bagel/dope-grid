@@ -2,32 +2,32 @@ using System;
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace DopeInventory;
+namespace DopeGrid;
 
-public struct Inventory : IDisposable
+public struct GridContainer : IDisposable
 {
-    public GridShape2D InventoryGrid;
+    public GridShape2D Grid;
     public NativeList<GridShape2D> ItemShapes;
     public NativeList<int2> ItemPositions; // top-left position
 
-    public Inventory(int width, int height, Allocator allocator = Allocator.Persistent)
+    public GridContainer(int width, int height, Allocator allocator = Allocator.Persistent)
     {
-        InventoryGrid = new GridShape2D(width, height, allocator);
+        Grid = new GridShape2D(width, height, allocator);
         ItemShapes = new NativeList<GridShape2D>(allocator);
         ItemPositions = new NativeList<int2>(allocator);
     }
 
     public int ItemCount => ItemShapes.Length;
-    public int FreeSpace => InventoryGrid.FreeSpaceCount;
+    public int FreeSpace => Grid.FreeSpaceCount;
 
     public bool IsCellOccupied(int2 pos)
     {
-        return InventoryGrid.GetCell(pos);
+        return Grid.GetCell(pos);
     }
 
     public bool TryAddItem(GridShape2D shape)
     {
-        var pos = InventoryGrid.FindFirstFit(shape);
+        var pos = Grid.FindFirstFit(shape);
         if (pos.x >= 0)
         {
             AddItemAt(shape, pos);
@@ -39,7 +39,7 @@ public struct Inventory : IDisposable
 
     public bool TryAddItemAt(GridShape2D shape, int2 pos)
     {
-        if (InventoryGrid.CanPlaceItem(shape, pos))
+        if (Grid.CanPlaceItem(shape, pos))
         {
             AddItemAt(shape, pos);
             return true;
@@ -50,7 +50,7 @@ public struct Inventory : IDisposable
 
     private void AddItemAt(GridShape2D shape, int2 pos)
     {
-        InventoryGrid.PlaceItem(shape, pos);
+        Grid.PlaceItem(shape, pos);
         ItemShapes.Add(shape);
         ItemPositions.Add(pos);
     }
@@ -61,7 +61,7 @@ public struct Inventory : IDisposable
         {
             var shape = ItemShapes[index];
             var pos = ItemPositions[index];
-            InventoryGrid.RemoveItem(shape, pos);
+            Grid.RemoveItem(shape, pos);
 
             ItemShapes.RemoveAtSwapBack(index);
             ItemPositions.RemoveAtSwapBack(index);
@@ -70,25 +70,25 @@ public struct Inventory : IDisposable
 
     public void Clear()
     {
-        InventoryGrid.Clear();
+        Grid.Clear();
         ItemShapes.Clear();
         ItemPositions.Clear();
     }
 
     public void Dispose()
     {
-        InventoryGrid.Dispose();
+        Grid.Dispose();
         foreach (var shape in ItemShapes)
             shape.Dispose();
         ItemShapes.Dispose();
         ItemPositions.Dispose();
     }
 
-    public Inventory Clone(Allocator allocator)
+    public GridContainer Clone(Allocator allocator)
     {
-        var clone = new Inventory
+        var clone = new GridContainer
         {
-            InventoryGrid = InventoryGrid.Clone(allocator),
+            Grid = Grid.Clone(allocator),
             ItemShapes = new NativeList<GridShape2D>(ItemShapes.Length, allocator),
             ItemPositions = new NativeList<int2>(ItemPositions.Length, allocator)
         };
