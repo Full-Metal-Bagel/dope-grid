@@ -62,6 +62,20 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
         return clone;
     }
 
+    public void CopyTo(GridShape2D other)
+    {
+        if (!_bits.IsCreated)
+            throw new InvalidOperationException("Cannot copy from a non-created GridShape2D");
+
+        if (!other._bits.IsCreated)
+            throw new InvalidOperationException("Cannot copy to a non-created GridShape2D");
+
+        if (Width != other.Width || Height != other.Height)
+            throw new ArgumentException($"Cannot copy to GridShape2D with different dimensions. Source: {Width}x{Height}, Target: {other.Width}x{other.Height}");
+
+        other._bits.Copy(0, ref _bits, 0, Size);
+    }
+
     public ReadOnly AsReadOnly() => new(Width, Height, _bits.AsReadOnly());
 
     public bool Equals(GridShape2D other) => Width == other.Width && Height == other.Height && _bits.SequenceEquals(other._bits);

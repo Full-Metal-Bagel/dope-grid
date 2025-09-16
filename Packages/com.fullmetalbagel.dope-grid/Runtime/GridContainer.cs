@@ -6,28 +6,43 @@ namespace DopeGrid;
 
 public struct GridContainer : IDisposable
 {
-    public GridShape2D Grid;
+    private GridShape2D _grid;
+    private GridShape2D _initializedGrid;
+    public GridShape2D.ReadOnly InitializedGrid => _initializedGrid.AsReadOnly();
+    public GridShape2D.ReadOnly CurrentGrid => _grid.AsReadOnly();
     public NativeList<GridShape2D> ItemShapes;
     public NativeList<int2> ItemPositions; // top-left position
 
+    public int Width => _initializedGrid.Width;
+    public int Height => _initializedGrid.Height;
+
     public GridContainer(int width, int height, Allocator allocator = Allocator.Persistent)
     {
-        Grid = new GridShape2D(width, height, allocator);
+        _grid = new GridShape2D(width, height, allocator);
+        _initializedGrid = _grid.Clone(allocator);
+        ItemShapes = new NativeList<GridShape2D>(allocator);
+        ItemPositions = new NativeList<int2>(allocator);
+    }
+
+    public GridContainer(GridShape2D containerShape, Allocator allocator = Allocator.Persistent)
+    {
+        _grid = containerShape.Clone(allocator);
+        _initializedGrid = _grid.Clone(allocator);
         ItemShapes = new NativeList<GridShape2D>(allocator);
         ItemPositions = new NativeList<int2>(allocator);
     }
 
     public int ItemCount => ItemShapes.Length;
-    public int FreeSpace => Grid.FreeSpaceCount;
+    public int FreeSpace => _grid.FreeSpaceCount;
 
     public bool IsCellOccupied(int2 pos)
     {
-        return Grid.GetCell(pos);
+        return _grid.GetCell(pos);
     }
 
     public bool TryAddItem(GridShape2D shape)
     {
-        var pos = Grid.FindFirstFit(shape);
+        var pos = _grid.FindFirstFit(shape);
         if (pos.x >= 0)
         {
             AddItemAt(shape, pos);
@@ -39,7 +54,7 @@ public struct GridContainer : IDisposable
 
     public bool TryAddItemAt(GridShape2D shape, int2 pos)
     {
-        if (Grid.CanPlaceItem(shape, pos))
+        if (_grid.CanPlaceItem(shape, pos))
         {
             AddItemAt(shape, pos);
             return true;
@@ -50,7 +65,7 @@ public struct GridContainer : IDisposable
 
     private void AddItemAt(GridShape2D shape, int2 pos)
     {
-        Grid.PlaceItem(shape, pos);
+        _grid.PlaceItem(shape, pos);
         ItemShapes.Add(shape);
         ItemPositions.Add(pos);
     }
@@ -61,7 +76,7 @@ public struct GridContainer : IDisposable
         {
             var shape = ItemShapes[index];
             var pos = ItemPositions[index];
-            Grid.RemoveItem(shape, pos);
+            _grid.RemoveItem(shape, pos);
 
             ItemShapes.RemoveAtSwapBack(index);
             ItemPositions.RemoveAtSwapBack(index);
@@ -70,14 +85,15 @@ public struct GridContainer : IDisposable
 
     public void Clear()
     {
-        Grid.Clear();
+        _initializedGrid.CopyTo(_grid);
         ItemShapes.Clear();
         ItemPositions.Clear();
     }
 
     public void Dispose()
     {
-        Grid.Dispose();
+        _initializedGrid.Dispose();
+        _grid.Dispose();
         foreach (var shape in ItemShapes)
             shape.Dispose();
         ItemShapes.Dispose();
@@ -88,9 +104,10 @@ public struct GridContainer : IDisposable
     {
         var clone = new GridContainer
         {
-            Grid = Grid.Clone(allocator),
-            ItemShapes = new NativeList<GridShape2D>(ItemShapes.Length, allocator),
-            ItemPositions = new NativeList<int2>(ItemPositions.Length, allocator)
+            _initializedGrid = _initializedGrid.Clone(allocator),
+            _grid = _grid.Clone(allocator),
+            ItemShapes = new NativeList<GridShape2D>(ItemShapes.Capacity, allocator),
+            ItemPositions = new NativeList<int2>(ItemPositions.Capacity, allocator)
         };
 
         for (var i = 0; i < ItemShapes.Length; i++)

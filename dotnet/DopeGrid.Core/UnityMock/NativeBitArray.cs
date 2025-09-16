@@ -43,6 +43,26 @@ public struct NativeBitArray : IDisposable
         _bits?.SetAll(false);
     }
 
+    public void Copy(int dstIndex, ref NativeBitArray srcBits, int srcIndex, int length)
+    {
+        if (_bits == null)
+            throw new InvalidOperationException("Cannot copy to a non-created NativeBitArray");
+
+        if (!srcBits.IsCreated || srcBits._bits == null)
+            throw new InvalidOperationException("Cannot copy from a non-created NativeBitArray");
+
+        if (dstIndex < 0 || dstIndex + length > _bits.Length)
+            throw new ArgumentOutOfRangeException(nameof(dstIndex), "Destination range is out of bounds");
+
+        if (srcIndex < 0 || srcIndex + length > srcBits._bits.Length)
+            throw new ArgumentOutOfRangeException(nameof(srcIndex), "Source range is out of bounds");
+
+        for (int i = 0; i < length; i++)
+        {
+            _bits[dstIndex + i] = srcBits._bits[srcIndex + i];
+        }
+    }
+
     public int CountBits(int start, int count)
     {
         if (_bits == null) return 0;

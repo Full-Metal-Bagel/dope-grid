@@ -16,8 +16,7 @@ public class GridContainerTests
     [TearDown]
     public void TearDown()
     {
-        if (_gridContainer.Grid.IsCreated)
-            _gridContainer.Dispose();
+        _gridContainer.Dispose();
     }
 
     #region Helper Methods
@@ -38,8 +37,8 @@ public class GridContainerTests
     [Test]
     public void Constructor_CreatesEmptyInventory()
     {
-        Assert.AreEqual(10, _gridContainer.Grid.Width);
-        Assert.AreEqual(10, _gridContainer.Grid.Height);
+        Assert.AreEqual(10, _gridContainer.Width);
+        Assert.AreEqual(10, _gridContainer.Height);
         Assert.AreEqual(0, _gridContainer.ItemCount);
         Assert.AreEqual(100, _gridContainer.FreeSpace);
     }
@@ -191,8 +190,8 @@ public class GridContainerTests
 
         Assert.AreEqual(_gridContainer.ItemCount, clone.ItemCount);
         Assert.AreEqual(_gridContainer.FreeSpace, clone.FreeSpace);
-        Assert.AreEqual(_gridContainer.Grid.Width, clone.Grid.Width);
-        Assert.AreEqual(_gridContainer.Grid.Height, clone.Grid.Height);
+        Assert.AreEqual(_gridContainer.Width, clone.Width);
+        Assert.AreEqual(_gridContainer.Height, clone.Height);
 
         for (var y = 0; y < 10; y++)
         for (var x = 0; x < 10; x++)
