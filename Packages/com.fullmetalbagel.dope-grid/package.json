@@ -4,7 +4,7 @@
   "unity": "2022.3",
   "displayName": "Dope Grid",
   "repository": {
-    "url": "https://github.com/Full-Metal-Bagel/dope-inventory.git",
+    "url": "https://github.com/Full-Metal-Bagel/dope-grid.git",
     "type": "git"
   },
   "dependencies": {

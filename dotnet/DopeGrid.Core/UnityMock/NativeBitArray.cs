@@ -1,8 +1,11 @@
 using System;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace Unity.Collections;
 
+[SuppressMessage("Design", "CA1024:Use properties where appropriate")]
 public struct NativeBitArray : IDisposable
 {
     private BitArray? _bits;
@@ -11,6 +14,7 @@ public struct NativeBitArray : IDisposable
     public int Length => _bits?.Length ?? 0;
     public bool IsCreated => _isCreated;
 
+    [SuppressMessage("Style", "IDE0060:Remove unused parameter")]
     public NativeBitArray(int length, Allocator allocator)
     {
         _bits = new BitArray(length, false);
@@ -42,10 +46,10 @@ public struct NativeBitArray : IDisposable
     public int CountBits(int start, int count)
     {
         if (_bits == null) return 0;
-        
+
         var setBits = 0;
         var end = Math.Min(start + count, _bits.Length);
-        
+
         for (var i = start; i < end; i++)
         {
             if (_bits[i])
@@ -53,7 +57,7 @@ public struct NativeBitArray : IDisposable
                 setBits++;
             }
         }
-        
+
         return setBits;
     }
 
@@ -61,5 +65,32 @@ public struct NativeBitArray : IDisposable
     {
         _bits = null;
         _isCreated = false;
+    }
+
+    public UnsafeBitArray.ReadOnly GetReadOnlyUnsafeBitArray()
+    {
+        return new UnsafeBitArray.ReadOnly(_bits);
+    }
+
+    public ReadOnly AsReadOnly()
+    {
+        return new ReadOnly(_bits);
+    }
+
+    [SuppressMessage("Design", "CA1716:Identifiers should not match keywords")]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible")]
+    public readonly struct ReadOnly
+    {
+        private readonly BitArray? _bits;
+
+        public ReadOnly(BitArray? bits)
+        {
+            _bits = bits;
+        }
+
+        public UnsafeBitArray.ReadOnly GetReadOnlyUnsafeBitArray()
+        {
+            return new UnsafeBitArray.ReadOnly(_bits);
+        }
     }
 }

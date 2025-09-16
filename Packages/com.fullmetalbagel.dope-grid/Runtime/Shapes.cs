@@ -60,4 +60,68 @@ public static class Shapes
         shape.SetCell(new int2(1, 2), true);
         return shape;
     }
+
+    public static GridShape2D Rotate(this GridShape2D shape, RotationDegree degree, Allocator allocator)
+    {
+        var width = shape.Width;
+        var height = shape.Height;
+        
+        // Always rotate around center for consistent behavior
+        var pivot = new int2(width / 2, height / 2);
+
+        var minX = int.MaxValue;
+        var minY = int.MaxValue;
+        var maxX = int.MinValue;
+        var maxY = int.MinValue;
+
+        using var rotatedPositions = new NativeList<int2>(width * height, Allocator.Temp);
+
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                if (!shape.GetCell(new int2(x, y))) continue;
+
+                var relativePos = new int2(x - pivot.x, y - pivot.y);
+                int2 rotatedPos;
+
+                switch (degree)
+                {
+                    case RotationDegree.Rotate90:
+                        rotatedPos = new int2(-relativePos.y, relativePos.x);
+                        break;
+                    case RotationDegree.Rotate180:
+                        rotatedPos = new int2(-relativePos.x, -relativePos.y);
+                        break;
+                    case RotationDegree.Rotate270:
+                        rotatedPos = new int2(relativePos.y, -relativePos.x);
+                        break;
+                    default:
+                        rotatedPos = relativePos;
+                        break;
+                }
+
+                var finalPos = rotatedPos + pivot;
+                rotatedPositions.Add(finalPos);
+
+                minX = finalPos.x < minX ? finalPos.x : minX;
+                minY = finalPos.y < minY ? finalPos.y : minY;
+                maxX = finalPos.x > maxX ? finalPos.x : maxX;
+                maxY = finalPos.y > maxY ? finalPos.y : maxY;
+            }
+        }
+
+        var newWidth = maxX - minX + 1;
+        var newHeight = maxY - minY + 1;
+        var rotatedShape = new GridShape2D(newWidth, newHeight, allocator);
+
+        for (var i = 0; i < rotatedPositions.Length; i++)
+        {
+            var pos = rotatedPositions[i];
+            var translatedPos = new int2(pos.x - minX, pos.y - minY);
+            rotatedShape.SetCell(translatedPos, true);
+        }
+
+        return rotatedShape;
+    }
 }

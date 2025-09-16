@@ -4,22 +4,22 @@ using Unity.Mathematics;
 
 namespace DopeGrid;
 
-public struct GridShape2D : IDisposable
+public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
 {
     public int Width { get; }
     public int Height { get; }
-    public NativeBitArray Bits;
+    private NativeBitArray _bits;
 
-    public int Size => Bits.Length;
-    public int OccupiedSpaceCount => Bits.CountBits(0, Size);
+    public int Size => _bits.Length;
+    public int OccupiedSpaceCount => _bits.CountBits(0, Size);
     public int FreeSpaceCount => Size - OccupiedSpaceCount;
-    public bool IsCreated => Bits.IsCreated;
+    public bool IsCreated => _bits.IsCreated;
 
     public GridShape2D(int width, int height, Allocator allocator)
     {
         Width = width;
         Height = height;
-        Bits = new NativeBitArray(Width * Height, allocator);
+        _bits = new NativeBitArray(Width * Height, allocator);
     }
 
     public int GetIndex(int2 pos)
@@ -29,23 +29,23 @@ public struct GridShape2D : IDisposable
 
     public void SetCell(int2 pos, bool value)
     {
-        Bits.Set(GetIndex(pos), value);
+        _bits.Set(GetIndex(pos), value);
     }
 
     public bool GetCell(int2 pos)
     {
-        return Bits.IsSet(GetIndex(pos));
+        return _bits.IsSet(GetIndex(pos));
     }
 
     public void Clear()
     {
-        Bits.Clear();
+        _bits.Clear();
     }
 
     public void Dispose()
     {
-        if (Bits.IsCreated)
-            Bits.Dispose();
+        if (_bits.IsCreated)
+            _bits.Dispose();
     }
 
     public GridShape2D Clone(Allocator allocator)
@@ -60,4 +60,11 @@ public struct GridShape2D : IDisposable
 
         return clone;
     }
+
+    public bool Equals(GridShape2D other) => Width == other.Width && Height == other.Height && _bits.SequenceEquals(other._bits);
+    public override bool Equals(object? obj) => obj is GridShape2D other && Equals(other);
+    public override int GetHashCode() => HashCode.Combine(_bits, Width, Height);
+    
+    public static bool operator ==(GridShape2D left, GridShape2D right) => left.Equals(right);
+    public static bool operator !=(GridShape2D left, GridShape2D right) => !left.Equals(right);
 }
