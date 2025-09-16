@@ -9,16 +9,14 @@ namespace Unity.Collections;
 public struct NativeBitArray : IDisposable
 {
     private BitArray? _bits;
-    private bool _isCreated;
 
     public int Length => _bits?.Length ?? 0;
-    public bool IsCreated => _isCreated;
+    public bool IsCreated => _bits is { Length: > 0 };
 
     [SuppressMessage("Style", "IDE0060:Remove unused parameter")]
-    public NativeBitArray(int length, Allocator allocator)
+    public NativeBitArray(int length, Allocator _)
     {
         _bits = new BitArray(length, false);
-        _isCreated = true;
     }
 
     public void Set(int index, bool value)
@@ -83,8 +81,11 @@ public struct NativeBitArray : IDisposable
 
     public void Dispose()
     {
-        _bits = null;
-        _isCreated = false;
+        if (_bits != null)
+        {
+            _bits.Length = 0;
+            _bits = null;
+        }
     }
 
     public UnsafeBitArray.ReadOnly GetReadOnlyUnsafeBitArray()
