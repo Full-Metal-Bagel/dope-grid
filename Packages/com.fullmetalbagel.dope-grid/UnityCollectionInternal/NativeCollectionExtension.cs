@@ -12,6 +12,9 @@ namespace Unity.Collections
         public static UnsafeBitArray.ReadOnly GetReadOnlyUnsafeBitArray(this NativeBitArray.ReadOnly bits) => bits.m_BitArray;
 
         [Pure, MustUseReturnValue]
+        public static UnsafeBitArray.ReadOnly CreateReadOnlyUnsafeBitArray(ulong* ptr, int length) => new(ptr, length);
+
+        [Pure, MustUseReturnValue]
         public static UnsafeBitArray* GetUnsafeBitArrayPtr(this NativeBitArray bits) => bits.m_BitArray;
 
         [Pure, MustUseReturnValue]

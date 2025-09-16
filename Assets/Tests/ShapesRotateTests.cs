@@ -177,19 +177,6 @@ public class ShapesRotateTests
     }
 
     [Test]
-    public void Rotate_InvalidDegree_ShouldReturnOriginal()
-    {
-        using var shape = Shapes.Line(3, Allocator.Temp);
-        using var rotated = shape.Rotate(RotationDegree.None, Allocator.Temp);
-
-        Assert.AreEqual(3, rotated.Width);
-        Assert.AreEqual(1, rotated.Height);
-        Assert.IsTrue(rotated.GetCell(new int2(0, 0)));
-        Assert.IsTrue(rotated.GetCell(new int2(1, 0)));
-        Assert.IsTrue(rotated.GetCell(new int2(2, 0)));
-    }
-
-    [Test]
     public void Rotate_EmptyShape()
     {
         using var shape = new GridShape2D(2, 2, Allocator.Temp);
@@ -248,11 +235,11 @@ public class ShapesRotateTests
         Assert.IsTrue(rotated270.Equals(rotated90x3),
             $"3x90° should equal 270° rotation (seed: {seed})");
 
-        // 4x90° = 360° = 0° 
+        // 4x90° = 360° = 0°
         // Note: Due to bounding box recalculation during rotation, dimensions might change
         // if the original shape had empty rows/columns that get trimmed
         using var rotated90x4 = rotated90x3.Rotate(RotationDegree.Rotate90, Allocator.Temp);
-        
+
         // The number of occupied cells should always be preserved
         Assert.AreEqual(shape.OccupiedSpaceCount, rotated90x4.OccupiedSpaceCount,
             $"OccupiedSpaceCount should be preserved after 4x90° rotation (seed: {seed})");

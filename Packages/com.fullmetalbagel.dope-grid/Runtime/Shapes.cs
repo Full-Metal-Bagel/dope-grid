@@ -1,5 +1,8 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 
 namespace DopeGrid;
@@ -7,6 +10,7 @@ namespace DopeGrid;
 public static class Shapes
 {
     [SuppressMessage("Naming", "CA1720:Identifier contains type name")]
+    [Pure, MustUseReturnValue]
     public static GridShape2D Single(Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape2D(1, 1, allocator);
@@ -14,6 +18,7 @@ public static class Shapes
         return shape;
     }
 
+    [Pure, MustUseReturnValue]
     public static GridShape2D Line(int length, Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape2D(length, 1, allocator);
@@ -22,6 +27,7 @@ public static class Shapes
         return shape;
     }
 
+    [Pure, MustUseReturnValue]
     public static GridShape2D Square(int size, Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape2D(size, size, allocator);
@@ -31,6 +37,7 @@ public static class Shapes
         return shape;
     }
 
+    [Pure, MustUseReturnValue]
     public static GridShape2D LShape(Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape2D(2, 2, allocator);
@@ -40,6 +47,7 @@ public static class Shapes
         return shape;
     }
 
+    [Pure, MustUseReturnValue]
     public static GridShape2D TShape(Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape2D(3, 2, allocator);
@@ -50,6 +58,7 @@ public static class Shapes
         return shape;
     }
 
+    [Pure, MustUseReturnValue]
     public static GridShape2D Cross(Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape2D(3, 3, allocator);
@@ -61,20 +70,38 @@ public static class Shapes
         return shape;
     }
 
+    [Pure, MustUseReturnValue]
     public static GridShape2D Rotate(this GridShape2D shape, RotationDegree degree, Allocator allocator)
+    {
+        return shape.ToReadOnly().Rotate(degree, allocator);
+    }
+
+    [Pure, MustUseReturnValue]
+    public static GridShape2D Rotate(this GridShape2D.ReadOnly shape, RotationDegree degree, Allocator allocator)
+    {
+        var dimensions = shape.GetRotatedDimensions(degree);
+        var rotated = new GridShape2D(dimensions.x, dimensions.y, allocator);
+        shape.RotateBits(degree, rotated.WritableBits);
+        return rotated;
+    }
+
+    [Pure, MustUseReturnValue]
+    public static int2 GetRotatedDimensions(this GridShape2D.ReadOnly shape, RotationDegree degree)
+    {
+        return degree switch
+        {
+            RotationDegree.Rotate90 => shape.Bound.yx,
+            RotationDegree.Rotate180 => shape.Bound,
+            RotationDegree.Rotate270 => shape.Bound.yx,
+            _ => throw new NotImplementedException()
+        };
+    }
+
+    public static GridShape2D.ReadOnly RotateBits(this GridShape2D.ReadOnly shape, RotationDegree degree, UnsafeBitArray output)
     {
         var width = shape.Width;
         var height = shape.Height;
-        
-        // Always rotate around center for consistent behavior
-        var pivot = new int2(width / 2, height / 2);
-
-        var minX = int.MaxValue;
-        var minY = int.MaxValue;
-        var maxX = int.MinValue;
-        var maxY = int.MinValue;
-
-        using var rotatedPositions = new NativeList<int2>(width * height, Allocator.Temp);
+        var newBound = GetRotatedDimensions(shape, degree);
 
         for (var y = 0; y < height; y++)
         {
@@ -82,46 +109,24 @@ public static class Shapes
             {
                 if (!shape.GetCell(new int2(x, y))) continue;
 
-                var relativePos = new int2(x - pivot.x, y - pivot.y);
-                int2 rotatedPos;
-
-                switch (degree)
+                int2 rotatedPos = degree switch
                 {
-                    case RotationDegree.Rotate90:
-                        rotatedPos = new int2(-relativePos.y, relativePos.x);
-                        break;
-                    case RotationDegree.Rotate180:
-                        rotatedPos = new int2(-relativePos.x, -relativePos.y);
-                        break;
-                    case RotationDegree.Rotate270:
-                        rotatedPos = new int2(relativePos.y, -relativePos.x);
-                        break;
-                    default:
-                        rotatedPos = relativePos;
-                        break;
-                }
+                    RotationDegree.Rotate90 =>
+                        // (x,y) -> (height-1-y, x)
+                        new int2(height - 1 - y, x),
+                    RotationDegree.Rotate180 =>
+                        // (x,y) -> (width-1-x, height-1-y)
+                        new int2(width - 1 - x, height - 1 - y),
+                    RotationDegree.Rotate270 =>
+                        // (x,y) -> (y, width-1-x)
+                        new int2(y, width - 1 - x),
+                    _ => throw new ArgumentException($"Invalid rotation degree: {degree}")
+                };
 
-                var finalPos = rotatedPos + pivot;
-                rotatedPositions.Add(finalPos);
-
-                minX = finalPos.x < minX ? finalPos.x : minX;
-                minY = finalPos.y < minY ? finalPos.y : minY;
-                maxX = finalPos.x > maxX ? finalPos.x : maxX;
-                maxY = finalPos.y > maxY ? finalPos.y : maxY;
+                var index = rotatedPos.y * newBound.x + rotatedPos.x;
+                output.Set(index, true);
             }
         }
-
-        var newWidth = maxX - minX + 1;
-        var newHeight = maxY - minY + 1;
-        var rotatedShape = new GridShape2D(newWidth, newHeight, allocator);
-
-        for (var i = 0; i < rotatedPositions.Length; i++)
-        {
-            var pos = rotatedPositions[i];
-            var translatedPos = new int2(pos.x - minX, pos.y - minY);
-            rotatedShape.SetCell(translatedPos, true);
-        }
-
-        return rotatedShape;
+        return new GridShape2D.ReadOnly(newBound, output.AsReadOnly());
     }
 }

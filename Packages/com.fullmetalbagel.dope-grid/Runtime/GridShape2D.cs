@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 
 namespace DopeGrid;
@@ -9,7 +10,8 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
 {
     public int Width { get; }
     public int Height { get; }
-    public NativeBitArray.ReadOnly Bits { get; }
+    public UnsafeBitArray.ReadOnly Bits { get; }
+    internal unsafe UnsafeBitArray WritableBits => *_bits.GetUnsafeBitArrayPtr();
     private NativeBitArray _bits;
 
     public readonly int Size => Bits.Length;
@@ -22,7 +24,7 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
         Width = width;
         Height = height;
         _bits = new NativeBitArray(Width * Height, allocator);
-        Bits = _bits.AsReadOnly();
+        Bits = _bits.GetReadOnlyUnsafeBitArray();
     }
 
     public readonly int GetIndex(int2 pos)
@@ -93,17 +95,23 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
     {
         public int Width { get; }
         public int Height { get; }
-        private readonly NativeBitArray.ReadOnly _bits;
+        public int2 Bound => new(Width, Height);
+        private readonly UnsafeBitArray.ReadOnly _bits;
 
         public int Size => Width * Height;
         public int OccupiedSpaceCount => _bits.CountBits(0, Size);
         public int FreeSpaceCount => Size - OccupiedSpaceCount;
 
-        internal ReadOnly(int width, int height, NativeBitArray.ReadOnly bits)
+        internal ReadOnly(int width, int height, UnsafeBitArray.ReadOnly bits)
         {
             Width = width;
             Height = height;
             _bits = bits;
+        }
+
+        internal ReadOnly(int2 bound, UnsafeBitArray.ReadOnly bits)
+            : this(bound.x, bound.y, bits)
+        {
         }
 
         public int GetIndex(int2 pos) => pos.y * Width + pos.x;
