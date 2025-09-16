@@ -9,21 +9,23 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
 {
     public int Width { get; }
     public int Height { get; }
+    public NativeBitArray.ReadOnly Bits { get; }
     private NativeBitArray _bits;
 
-    public int Size => _bits.Length;
-    public int OccupiedSpaceCount => _bits.CountBits(0, Size);
-    public int FreeSpaceCount => Size - OccupiedSpaceCount;
-    public bool IsCreated => _bits.IsCreated;
+    public readonly int Size => Bits.Length;
+    public readonly int OccupiedSpaceCount => Bits.CountBits(0, Size);
+    public readonly int FreeSpaceCount => Size - OccupiedSpaceCount;
+    public readonly bool IsCreated => _bits.IsCreated;
 
     public GridShape2D(int width, int height, Allocator allocator)
     {
         Width = width;
         Height = height;
         _bits = new NativeBitArray(Width * Height, allocator);
+        Bits = _bits.AsReadOnly();
     }
 
-    public int GetIndex(int2 pos)
+    public readonly int GetIndex(int2 pos)
     {
         return pos.y * Width + pos.x;
     }
@@ -33,9 +35,9 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
         _bits.Set(GetIndex(pos), value);
     }
 
-    public bool GetCell(int2 pos)
+    public readonly bool GetCell(int2 pos)
     {
-        return _bits.IsSet(GetIndex(pos));
+        return Bits.IsSet(GetIndex(pos));
     }
 
     public void Clear()
@@ -49,7 +51,7 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
             _bits.Dispose();
     }
 
-    public GridShape2D Clone(Allocator allocator)
+    public readonly GridShape2D Clone(Allocator allocator)
     {
         var clone = new GridShape2D(Width, Height, allocator);
         for (var y = 0; y < Height; y++)
@@ -76,7 +78,8 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
         other._bits.Copy(0, ref _bits, 0, Size);
     }
 
-    public ReadOnly AsReadOnly() => new(Width, Height, _bits.AsReadOnly());
+    public static implicit operator ReadOnly(GridShape2D shape) => shape.AsReadOnly();
+    public ReadOnly AsReadOnly() => new(Width, Height, Bits);
 
     public bool Equals(GridShape2D other) => Width == other.Width && Height == other.Height && _bits.SequenceEquals(other._bits);
     public override bool Equals(object? obj) => obj is GridShape2D other && Equals(other);

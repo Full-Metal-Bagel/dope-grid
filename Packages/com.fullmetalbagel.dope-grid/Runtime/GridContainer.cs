@@ -7,11 +7,16 @@ namespace DopeGrid;
 public struct GridContainer : IDisposable
 {
     private GridShape2D _grid;
+    public GridShape2D.ReadOnly CurrentGrid => _grid.AsReadOnly();
+
     private GridShape2D _initializedGrid;
     public GridShape2D.ReadOnly InitializedGrid => _initializedGrid.AsReadOnly();
-    public GridShape2D.ReadOnly CurrentGrid => _grid.AsReadOnly();
-    public NativeList<GridShape2D> ItemShapes;
-    public NativeList<int2> ItemPositions; // top-left position
+
+    private NativeList<GridShape2D> _itemShapes;
+    public NativeArray<GridShape2D>.ReadOnly ItemShapes => _itemShapes.AsReadOnly();
+
+    private NativeList<int2> _itemPositions; // top-left position
+    public NativeArray<int2>.ReadOnly ItemPositions => _itemPositions.AsReadOnly();
 
     public int Width => _initializedGrid.Width;
     public int Height => _initializedGrid.Height;
@@ -20,19 +25,19 @@ public struct GridContainer : IDisposable
     {
         _grid = new GridShape2D(width, height, allocator);
         _initializedGrid = _grid.Clone(allocator);
-        ItemShapes = new NativeList<GridShape2D>(allocator);
-        ItemPositions = new NativeList<int2>(allocator);
+        _itemShapes = new NativeList<GridShape2D>(allocator);
+        _itemPositions = new NativeList<int2>(allocator);
     }
 
     public GridContainer(GridShape2D containerShape, Allocator allocator = Allocator.Persistent)
     {
         _grid = containerShape.Clone(allocator);
         _initializedGrid = _grid.Clone(allocator);
-        ItemShapes = new NativeList<GridShape2D>(allocator);
-        ItemPositions = new NativeList<int2>(allocator);
+        _itemShapes = new NativeList<GridShape2D>(allocator);
+        _itemPositions = new NativeList<int2>(allocator);
     }
 
-    public int ItemCount => ItemShapes.Length;
+    public int ItemCount => _itemShapes.Length;
     public int FreeSpace => _grid.FreeSpaceCount;
 
     public bool IsCellOccupied(int2 pos)
@@ -66,38 +71,38 @@ public struct GridContainer : IDisposable
     private void AddItemAt(GridShape2D shape, int2 pos)
     {
         _grid.PlaceItem(shape, pos);
-        ItemShapes.Add(shape);
-        ItemPositions.Add(pos);
+        _itemShapes.Add(shape);
+        _itemPositions.Add(pos);
     }
 
     public void RemoveItem(int index)
     {
-        if (index >= 0 && index < ItemShapes.Length)
+        if (index >= 0 && index < _itemShapes.Length)
         {
-            var shape = ItemShapes[index];
-            var pos = ItemPositions[index];
+            var shape = _itemShapes[index];
+            var pos = _itemPositions[index];
             _grid.RemoveItem(shape, pos);
 
-            ItemShapes.RemoveAtSwapBack(index);
-            ItemPositions.RemoveAtSwapBack(index);
+            _itemShapes.RemoveAtSwapBack(index);
+            _itemPositions.RemoveAtSwapBack(index);
         }
     }
 
     public void Clear()
     {
         _initializedGrid.CopyTo(_grid);
-        ItemShapes.Clear();
-        ItemPositions.Clear();
+        _itemShapes.Clear();
+        _itemPositions.Clear();
     }
 
     public void Dispose()
     {
         _initializedGrid.Dispose();
         _grid.Dispose();
-        foreach (var shape in ItemShapes)
+        foreach (var shape in _itemShapes)
             shape.Dispose();
-        ItemShapes.Dispose();
-        ItemPositions.Dispose();
+        _itemShapes.Dispose();
+        _itemPositions.Dispose();
     }
 
     public GridContainer Clone(Allocator allocator)
@@ -106,14 +111,14 @@ public struct GridContainer : IDisposable
         {
             _initializedGrid = _initializedGrid.Clone(allocator),
             _grid = _grid.Clone(allocator),
-            ItemShapes = new NativeList<GridShape2D>(ItemShapes.Capacity, allocator),
-            ItemPositions = new NativeList<int2>(ItemPositions.Capacity, allocator)
+            _itemShapes = new NativeList<GridShape2D>(_itemShapes.Capacity, allocator),
+            _itemPositions = new NativeList<int2>(_itemPositions.Capacity, allocator)
         };
 
-        for (var i = 0; i < ItemShapes.Length; i++)
+        for (var i = 0; i < _itemShapes.Length; i++)
         {
-            clone.ItemShapes.Add(ItemShapes[i].Clone(allocator));
-            clone.ItemPositions.Add(ItemPositions[i]);
+            clone._itemShapes.Add(_itemShapes[i].Clone(allocator));
+            clone._itemPositions.Add(_itemPositions[i]);
         }
 
         return clone;
