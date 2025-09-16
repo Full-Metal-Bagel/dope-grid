@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Unity.Collections;
 using Unity.Mathematics;
 
@@ -61,10 +62,41 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
         return clone;
     }
 
+    public ReadOnly AsReadOnly() => new(Width, Height, _bits.AsReadOnly());
+
     public bool Equals(GridShape2D other) => Width == other.Width && Height == other.Height && _bits.SequenceEquals(other._bits);
     public override bool Equals(object? obj) => obj is GridShape2D other && Equals(other);
-    public override int GetHashCode() => HashCode.Combine(_bits, Width, Height);
-    
+    public override int GetHashCode() => HashCode.Combine(_bits.IsCreated ? _bits.CalculateHashCode() : 0, Width, Height);
+
     public static bool operator ==(GridShape2D left, GridShape2D right) => left.Equals(right);
     public static bool operator !=(GridShape2D left, GridShape2D right) => !left.Equals(right);
+
+    [SuppressMessage("Design", "CA1716:Identifiers should not match keywords")]
+    public readonly ref struct ReadOnly
+    {
+        public int Width { get; }
+        public int Height { get; }
+        private readonly NativeBitArray.ReadOnly _bits;
+
+        public int Size => Width * Height;
+        public int OccupiedSpaceCount => _bits.CountBits(0, Size);
+        public int FreeSpaceCount => Size - OccupiedSpaceCount;
+
+        internal ReadOnly(int width, int height, NativeBitArray.ReadOnly bits)
+        {
+            Width = width;
+            Height = height;
+            _bits = bits;
+        }
+
+        public int GetIndex(int2 pos) => pos.y * Width + pos.x;
+        public bool GetCell(int2 pos) => _bits.IsSet(GetIndex(pos));
+
+        public bool Equals(ReadOnly other) => Width == other.Width && Height == other.Height && _bits.SequenceEquals(other._bits);
+        [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
+        public override bool Equals(object? obj) => throw new NotSupportedException();
+        public override int GetHashCode() => HashCode.Combine(_bits.CalculateHashCode(), Width, Height);
+        public static bool operator ==(ReadOnly left, ReadOnly right) => left.Equals(right);
+        public static bool operator !=(ReadOnly left, ReadOnly right) => !left.Equals(right);
+    }
 }

@@ -37,5 +37,24 @@ public struct UnsafeBitArray
 
             return true;
         }
+
+        public int CalculateHashCode()
+        {
+            if (_bits == null || Length == 0)
+                return 0;
+
+            unchecked
+            {
+                int hash = 17;
+                for (int i = 0; i < Length; i++)
+                {
+                    if (_bits[i])
+                        hash = hash * 31 + 1;
+                    else
+                        hash = hash * 31;
+                }
+                return hash;
+            }
+        }
     }
 }

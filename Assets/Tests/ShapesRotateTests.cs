@@ -1,4 +1,3 @@
-using System;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -241,36 +240,34 @@ public class ShapesRotateTests
         // Verify rotation compositions
         // 2x90° = 180°
         using var rotated90x2 = rotated90.Rotate(RotationDegree.Rotate90, Allocator.Temp);
-        Assert.AreEqual(rotated180.OccupiedSpaceCount, rotated90x2.OccupiedSpaceCount,
+        Assert.IsTrue(rotated180.Equals(rotated90x2),
             $"2x90° should equal 180° rotation (seed: {seed})");
-        Assert.AreEqual(rotated180.Width, rotated90x2.Width,
-            $"2x90° should have same width as 180° rotation (seed: {seed})");
-        Assert.AreEqual(rotated180.Height, rotated90x2.Height,
-            $"2x90° should have same height as 180° rotation (seed: {seed})");
 
         // 3x90° = 270°
         using var rotated90x3 = rotated90x2.Rotate(RotationDegree.Rotate90, Allocator.Temp);
-        Assert.AreEqual(rotated270.OccupiedSpaceCount, rotated90x3.OccupiedSpaceCount,
+        Assert.IsTrue(rotated270.Equals(rotated90x3),
             $"3x90° should equal 270° rotation (seed: {seed})");
-        Assert.AreEqual(rotated270.Width, rotated90x3.Width,
-            $"3x90° should have same width as 270° rotation (seed: {seed})");
-        Assert.AreEqual(rotated270.Height, rotated90x3.Height,
-            $"3x90° should have same height as 270° rotation (seed: {seed})");
 
-        // 4x90° = 360° = 0° (back to original orientation, but possibly different position)
+        // 4x90° = 360° = 0° 
+        // Note: Due to bounding box recalculation during rotation, dimensions might change
+        // if the original shape had empty rows/columns that get trimmed
         using var rotated90x4 = rotated90x3.Rotate(RotationDegree.Rotate90, Allocator.Temp);
-        Assert.AreEqual(originalOccupiedCount, rotated90x4.OccupiedSpaceCount,
-            $"4x90° rotation should preserve OccupiedSpaceCount (seed: {seed})");
+        
+        // The number of occupied cells should always be preserved
+        Assert.AreEqual(shape.OccupiedSpaceCount, rotated90x4.OccupiedSpaceCount,
+            $"OccupiedSpaceCount should be preserved after 4x90° rotation (seed: {seed})");
 
         // 2x180° = 360° = 0°
+        // Same issue as 4x90° - dimensions might change due to bounding box recalculation
         using var rotated180x2 = rotated180.Rotate(RotationDegree.Rotate180, Allocator.Temp);
-        Assert.AreEqual(originalOccupiedCount, rotated180x2.OccupiedSpaceCount,
-            $"2x180° should preserve OccupiedSpaceCount (seed: {seed})");
+        Assert.AreEqual(shape.OccupiedSpaceCount, rotated180x2.OccupiedSpaceCount,
+            $"OccupiedSpaceCount should be preserved after 2x180° rotation (seed: {seed})");
 
         // 270° + 90° = 360° = 0°
+        // Same issue - dimensions might change due to bounding box recalculation
         using var rotated270plus90 = rotated270.Rotate(RotationDegree.Rotate90, Allocator.Temp);
-        Assert.AreEqual(originalOccupiedCount, rotated270plus90.OccupiedSpaceCount,
-            $"270° + 90° should preserve OccupiedSpaceCount (seed: {seed})");
+        Assert.AreEqual(shape.OccupiedSpaceCount, rotated270plus90.OccupiedSpaceCount,
+            $"OccupiedSpaceCount should be preserved after 270° + 90° rotation (seed: {seed})");
 
         // Verify Size invariants
         // The Size should be at least as large as OccupiedSpaceCount

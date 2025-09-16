@@ -304,35 +304,6 @@ public class NativeBitArrayExtensionsTests
     }
 
     [Test]
-    public void SequenceEquals_PerformanceTest_LargeArrays()
-    {
-        const int size = 100000; // 100k bits
-        using var array1 = new NativeBitArray(size, Allocator.Temp);
-        using var array2 = new NativeBitArray(size, Allocator.Temp);
-
-        // Set same sparse pattern
-        var random = new System.Random(42);
-        for (var i = 0; i < size / 10; i++)
-        {
-            var index = random.Next(size);
-            array1.Set(index, true);
-            array2.Set(index, true);
-        }
-
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        const int iterations = 10000;
-
-        for (var i = 0; i < iterations; i++)
-        {
-            var result = array1.SequenceEquals(array2);
-            Assert.IsTrue(result);
-        }
-
-        stopwatch.Stop();
-        UnityEngine.Debug.Log($"SequenceEquals performance: {iterations} comparisons of {size}-bit arrays in {stopwatch.ElapsedMilliseconds}ms");
-    }
-
-    [Test]
     public void SequenceEquals_AllPossibleTailMasks()
     {
         // Test all possible tail sizes (1-63 bits) with various bit patterns

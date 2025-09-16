@@ -77,9 +77,14 @@ public struct NativeBitArray : IDisposable
         return new ReadOnly(_bits);
     }
 
+    public int CalculateHashCode()
+    {
+        return GetReadOnlyUnsafeBitArray().CalculateHashCode();
+    }
+
     [SuppressMessage("Design", "CA1716:Identifiers should not match keywords")]
     [SuppressMessage("Design", "CA1034:Nested types should not be visible")]
-    public readonly struct ReadOnly
+    public readonly ref struct ReadOnly
     {
         private readonly BitArray? _bits;
 
@@ -88,9 +93,41 @@ public struct NativeBitArray : IDisposable
             _bits = bits;
         }
 
+        public bool IsSet(int index)
+        {
+            if (_bits != null && index >= 0 && index < _bits.Length)
+            {
+                return _bits[index];
+            }
+            return false;
+        }
+
+        public int CountBits(int start, int count)
+        {
+            if (_bits == null) return 0;
+
+            var setBits = 0;
+            var end = Math.Min(start + count, _bits.Length);
+
+            for (var i = start; i < end; i++)
+            {
+                if (_bits[i])
+                {
+                    setBits++;
+                }
+            }
+
+            return setBits;
+        }
+
         public UnsafeBitArray.ReadOnly GetReadOnlyUnsafeBitArray()
         {
             return new UnsafeBitArray.ReadOnly(_bits);
+        }
+
+        public int CalculateHashCode()
+        {
+            return GetReadOnlyUnsafeBitArray().CalculateHashCode();
         }
     }
 }
