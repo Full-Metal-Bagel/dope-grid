@@ -7,10 +7,10 @@ namespace DopeGrid;
 public struct GridContainer : IDisposable
 {
     private GridShape2D _grid;
-    public GridShape2D.ReadOnly CurrentGrid => _grid.AsReadOnly();
+    public GridShape2D.ReadOnly CurrentGrid => _grid.ToReadOnly();
 
     private GridShape2D _initializedGrid;
-    public GridShape2D.ReadOnly InitializedGrid => _initializedGrid.AsReadOnly();
+    public GridShape2D.ReadOnly InitializedGrid => _initializedGrid.ToReadOnly();
 
     private NativeList<GridShape2D> _itemShapes;
     public NativeArray<GridShape2D>.ReadOnly ItemShapes => _itemShapes.AsReadOnly();

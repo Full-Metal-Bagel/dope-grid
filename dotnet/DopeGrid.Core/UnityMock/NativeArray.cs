@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Unity.Collections;
 
@@ -58,5 +59,21 @@ public struct NativeArray<T> : IDisposable where T : struct
         {
             Array.Copy(_array, array._array, Math.Min(_array.Length, array._array.Length));
         }
+    }
+
+    [SuppressMessage("Design", "CA1716:Identifiers should not match keywords")]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible")]
+    public readonly struct ReadOnly
+    {
+        private readonly T[]? _array;
+
+        public ReadOnly(T[]? array)
+        {
+            _array = array;
+        }
+
+        public int Length => _array?.Length ?? 0;
+
+        public T this[int index] => _array != null ? _array[index] : default;
     }
 }

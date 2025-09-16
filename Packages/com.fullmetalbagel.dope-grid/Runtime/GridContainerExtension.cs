@@ -9,7 +9,7 @@ public static class GridContainerExtension
     [Pure, MustUseReturnValue]
     public static int2 FindFirstFit(this GridShape2D container, in GridShape2D.ReadOnly item)
     {
-        return container.AsReadOnly().FindFirstFit(item);
+        return container.ToReadOnly().FindFirstFit(item);
     }
 
     [Pure, MustUseReturnValue]
@@ -29,7 +29,7 @@ public static class GridContainerExtension
     [Pure, MustUseReturnValue]
     public static int2 FindBestFit(this GridShape2D container, in GridShape2D.ReadOnly item)
     {
-        return container.AsReadOnly().FindBestFit(item);
+        return container.ToReadOnly().FindBestFit(item);
     }
 
     [Pure, MustUseReturnValue]
@@ -64,7 +64,7 @@ public static class GridContainerExtension
     {
         var placed = 0;
 
-        var readonlyContainer = container.AsReadOnly();
+        var readonlyContainer = container.ToReadOnly();
         for (var i = 0; i < items.Length; i++)
         {
             var pos = readonlyContainer.FindFirstFit(items[i]);
@@ -82,7 +82,7 @@ public static class GridContainerExtension
     [Pure, MustUseReturnValue]
     public static bool CanPlaceItem(this GridShape2D container, in GridShape2D.ReadOnly item, int2 pos)
     {
-        return container.AsReadOnly().CanPlaceItem(item, pos);
+        return container.ToReadOnly().CanPlaceItem(item, pos);
     }
 
     [Pure, MustUseReturnValue]

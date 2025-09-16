@@ -15,7 +15,7 @@ public class GridShape2DReadOnlyTests
         shape.SetCell(new int2(2, 2), true);
         shape.SetCell(new int2(4, 4), true);
 
-        var readOnly = shape.AsReadOnly();
+        var readOnly = shape.ToReadOnly();
 
         Assert.AreEqual(5, readOnly.Width);
         Assert.AreEqual(5, readOnly.Height);
@@ -33,7 +33,7 @@ public class GridShape2DReadOnlyTests
     public void ReadOnly_GetIndex_CalculatesCorrectly()
     {
         using var shape = new GridShape2D(3, 4, Allocator.Temp);
-        var readOnly = shape.AsReadOnly();
+        var readOnly = shape.ToReadOnly();
 
         Assert.AreEqual(0, readOnly.GetIndex(new int2(0, 0)));
         Assert.AreEqual(2, readOnly.GetIndex(new int2(2, 0)));
@@ -57,8 +57,8 @@ public class GridShape2DReadOnlyTests
         shape2.SetCell(new int2(1, 1), true);
         shape2.SetCell(new int2(2, 2), true);
 
-        var readOnly1 = shape1.AsReadOnly();
-        var readOnly2 = shape2.AsReadOnly();
+        var readOnly1 = shape1.ToReadOnly();
+        var readOnly2 = shape2.ToReadOnly();
 
         Assert.IsTrue(readOnly1.Equals(readOnly2));
         Assert.IsTrue(readOnly2.Equals(readOnly1));
@@ -78,8 +78,8 @@ public class GridShape2DReadOnlyTests
         shape2.SetCell(new int2(0, 0), true);
         shape2.SetCell(new int2(2, 2), true);
 
-        var readOnly1 = shape1.AsReadOnly();
-        var readOnly2 = shape2.AsReadOnly();
+        var readOnly1 = shape1.ToReadOnly();
+        var readOnly2 = shape2.ToReadOnly();
 
         Assert.IsFalse(readOnly1.Equals(readOnly2));
         Assert.IsFalse(readOnly2.Equals(readOnly1));
@@ -96,8 +96,8 @@ public class GridShape2DReadOnlyTests
         shape1.SetCell(new int2(0, 0), true);
         shape2.SetCell(new int2(0, 0), true);
 
-        var readOnly1 = shape1.AsReadOnly();
-        var readOnly2 = shape2.AsReadOnly();
+        var readOnly1 = shape1.ToReadOnly();
+        var readOnly2 = shape2.ToReadOnly();
 
         Assert.IsFalse(readOnly1.Equals(readOnly2));
     }
@@ -108,8 +108,8 @@ public class GridShape2DReadOnlyTests
         using var shape = new GridShape2D(2, 2, Allocator.Temp);
         shape.SetCell(new int2(0, 0), true);
 
-        Assert.Catch<NotSupportedException>(() => shape.AsReadOnly().Equals(null));
-        Assert.Catch<NotSupportedException>(() => shape.AsReadOnly().Equals("not a shape"));
+        Assert.Catch<NotSupportedException>(() => shape.ToReadOnly().Equals(null));
+        Assert.Catch<NotSupportedException>(() => shape.ToReadOnly().Equals("not a shape"));
     }
 
     [Test]
@@ -121,8 +121,8 @@ public class GridShape2DReadOnlyTests
         shape1.SetCell(new int2(1, 1), true);
         shape2.SetCell(new int2(1, 1), true);
 
-        var readOnly1 = shape1.AsReadOnly();
-        var readOnly2 = shape2.AsReadOnly();
+        var readOnly1 = shape1.ToReadOnly();
+        var readOnly2 = shape2.ToReadOnly();
 
         // While we can't guarantee equal hash codes for equal objects with NativeBitArray,
         // we can at least verify hash codes are consistent for the same object
@@ -134,7 +134,7 @@ public class GridShape2DReadOnlyTests
     public void ReadOnly_ReflectsChangesToOriginalShape()
     {
         using var shape = new GridShape2D(3, 3, Allocator.Temp);
-        var readOnly = shape.AsReadOnly();
+        var readOnly = shape.ToReadOnly();
 
         Assert.AreEqual(0, readOnly.OccupiedSpaceCount);
         Assert.IsFalse(readOnly.GetCell(new int2(1, 1)));
@@ -161,9 +161,9 @@ public class GridShape2DReadOnlyTests
         using var lShape = Shapes.LShape(Allocator.Temp);
         using var tShape = Shapes.TShape(Allocator.Temp);
 
-        var crossReadOnly = cross.AsReadOnly();
-        var lShapeReadOnly = lShape.AsReadOnly();
-        var tShapeReadOnly = tShape.AsReadOnly();
+        var crossReadOnly = cross.ToReadOnly();
+        var lShapeReadOnly = lShape.ToReadOnly();
+        var tShapeReadOnly = tShape.ToReadOnly();
 
         Assert.AreEqual(5, crossReadOnly.OccupiedSpaceCount);
         Assert.AreEqual(3, lShapeReadOnly.OccupiedSpaceCount);

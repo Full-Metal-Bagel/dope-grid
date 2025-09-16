@@ -78,8 +78,8 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
         other._bits.Copy(0, ref _bits, 0, Size);
     }
 
-    public static implicit operator ReadOnly(GridShape2D shape) => shape.AsReadOnly();
-    public ReadOnly AsReadOnly() => new(Width, Height, Bits);
+    public static implicit operator ReadOnly(GridShape2D shape) => shape.ToReadOnly();
+    public ReadOnly ToReadOnly() => new(Width, Height, Bits);
 
     public bool Equals(GridShape2D other) => Width == other.Width && Height == other.Height && _bits.SequenceEquals(other._bits);
     public override bool Equals(object? obj) => obj is GridShape2D other && Equals(other);

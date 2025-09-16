@@ -13,7 +13,7 @@
         <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
         <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <NoWarn>$(NoWarn);IDE0161</NoWarn>
         <RootNamespace>DopeGrid</RootNamespace>
@@ -22,6 +22,10 @@
     <ItemGroup>
         <Compile Include="../../Packages/com.fullmetalbagel.dope-grid/Runtime/**/*.cs" />
         <Link Include="../../.editorconfig" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
     </ItemGroup>
 
 </Project>

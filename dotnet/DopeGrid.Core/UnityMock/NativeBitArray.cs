@@ -105,9 +105,10 @@ public struct NativeBitArray : IDisposable
 
     [SuppressMessage("Design", "CA1716:Identifiers should not match keywords")]
     [SuppressMessage("Design", "CA1034:Nested types should not be visible")]
-    public readonly ref struct ReadOnly
+    public readonly struct ReadOnly
     {
         private readonly BitArray? _bits;
+        public int Length => _bits?.Length ?? 0;
 
         public ReadOnly(BitArray? bits)
         {

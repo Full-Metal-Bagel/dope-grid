@@ -85,4 +85,9 @@ public struct NativeList<T> : IDisposable where T : struct
             _list.AddRange(other._list);
         }
     }
+
+    public NativeArray<T>.ReadOnly AsReadOnly()
+    {
+        return new NativeArray<T>.ReadOnly(_list?.ToArray());
+    }
 }
