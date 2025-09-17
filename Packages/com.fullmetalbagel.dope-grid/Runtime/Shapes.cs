@@ -97,6 +97,11 @@ public static class Shapes
         };
     }
 
+    public static GridShape2D.ReadOnly RotateBits(this in GridShape2D.ReadOnly shape, RotationDegree degree, NativeBitArray output)
+    {
+        return shape.RotateBits(degree, output.GetUnsafeBitArray());
+    }
+
     public static GridShape2D.ReadOnly RotateBits(this in GridShape2D.ReadOnly shape, RotationDegree degree, UnsafeBitArray output)
     {
         var width = shape.Width;

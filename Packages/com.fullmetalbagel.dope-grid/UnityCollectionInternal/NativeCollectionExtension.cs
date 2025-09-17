@@ -18,6 +18,9 @@ namespace Unity.Collections
         public static UnsafeBitArray* GetUnsafeBitArrayPtr(this NativeBitArray bits) => bits.m_BitArray;
 
         [Pure, MustUseReturnValue]
+        public static ref UnsafeBitArray GetUnsafeBitArray(this NativeBitArray bits) => ref UnsafeUtility.AsRef<UnsafeBitArray>(bits.m_BitArray);
+
+        [Pure, MustUseReturnValue]
         public static int CalculateHashCode(this NativeBitArray bits)
         {
             if (!bits.IsCreated)

@@ -2,30 +2,33 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Jobs;
 using Unity.Mathematics;
 
 namespace DopeGrid;
 
-public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
+public struct GridShape2D : IEquatable<GridShape2D>, IDisposable, INativeDisposable
 {
     public int Width { get; }
     public int Height { get; }
+    public int Size { get; }
     public UnsafeBitArray.ReadOnly Bits { get; }
     internal unsafe UnsafeBitArray WritableBits => *_bits.GetUnsafeBitArrayPtr();
     private NativeBitArray _bits;
 
-    public readonly int Size => Bits.Length;
     public readonly int OccupiedSpaceCount => Bits.CountBits(0, Size);
     public readonly int FreeSpaceCount => Size - OccupiedSpaceCount;
     public readonly bool IsCreated => _bits.IsCreated;
     public readonly bool IsEmpty => Width == 0 || Height == 0;
 
-    public GridShape2D(int width, int height, Allocator allocator)
+    public unsafe GridShape2D(int width, int height, Allocator allocator)
     {
         Width = width;
         Height = height;
-        _bits = new NativeBitArray(Width * Height, allocator);
-        Bits = _bits.GetReadOnlyUnsafeBitArray();
+        Size = width * height;
+        var numBits = (Size + 7) / 8 * 8;
+        _bits = new NativeBitArray(numBits, allocator, NativeArrayOptions.ClearMemory);
+        Bits = NativeCollectionExtension.CreateReadOnlyUnsafeBitArray(_bits.GetUnsafeBitArray().Ptr, Size);
     }
 
     public readonly int GetIndex(int2 pos) => GetIndex(pos.x, pos.y);
@@ -44,8 +47,12 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
 
     public void Dispose()
     {
-        if (_bits.IsCreated)
-            _bits.Dispose();
+        _bits.Dispose();
+    }
+
+    public JobHandle Dispose(JobHandle inputDeps)
+    {
+        return _bits.Dispose(inputDeps);
     }
 
     public readonly GridShape2D Clone(Allocator allocator)
@@ -64,7 +71,7 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
         if (Width != other.Width || Height != other.Height)
             throw new ArgumentException($"Cannot copy to GridShape2D with different dimensions. Source: {Width}x{Height}, Target: {other.Width}x{other.Height}");
 
-        other._bits.Copy(0, ref _bits, 0, Size);
+        other._bits.Copy(0, ref _bits, 0, _bits.Length);
     }
 
     public static implicit operator ReadOnly(GridShape2D shape) => shape.ToReadOnly();
@@ -115,7 +122,7 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
             {
                 var sourcePtr = Bits.Ptr;
                 var destPtr = clone.WritableBits.Ptr;
-                var sizeInBytes = (Bits.Length + 7) / 8; // Convert bits to bytes
+                var sizeInBytes = (Bits.Length + 7) / 8;
                 UnsafeUtility.MemCpy(destPtr, sourcePtr, sizeInBytes);
             }
             return clone;
