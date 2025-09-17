@@ -257,14 +257,34 @@ public static class Shapes
         for (var y = minY; y <= maxY; y++)
         {
             var rowStart = y * width;
-            for (var x = 0; x < width; x++)
+            var remaining = width;
+            var offset = 0;
+
+            while (remaining > 0)
             {
-                if (bits.IsSet(rowStart + x))
+                var chunkSize = math.min(remaining, 64);
+                var chunk = bits.GetBits(rowStart + offset, chunkSize);
+
+                if (chunk != 0)
                 {
-                    if (x < minX) minX = x;
-                    if (x > maxX) maxX = x;
+                    var trailingZeros = math.tzcnt(chunk);
+                    if (trailingZeros < chunkSize)
+                        minX = math.min(minX, offset + trailingZeros);
+
+                    var leadingZeros = math.lzcnt(chunk);
+                    var highestBit = 63 - leadingZeros;
+                    maxX = math.max(maxX, offset + highestBit);
+
+                    if (minX == 0 && maxX == width - 1)
+                        break;
                 }
+
+                remaining -= chunkSize;
+                offset += chunkSize;
             }
+
+            if (minX == 0 && maxX == width - 1)
+                break;
         }
 
         // Calculate new dimensions
@@ -272,20 +292,31 @@ public static class Shapes
         var newHeight = maxY - minY + 1;
         var trimmed = new GridShape2D(newWidth, newHeight, allocator);
 
-        // TODO: optimize further more
-        // Copy occupied region using direct bit operations
-        for (var y = minY; y <= maxY; y++)
+        // Copy each occupied row segment into the output without per-cell writes
+        unsafe
         {
-            var sourceRowStart = y * width;
-            var destRowStart = (y - minY) * newWidth;
+            var destBits = trimmed.WritableBits;
 
-            for (var x = minX; x <= maxX; x++)
+            for (var row = 0; row < newHeight; row++)
             {
-                var sourceIndex = sourceRowStart + x;
-                if (bits.IsSet(sourceIndex))
+                var srcIndex = (minY + row) * width + minX;
+                var destIndex = row * newWidth;
+
+                var remaining = newWidth;
+                var offset = 0;
+
+                while (remaining > 0)
                 {
-                    var destIndex = destRowStart + (x - minX);
-                    trimmed.SetCell(destIndex, true);
+                    var chunkSize = math.min(remaining, 64);
+                    var chunk = bits.GetBits(srcIndex + offset, chunkSize);
+
+                    if (chunk != 0)
+                    {
+                        destBits.SetBits(destIndex + offset, chunk, chunkSize);
+                    }
+
+                    remaining -= chunkSize;
+                    offset += chunkSize;
                 }
             }
         }
