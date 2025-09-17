@@ -31,6 +31,7 @@ public struct GridContainer : IDisposable
 
     public GridContainer(GridShape2D containerShape, Allocator allocator = Allocator.Persistent)
     {
+        if (containerShape.IsEmpty) throw new ArgumentException(nameof(containerShape));
         _grid = containerShape.Clone(allocator);
         _initializedGrid = _grid.Clone(allocator);
         _itemShapes = new NativeList<GridShape2D>(allocator);

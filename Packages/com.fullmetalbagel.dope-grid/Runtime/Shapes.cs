@@ -77,7 +77,7 @@ public static class Shapes
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape2D Rotate(this GridShape2D.ReadOnly shape, RotationDegree degree, Allocator allocator)
+    public static GridShape2D Rotate(this in GridShape2D.ReadOnly shape, RotationDegree degree, Allocator allocator)
     {
         var dimensions = shape.GetRotatedDimensions(degree);
         var rotated = new GridShape2D(dimensions.x, dimensions.y, allocator);
@@ -86,7 +86,7 @@ public static class Shapes
     }
 
     [Pure, MustUseReturnValue]
-    public static int2 GetRotatedDimensions(this GridShape2D.ReadOnly shape, RotationDegree degree)
+    public static int2 GetRotatedDimensions(this in GridShape2D.ReadOnly shape, RotationDegree degree)
     {
         return degree switch
         {
@@ -97,7 +97,7 @@ public static class Shapes
         };
     }
 
-    public static GridShape2D.ReadOnly RotateBits(this GridShape2D.ReadOnly shape, RotationDegree degree, UnsafeBitArray output)
+    public static GridShape2D.ReadOnly RotateBits(this in GridShape2D.ReadOnly shape, RotationDegree degree, UnsafeBitArray output)
     {
         var width = shape.Width;
         var height = shape.Height;
@@ -128,5 +128,117 @@ public static class Shapes
             }
         }
         return new GridShape2D.ReadOnly(newBound, output.AsReadOnly());
+    }
+
+    [Pure, MustUseReturnValue]
+    public static bool IsTrimmed(this GridShape2D shape)
+    {
+        return shape.ToReadOnly().IsTrimmed();
+    }
+
+    [Pure, MustUseReturnValue]
+    public static bool IsTrimmed(this in GridShape2D.ReadOnly shape)
+    {
+        // Empty shapes are considered trimmed
+        if (shape.Width == 0 || shape.Height == 0)
+            return true;
+
+        // A shape is trimmed when all four borders have at least one occupied cell
+        return HasOccupiedCellInRow(shape, 0) &&                    // Top row
+               HasOccupiedCellInRow(shape, shape.Height - 1) &&     // Bottom row
+               HasOccupiedCellInColumn(shape, 0) &&                 // Left column
+               HasOccupiedCellInColumn(shape, shape.Width - 1);     // Right column
+
+        static bool HasOccupiedCellInRow(in GridShape2D.ReadOnly shape, int row)
+        {
+            var rowStart = row * shape.Width;
+            return shape.Bits.TestAny(rowStart, shape.Width);
+        }
+
+        static bool HasOccupiedCellInColumn(in GridShape2D.ReadOnly shape, int column)
+        {
+            for (var row = 0; row < shape.Height; row++)
+            {
+                if (shape.GetCell(column, row))
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    [Pure, MustUseReturnValue]
+    public static GridShape2D Trim(this in GridShape2D.ReadOnly shape, Allocator allocator = Allocator.Temp)
+    {
+        // Handle empty shapes
+        if (shape.Width == 0 || shape.Height == 0)
+            return new GridShape2D(0, 0, allocator);
+
+        // If already trimmed, create a copy with the same cells
+        if (shape.IsTrimmed())
+            return shape.Clone(allocator);
+
+        var bits = shape.Bits;
+        var width = shape.Width;
+        var height = shape.Height;
+
+        // Find bounds using direct bit operations
+        var minY = -1;
+        var maxY = -1;
+
+        // Find first and last occupied rows
+        for (var y = 0; y < height; y++)
+        {
+            var rowStart = y * width;
+            if (bits.TestAny(rowStart, width))
+            {
+                if (minY == -1) minY = y;
+                maxY = y;
+            }
+        }
+
+        // No occupied cells found
+        if (minY == -1)
+            return new GridShape2D(0, 0, allocator);
+
+        // Find left and right bounds
+        var minX = width;
+        var maxX = -1;
+
+        for (var y = minY; y <= maxY; y++)
+        {
+            var rowStart = y * width;
+            for (var x = 0; x < width; x++)
+            {
+                if (bits.IsSet(rowStart + x))
+                {
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                }
+            }
+        }
+
+        // Calculate new dimensions
+        var newWidth = maxX - minX + 1;
+        var newHeight = maxY - minY + 1;
+        var trimmed = new GridShape2D(newWidth, newHeight, allocator);
+
+        // Copy occupied region using direct bit operations
+        for (var y = minY; y <= maxY; y++)
+        {
+            var sourceRowStart = y * width;
+            var destRowStart = (y - minY) * newWidth;
+
+            for (var x = minX; x <= maxX; x++)
+            {
+                var sourceIndex = sourceRowStart + x;
+                if (bits.IsSet(sourceIndex))
+                {
+                    var destIndex = destRowStart + (x - minX);
+                    trimmed.WritableBits.Set(destIndex, true);
+                }
+            }
+        }
+
+        return trimmed;
     }
 }

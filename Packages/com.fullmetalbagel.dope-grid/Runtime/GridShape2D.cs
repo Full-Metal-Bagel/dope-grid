@@ -18,6 +18,7 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
     public readonly int OccupiedSpaceCount => Bits.CountBits(0, Size);
     public readonly int FreeSpaceCount => Size - OccupiedSpaceCount;
     public readonly bool IsCreated => _bits.IsCreated;
+    public readonly bool IsEmpty => Width == 0 || Height == 0;
 
     public GridShape2D(int width, int height, Allocator allocator)
     {
@@ -27,20 +28,14 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
         Bits = _bits.GetReadOnlyUnsafeBitArray();
     }
 
-    public readonly int GetIndex(int2 pos)
-    {
-        return pos.y * Width + pos.x;
-    }
+    public readonly int GetIndex(int2 pos) => GetIndex(pos.x, pos.y);
+    public readonly int GetIndex(int x, int y) => y * Width + x;
 
-    public void SetCell(int2 pos, bool value)
-    {
-        _bits.Set(GetIndex(pos), value);
-    }
+    public readonly bool GetCell(int2 pos) => GetCell(pos.x, pos.y);
+    public readonly bool GetCell(int x, int y) => Bits.IsSet(GetIndex(x, y));
 
-    public readonly bool GetCell(int2 pos)
-    {
-        return Bits.IsSet(GetIndex(pos));
-    }
+    public void SetCell(int2 pos, bool value) => SetCell(pos.x, pos.y, value);
+    public void SetCell(int x, int y, bool value) => _bits.Set(GetIndex(x, y), value);
 
     public void Clear()
     {
@@ -55,15 +50,7 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
 
     public readonly GridShape2D Clone(Allocator allocator)
     {
-        var clone = new GridShape2D(Width, Height, allocator);
-        for (var y = 0; y < Height; y++)
-        for (var x = 0; x < Width; x++)
-        {
-            var pos = new int2(x, y);
-            clone.SetCell(pos, GetCell(pos));
-        }
-
-        return clone;
+        return ToReadOnly().Clone(allocator);
     }
 
     public void CopyTo(GridShape2D other)
@@ -81,10 +68,11 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
     }
 
     public static implicit operator ReadOnly(GridShape2D shape) => shape.ToReadOnly();
-    public ReadOnly ToReadOnly() => new(Width, Height, Bits);
+    public readonly ReadOnly ToReadOnly() => new(Width, Height, Bits);
 
+    [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
+    public override bool Equals(object? obj) => throw new NotSupportedException();
     public bool Equals(GridShape2D other) => Width == other.Width && Height == other.Height && _bits.SequenceEquals(other._bits);
-    public override bool Equals(object? obj) => obj is GridShape2D other && Equals(other);
     public override int GetHashCode() => HashCode.Combine(_bits.IsCreated ? _bits.CalculateHashCode() : 0, Width, Height);
 
     public static bool operator ==(GridShape2D left, GridShape2D right) => left.Equals(right);
@@ -96,17 +84,17 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
         public int Width { get; }
         public int Height { get; }
         public int2 Bound => new(Width, Height);
-        private readonly UnsafeBitArray.ReadOnly _bits;
+        public UnsafeBitArray.ReadOnly Bits { get; }
 
         public int Size => Width * Height;
-        public int OccupiedSpaceCount => _bits.CountBits(0, Size);
+        public int OccupiedSpaceCount => Bits.CountBits(0, Size);
         public int FreeSpaceCount => Size - OccupiedSpaceCount;
 
         internal ReadOnly(int width, int height, UnsafeBitArray.ReadOnly bits)
         {
             Width = width;
             Height = height;
-            _bits = bits;
+            Bits = bits;
         }
 
         internal ReadOnly(int2 bound, UnsafeBitArray.ReadOnly bits)
@@ -114,13 +102,29 @@ public struct GridShape2D : IDisposable, IEquatable<GridShape2D>
         {
         }
 
-        public int GetIndex(int2 pos) => pos.y * Width + pos.x;
-        public bool GetCell(int2 pos) => _bits.IsSet(GetIndex(pos));
+        public int GetIndex(int2 pos) => GetIndex(pos.x, pos.y);
+        public int GetIndex(int x, int y) => y * Width + x;
 
-        public bool Equals(ReadOnly other) => Width == other.Width && Height == other.Height && _bits.SequenceEquals(other._bits);
+        public bool GetCell(int2 pos) => GetCell(pos.x, pos.y);
+        public bool GetCell(int x, int y) => Bits.IsSet(GetIndex(x, y));
+
+        public GridShape2D Clone(Allocator allocator)
+        {
+            var clone = new GridShape2D(Width, Height, allocator);
+            unsafe
+            {
+                var sourcePtr = Bits.Ptr;
+                var destPtr = clone.WritableBits.Ptr;
+                var sizeInBytes = (Bits.Length + 7) / 8; // Convert bits to bytes
+                UnsafeUtility.MemCpy(destPtr, sourcePtr, sizeInBytes);
+            }
+            return clone;
+        }
+
         [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
         public override bool Equals(object? obj) => throw new NotSupportedException();
-        public override int GetHashCode() => HashCode.Combine(_bits.CalculateHashCode(), Width, Height);
+        public bool Equals(ReadOnly other) => Width == other.Width && Height == other.Height && Bits.SequenceEquals(other.Bits);
+        public override int GetHashCode() => HashCode.Combine(Bits.CalculateHashCode(), Width, Height);
         public static bool operator ==(ReadOnly left, ReadOnly right) => left.Equals(right);
         public static bool operator !=(ReadOnly left, ReadOnly right) => !left.Equals(right);
     }
