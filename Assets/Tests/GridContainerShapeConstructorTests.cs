@@ -240,10 +240,10 @@ public class GridContainerShapeConstructorTests
             item.SetCell(new int2(x, y), true);
 
         // Should not be able to place at (0,0) due to pre-filled cells
-        Assert.IsFalse(container.TryAddItemAt(item, new int2(0, 0)));
+        Assert.IsFalse(container.TryAddItemAt(item.GetOrCreateImmutable(), new int2(0, 0)));
 
         // Should fail at (1,0) because it would overlap with blocked cells at (1,0) and (1,1)
-        Assert.IsFalse(container.TryAddItemAt(item, new int2(1, 0)));
+        Assert.IsFalse(container.TryAddItemAt(item.GetOrCreateImmutable(), new int2(1, 0)));
 
         // Grid state: [X][X][ ]
         //              [X][X][ ]
@@ -254,7 +254,7 @@ public class GridContainerShapeConstructorTests
         using var verticalItem = new GridShape2D(1, 2, Allocator.Temp);
         verticalItem.SetCell(new int2(0, 0), true);
         verticalItem.SetCell(new int2(0, 1), true);
-        Assert.IsTrue(container.TryAddItemAt(verticalItem, new int2(2, 0)));
+        Assert.IsTrue(container.TryAddItemAt(verticalItem.GetOrCreateImmutable(), new int2(2, 0)));
     }
 
     [Test]

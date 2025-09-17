@@ -70,6 +70,49 @@ public static class Shapes
         return shape;
     }
 
+    // Immutable shape factory methods
+    [Pure, MustUseReturnValue]
+    public static ImmutableGridShape2D ImmutableSingle()
+    {
+        using var shape = Single(Allocator.Temp);
+        return shape.GetOrCreateImmutable();
+    }
+
+    [Pure, MustUseReturnValue]
+    public static ImmutableGridShape2D ImmutableLine(int length)
+    {
+        using var shape = Line(length, Allocator.Temp);
+        return shape.GetOrCreateImmutable();
+    }
+
+    [Pure, MustUseReturnValue]
+    public static ImmutableGridShape2D ImmutableSquare(int size)
+    {
+        using var shape = Square(size, Allocator.Temp);
+        return shape.GetOrCreateImmutable();
+    }
+
+    [Pure, MustUseReturnValue]
+    public static ImmutableGridShape2D ImmutableLShape()
+    {
+        using var shape = LShape(Allocator.Temp);
+        return shape.GetOrCreateImmutable();
+    }
+
+    [Pure, MustUseReturnValue]
+    public static ImmutableGridShape2D ImmutableTShape()
+    {
+        using var shape = TShape(Allocator.Temp);
+        return shape.GetOrCreateImmutable();
+    }
+
+    [Pure, MustUseReturnValue]
+    public static ImmutableGridShape2D ImmutableCross()
+    {
+        using var shape = Cross(Allocator.Temp);
+        return shape.GetOrCreateImmutable();
+    }
+
     [Pure, MustUseReturnValue]
     public static GridShape2D Rotate(this GridShape2D shape, RotationDegree degree, Allocator allocator)
     {

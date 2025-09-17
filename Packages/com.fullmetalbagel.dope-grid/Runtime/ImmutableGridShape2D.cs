@@ -19,13 +19,28 @@ public readonly record struct ImmutableGridShape2D(int Id)
     public int2 Bound => Shapes.Bounds[Id];
     public int Width => Bound.x;
     public int Height => Bound.y;
+    public int Size => Width * Height;
     public UnsafeBitArray.ReadOnly Pattern => Shapes.GetPattern(Id);
+    public int OccupiedSpaceCount => Pattern.CountBits(0, Size);
+    public int FreeSpaceCount => Size - OccupiedSpaceCount;
+    public bool IsEmpty => Width == 0 || Height == 0;
 
     public ImmutableGridShape2D Rotate90() => new(Shapes.GetOrCreateRotated90(Id));
     public ImmutableGridShape2D Flip() => new(Shapes.GetOrCreateFlipped(Id));
 
+    public int GetIndex(int2 pos) => GetIndex(pos.x, pos.y);
+    public int GetIndex(int x, int y) => y * Width + x;
+
+    public bool GetCell(int2 pos) => GetCell(pos.x, pos.y);
+    public bool GetCell(int x, int y) => Pattern.IsSet(GetIndex(x, y));
+
     public static implicit operator GridShape2D.ReadOnly(ImmutableGridShape2D shape) => shape.ToReadOnlyGridShape();
     public GridShape2D.ReadOnly ToReadOnlyGridShape() => new(Width, Height, Pattern);
+
+    public void CopyTo(GridShape2D other)
+    {
+        ToReadOnlyGridShape().CopyTo(other);
+    }
 }
 
 public static class ImmutableGridShape2DList
@@ -64,6 +79,11 @@ public static class ImmutableGridShape2DList
         {
             s_shapes.Value.Dispose();
         }
+    }
+
+    public static ImmutableGridShape2D GetOrCreateImmutable(this GridShape2D shape)
+    {
+        return shape.ToReadOnly().GetOrCreateImmutable();
     }
 
     public static ImmutableGridShape2D GetOrCreateImmutable(this in GridShape2D.ReadOnly shape)

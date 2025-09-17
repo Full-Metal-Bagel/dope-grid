@@ -46,29 +46,19 @@ public class GridContainerTests
     [Test]
     public void TryAddItem_AddsItemSuccessfully()
     {
-        var itemShape = new GridShape2D(2, 2, Allocator.Temp);
-        itemShape.SetCell(new int2(0, 0), true);
-        itemShape.SetCell(new int2(1, 0), true);
-        itemShape.SetCell(new int2(0, 1), true);
-        itemShape.SetCell(new int2(1, 1), true);
+        var itemShape = Shapes.ImmutableSquare(2);
 
         var added = _gridContainer.TryAddItem(itemShape);
 
         Assert.IsTrue(added);
         Assert.AreEqual(1, _gridContainer.ItemCount);
         Assert.AreEqual(96, _gridContainer.FreeSpace);
-
-        itemShape.Dispose();
     }
 
     [Test]
     public void TryAddItemAt_AddsItemAtSpecificPosition()
     {
-        var itemShape = new GridShape2D(2, 2, Allocator.Temp);
-        itemShape.SetCell(new int2(0, 0), true);
-        itemShape.SetCell(new int2(1, 0), true);
-        itemShape.SetCell(new int2(0, 1), true);
-        itemShape.SetCell(new int2(1, 1), true);
+        var itemShape = Shapes.ImmutableSquare(2);
 
         var added = _gridContainer.TryAddItemAt(itemShape, new int2(3, 4));
 
@@ -78,50 +68,35 @@ public class GridContainerTests
         Assert.IsTrue(_gridContainer.IsCellOccupied(new int2(4, 4)));
         Assert.IsTrue(_gridContainer.IsCellOccupied(new int2(3, 5)));
         Assert.IsTrue(_gridContainer.IsCellOccupied(new int2(4, 5)));
-
-        itemShape.Dispose();
     }
 
     [Test]
     public void TryAddItemAt_FailsWhenPositionOccupied()
     {
-        var itemShape = new GridShape2D(2, 2, Allocator.Temp);
-        itemShape.SetCell(new int2(0, 0), true);
-        itemShape.SetCell(new int2(1, 0), true);
-        itemShape.SetCell(new int2(0, 1), true);
-        itemShape.SetCell(new int2(1, 1), true);
+        var itemShape = Shapes.ImmutableSquare(2);
 
         _gridContainer.TryAddItemAt(itemShape, new int2(3, 4));
         var secondAdd = _gridContainer.TryAddItemAt(itemShape, new int2(3, 4));
 
         Assert.IsFalse(secondAdd);
         Assert.AreEqual(1, _gridContainer.ItemCount);
-
-        itemShape.Dispose();
     }
 
     [Test]
     public void TryAddItemAt_FailsWhenOutOfBounds()
     {
-        var itemShape = new GridShape2D(3, 3, Allocator.Temp);
-        itemShape.SetCell(new int2(0, 0), true);
+        var itemShape = Shapes.ImmutableSingle();
 
-        var added = _gridContainer.TryAddItemAt(itemShape, new int2(8, 8));
+        var added = _gridContainer.TryAddItemAt(itemShape, new int2(10, 10));
 
         Assert.IsFalse(added);
         Assert.AreEqual(0, _gridContainer.ItemCount);
-
-        itemShape.Dispose();
     }
 
     [Test]
     public void RemoveItem_RemovesItemSuccessfully()
     {
-        var itemShape = new GridShape2D(2, 2, Allocator.Temp);
-        itemShape.SetCell(new int2(0, 0), true);
-        itemShape.SetCell(new int2(1, 0), true);
-        itemShape.SetCell(new int2(0, 1), true);
-        itemShape.SetCell(new int2(1, 1), true);
+        var itemShape = Shapes.ImmutableSquare(2);
 
         _gridContainer.TryAddItemAt(itemShape, new int2(2, 2));
         _gridContainer.RemoveItem(0);
@@ -132,8 +107,6 @@ public class GridContainerTests
         Assert.IsFalse(_gridContainer.IsCellOccupied(new int2(3, 2)));
         Assert.IsFalse(_gridContainer.IsCellOccupied(new int2(2, 3)));
         Assert.IsFalse(_gridContainer.IsCellOccupied(new int2(3, 3)));
-
-        itemShape.Dispose();
     }
 
     [Test]
@@ -148,14 +121,8 @@ public class GridContainerTests
     [Test]
     public void Clear_RemovesAllItems()
     {
-        var itemShape1 = new GridShape2D(2, 2, Allocator.Temp);
-        var itemShape2 = new GridShape2D(3, 1, Allocator.Temp);
-
-        itemShape1.SetCell(new int2(0, 0), true);
-        itemShape1.SetCell(new int2(1, 0), true);
-        itemShape2.SetCell(new int2(0, 0), true);
-        itemShape2.SetCell(new int2(1, 0), true);
-        itemShape2.SetCell(new int2(2, 0), true);
+        var itemShape1 = Shapes.ImmutableSquare(2);
+        var itemShape2 = Shapes.ImmutableLine(3);
 
         _gridContainer.TryAddItem(itemShape1);
         _gridContainer.TryAddItem(itemShape2);
@@ -166,9 +133,6 @@ public class GridContainerTests
 
         Assert.AreEqual(0, _gridContainer.ItemCount);
         Assert.AreEqual(100, _gridContainer.FreeSpace);
-
-        itemShape1.Dispose();
-        itemShape2.Dispose();
     }
 
     #endregion
@@ -178,11 +142,7 @@ public class GridContainerTests
     [Test]
     public void Clone_CreatesIdenticalCopy()
     {
-        var itemShape = new GridShape2D(2, 2, Allocator.Temp);
-        itemShape.SetCell(new int2(0, 0), true);
-        itemShape.SetCell(new int2(1, 0), true);
-        itemShape.SetCell(new int2(0, 1), true);
-        itemShape.SetCell(new int2(1, 1), true);
+        var itemShape = Shapes.ImmutableSquare(2);
 
         _gridContainer.TryAddItemAt(itemShape, new int2(3, 4));
 
@@ -200,18 +160,13 @@ public class GridContainerTests
             Assert.AreEqual(_gridContainer.IsCellOccupied(pos), clone.IsCellOccupied(pos));
         }
 
-        itemShape.Dispose();
         clone.Dispose();
     }
 
     [Test]
     public void Clone_ModificationsDoNotAffectOriginal()
     {
-        var itemShape = new GridShape2D(2, 2, Allocator.Temp);
-        itemShape.SetCell(new int2(0, 0), true);
-        itemShape.SetCell(new int2(1, 0), true);
-        itemShape.SetCell(new int2(0, 1), true);
-        itemShape.SetCell(new int2(1, 1), true);
+        var itemShape = Shapes.ImmutableSquare(2);
 
         _gridContainer.TryAddItemAt(itemShape, new int2(0, 0));
         var clone = _gridContainer.Clone(Allocator.Temp);
@@ -223,7 +178,6 @@ public class GridContainerTests
         Assert.IsTrue(_gridContainer.IsCellOccupied(new int2(0, 0)));
         Assert.IsFalse(clone.IsCellOccupied(new int2(0, 0)));
 
-        itemShape.Dispose();
         clone.Dispose();
     }
 
@@ -234,24 +188,19 @@ public class GridContainerTests
     [Test]
     public void TryAddItem_LShapedItem()
     {
-        var lShape = new GridShape2D(2, 3, Allocator.Temp);
-        lShape.SetCell(new int2(0, 0), true);
-        lShape.SetCell(new int2(0, 1), true);
-        lShape.SetCell(new int2(0, 2), true);
-        lShape.SetCell(new int2(1, 2), true);
+        var lShape = Shapes.ImmutableLShape();
 
         var added = _gridContainer.TryAddItem(lShape);
 
         Assert.IsTrue(added);
         Assert.AreEqual(1, _gridContainer.ItemCount);
-        Assert.AreEqual(96, _gridContainer.FreeSpace);
-
-        lShape.Dispose();
+        Assert.AreEqual(97, _gridContainer.FreeSpace); // L shape has 3 cells
     }
 
     [Test]
     public void TryAddItem_HollowSquare()
     {
+        // Create a 3x3 hollow square manually since we don't have a premade one
         var hollowSquare = new GridShape2D(3, 3, Allocator.Temp);
         hollowSquare.SetCell(new int2(0, 0), true);
         hollowSquare.SetCell(new int2(1, 0), true);
@@ -261,14 +210,14 @@ public class GridContainerTests
         hollowSquare.SetCell(new int2(0, 2), true);
         hollowSquare.SetCell(new int2(1, 2), true);
         hollowSquare.SetCell(new int2(2, 2), true);
+        var immutableHollow = hollowSquare.GetOrCreateImmutable();
+        hollowSquare.Dispose();
 
-        var added = _gridContainer.TryAddItem(hollowSquare);
+        var added = _gridContainer.TryAddItem(immutableHollow);
 
         Assert.IsTrue(added);
         Assert.AreEqual(1, _gridContainer.ItemCount);
         Assert.AreEqual(92, _gridContainer.FreeSpace);
-
-        hollowSquare.Dispose();
     }
 
     #endregion
@@ -278,8 +227,7 @@ public class GridContainerTests
     [Test]
     public void TryAddItem_MultipleItems_FillsSpace()
     {
-        var smallItem = new GridShape2D(1, 1, Allocator.Temp);
-        smallItem.SetCell(new int2(0, 0), true);
+        var smallItem = Shapes.ImmutableSingle();
 
         var addedCount = 0;
         for (var i = 0; i < 100; i++)
@@ -292,36 +240,27 @@ public class GridContainerTests
 
         var extraAdd = _gridContainer.TryAddItem(smallItem);
         Assert.IsFalse(extraAdd);
-
-        smallItem.Dispose();
     }
 
     [Test]
     public void TryAddItem_Tetris_PackingTest()
     {
-        var block2x2 = new GridShape2D(2, 2, Allocator.Temp);
-        for (var y = 0; y < 2; y++)
-        for (var x = 0; x < 2; x++)
-            block2x2.SetCell(new int2(x, y), true);
+        var block2x2 = Shapes.ImmutableSquare(2);
+        var line4x1 = Shapes.ImmutableLine(4);
 
-        var line4x1 = new GridShape2D(4, 1, Allocator.Temp);
-        for (var x = 0; x < 4; x++)
-            line4x1.SetCell(new int2(x, 0), true);
-
+        // Create vertical line manually
         var line1x4 = new GridShape2D(1, 4, Allocator.Temp);
         for (var y = 0; y < 4; y++)
             line1x4.SetCell(new int2(0, y), true);
+        var immutableLine1x4 = line1x4.GetOrCreateImmutable();
+        line1x4.Dispose();
 
         _gridContainer.TryAddItem(block2x2);
         _gridContainer.TryAddItem(line4x1);
-        _gridContainer.TryAddItem(line1x4);
+        _gridContainer.TryAddItem(immutableLine1x4);
 
         Assert.AreEqual(3, _gridContainer.ItemCount);
         Assert.AreEqual(88, _gridContainer.FreeSpace);
-
-        block2x2.Dispose();
-        line4x1.Dispose();
-        line1x4.Dispose();
     }
 
     [Test]
@@ -331,9 +270,9 @@ public class GridContainerTests
         var item2 = CreateSquareShape(3, Allocator.Temp);
         var item3 = CreateSquareShape(1, Allocator.Temp);
 
-        _gridContainer.TryAddItem(item1);
-        _gridContainer.TryAddItem(item2);
-        _gridContainer.TryAddItem(item3);
+        _gridContainer.TryAddItem(item1.GetOrCreateImmutable());
+        _gridContainer.TryAddItem(item2.GetOrCreateImmutable());
+        _gridContainer.TryAddItem(item3.GetOrCreateImmutable());
 
         Assert.AreEqual(3, _gridContainer.ItemCount);
 
@@ -354,9 +293,11 @@ public class GridContainerTests
     public void TryAddItem_ItemLargerThanInventory_Fails()
     {
         var largeItem = new GridShape2D(11, 11, Allocator.Temp);
-        largeItem.SetCell(new int2(0, 0), true);
+        for (var y = 0; y < 11; y++)
+        for (var x = 0; x < 11; x++)
+            largeItem.SetCell(x, y, true);
 
-        var added = _gridContainer.TryAddItem(largeItem);
+        var added = _gridContainer.TryAddItem(largeItem.GetOrCreateImmutable());
 
         Assert.IsFalse(added);
         Assert.AreEqual(0, _gridContainer.ItemCount);
@@ -372,7 +313,7 @@ public class GridContainerTests
         for (var x = 0; x < 10; x++)
             exactFit.SetCell(new int2(x, y), true);
 
-        var added = _gridContainer.TryAddItem(exactFit);
+        var added = _gridContainer.TryAddItem(exactFit.GetOrCreateImmutable());
 
         Assert.IsTrue(added);
         Assert.AreEqual(1, _gridContainer.ItemCount);
@@ -386,10 +327,10 @@ public class GridContainerTests
     {
         var item = CreateSquareShape(2, Allocator.Temp);
 
-        var added = _gridContainer.TryAddItemAt(item, new int2(-1, 0));
+        var added = _gridContainer.TryAddItemAt(item.GetOrCreateImmutable(), new int2(-1, 0));
         Assert.IsFalse(added);
 
-        added = _gridContainer.TryAddItemAt(item, new int2(0, -1));
+        added = _gridContainer.TryAddItemAt(item.GetOrCreateImmutable(), new int2(0, -1));
         Assert.IsFalse(added);
 
         item.Dispose();

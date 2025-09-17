@@ -63,16 +63,7 @@ public struct GridShape2D : IEquatable<GridShape2D>, INativeDisposable
 
     public void CopyTo(GridShape2D other)
     {
-        if (!_bits.IsCreated)
-            throw new InvalidOperationException("Cannot copy from a non-created GridShape2D");
-
-        if (!other._bits.IsCreated)
-            throw new InvalidOperationException("Cannot copy to a non-created GridShape2D");
-
-        if (Width != other.Width || Height != other.Height)
-            throw new ArgumentException($"Cannot copy to GridShape2D with different dimensions. Source: {Width}x{Height}, Target: {other.Width}x{other.Height}");
-
-        other._bits.Copy(0, ref _bits, 0, _bits.Length);
+        ToReadOnly().CopyTo(other);
     }
 
     public static implicit operator ReadOnly(GridShape2D shape) => shape.ToReadOnly();
@@ -119,14 +110,30 @@ public struct GridShape2D : IEquatable<GridShape2D>, INativeDisposable
         public GridShape2D Clone(Allocator allocator)
         {
             var clone = new GridShape2D(Width, Height, allocator);
-            unsafe
-            {
-                var sourcePtr = Bits.Ptr;
-                var destPtr = clone.WritableBits.Ptr;
-                var sizeInBytes = (Bits.Length + 7) / 8;
-                UnsafeUtility.MemCpy(destPtr, sourcePtr, sizeInBytes);
-            }
+            CopyTo(clone);
             return clone;
+        }
+
+        public unsafe void CopyTo(GridShape2D other)
+        {
+            if (Bits.Ptr == null)
+                throw new InvalidOperationException("Cannot copy from a non-created GridShape2D");
+
+            if (!other.IsCreated)
+                throw new InvalidOperationException("Cannot copy to a non-created GridShape2D");
+
+            if (Width != other.Width || Height != other.Height)
+                throw new ArgumentException($"Cannot copy to GridShape2D with different dimensions. Source: {Width}x{Height}, Target: {other.Width}x{other.Height}");
+
+            if (Bits.Length == 0)
+            {
+                other.Clear();
+                return;
+            }
+
+            var destBits = other.WritableBits;
+            var sizeInBytes = (Bits.Length + 7) / 8;
+            UnsafeUtility.MemCpy(destBits.Ptr, Bits.Ptr, sizeInBytes);
         }
 
         [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
