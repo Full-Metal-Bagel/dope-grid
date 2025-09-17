@@ -71,7 +71,7 @@ internal static class ImmutableGridShape2DList
         var shapes = ImmutableShapes.Value;
 
         // Step 2: Find if the shape already exists
-        var existingId = FindExistingShape(trimmedShape, shapes);
+        var existingId = FindExistingShape(shapes, trimmedShape);
         if (existingId >= 0)
         {
             return new ImmutableGridShape2D(existingId);
@@ -81,7 +81,12 @@ internal static class ImmutableGridShape2DList
         return CreateNewShapeVariants(trimmedShape, shapes);
     }
 
-    private static int FindExistingShape(GridShape2D shape, Shapes shapes)
+    public static int FindExistingShape(this Shapes shapes, GridShape2D shape)
+    {
+        return shapes.FindExistingShape(shape.ToReadOnly());
+    }
+
+    public static int FindExistingShape(this Shapes shapes, in GridShape2D.ReadOnly shape)
     {
         for (var i = 0; i < shapes.Bounds.Length; i++)
         {
@@ -101,22 +106,6 @@ internal static class ImmutableGridShape2DList
                 return i;
         }
         return -1;
-    }
-
-    private static GridShape2D FlipHorizontally(GridShape2D.ReadOnly shape)
-    {
-        var flipped = new GridShape2D(shape.Width, shape.Height, Allocator.Temp);
-        for (var y = 0; y < shape.Height; y++)
-        {
-            for (var x = 0; x < shape.Width; x++)
-            {
-                if (shape.GetCell(new int2(x, y)))
-                {
-                    flipped.SetCell(new int2(shape.Width - 1 - x, y), true);
-                }
-            }
-        }
-        return flipped;
     }
 
     private static int AddShapeToList(GridShape2D shape, Shapes shapes)
@@ -154,34 +143,34 @@ internal static class ImmutableGridShape2DList
         return id;
     }
 
-    private static ImmutableGridShape2D CreateNewShapeVariants(GridShape2D trimmedShape, Shapes shapes)
+    private static ImmutableGridShape2D CreateNewShapeVariants(GridShape2D shape, Shapes shapes)
     {
         var allocator = Allocator.Temp;
 
         // Add base shape
-        var baseId = AddShapeToList(trimmedShape, shapes);
+        var baseId = AddShapeToList(shape, shapes);
 
         // Create rotations
-        using var rotated90 = trimmedShape.Rotate(RotationDegree.Rotate90, allocator);
-        using var rotated180 = trimmedShape.Rotate(RotationDegree.Rotate180, allocator);
-        using var rotated270 = trimmedShape.Rotate(RotationDegree.Rotate270, allocator);
+        using var rotated90 = shape.Rotate(RotationDegree.Rotate90, allocator);
+        using var rotated180 = shape.Rotate(RotationDegree.Rotate180, allocator);
+        using var rotated270 = shape.Rotate(RotationDegree.Rotate270, allocator);
 
         // Check if rotations are unique and add them
-        var rotate90Id = trimmedShape.Equals(rotated90) ? baseId : FindExistingShape(rotated90, shapes);
+        var rotate90Id = shape.Equals(rotated90) ? baseId : shapes.FindExistingShape(rotated90);
         if (rotate90Id < 0) rotate90Id = AddShapeToList(rotated90, shapes);
 
-        var rotate180Id = trimmedShape.Equals(rotated180) ? baseId :
-                          rotated90.Equals(rotated180) ? rotate90Id : FindExistingShape(rotated180, shapes);
+        var rotate180Id = shape.Equals(rotated180) ? baseId :
+                          rotated90.Equals(rotated180) ? rotate90Id : shapes.FindExistingShape(rotated180);
         if (rotate180Id < 0) rotate180Id = AddShapeToList(rotated180, shapes);
 
-        var rotate270Id = trimmedShape.Equals(rotated270) ? baseId :
+        var rotate270Id = shape.Equals(rotated270) ? baseId :
                           rotated90.Equals(rotated270) ? rotate90Id :
-                          rotated180.Equals(rotated270) ? rotate180Id : FindExistingShape(rotated270, shapes);
+                          rotated180.Equals(rotated270) ? rotate180Id : shapes.FindExistingShape(rotated270);
         if (rotate270Id < 0) rotate270Id = AddShapeToList(rotated270, shapes);
 
         // Create flipped version
-        using var flipped = FlipHorizontally(trimmedShape);
-        var flippedId = trimmedShape.Equals(flipped) ? baseId : FindExistingShape(flipped, shapes);
+        using var flipped = shape.Flip(FlipAxis.Horizontal, Allocator.Temp);
+        var flippedId = shape.Equals(flipped) ? baseId : shapes.FindExistingShape(flipped);
         if (flippedId < 0) flippedId = AddShapeToList(flipped, shapes);
 
         // Create rotations of flipped shape
@@ -241,7 +230,7 @@ internal static class ImmutableGridShape2DList
             shapes.FlipIndices.Add(rotate270Id);
         }
 
-        trimmedShape.Dispose();
+        shape.Dispose();
         return new ImmutableGridShape2D(baseId);
     }
 
@@ -268,7 +257,7 @@ internal static class ImmutableGridShape2DList
         }
 
         // Check rest of the list
-        var foundId = FindExistingShape(shape, shapes);
+        var foundId = shapes.FindExistingShape(shape);
         return foundId >= 0 ? foundId : AddShapeToList(shape, shapes);
     }
 }

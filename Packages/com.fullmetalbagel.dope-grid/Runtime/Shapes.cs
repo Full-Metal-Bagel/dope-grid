@@ -131,6 +131,51 @@ public static class Shapes
     }
 
     [Pure, MustUseReturnValue]
+    public static GridShape2D Flip(this GridShape2D shape, FlipAxis axis, Allocator allocator)
+    {
+        return shape.ToReadOnly().Flip(axis, allocator);
+    }
+
+    [Pure, MustUseReturnValue]
+    public static GridShape2D Flip(this in GridShape2D.ReadOnly shape, FlipAxis axis, Allocator allocator)
+    {
+        var flipped = new GridShape2D(shape.Width, shape.Height, allocator);
+        shape.FlipBits(axis, flipped.WritableBits);
+        return flipped;
+    }
+
+    public static GridShape2D.ReadOnly FlipBits(this in GridShape2D.ReadOnly shape, FlipAxis axis, UnsafeBitArray output)
+    {
+        var width = shape.Width;
+        var height = shape.Height;
+        var bits = shape.Bits;
+
+        // Use direct bit operations for better performance
+        for (var y = 0; y < height; y++)
+        {
+            var rowStart = y * width;
+
+            for (var x = 0; x < width; x++)
+            {
+                var sourceIndex = rowStart + x;
+                if (!bits.IsSet(sourceIndex)) continue;
+
+                var flippedPos = axis switch
+                {
+                    FlipAxis.Horizontal => new int2(width - 1 - x, y),
+                    FlipAxis.Vertical => new int2(x, height - 1 - y),
+                    _ => throw new ArgumentException($"Invalid flip axis: {axis}")
+                };
+
+                var destIndex = flippedPos.y * width + flippedPos.x;
+                output.Set(destIndex, true);
+            }
+        }
+
+        return new GridShape2D.ReadOnly(width, height, output.AsReadOnly());
+    }
+
+    [Pure, MustUseReturnValue]
     public static bool IsTrimmed(this GridShape2D shape)
     {
         return shape.ToReadOnly().IsTrimmed();
@@ -222,6 +267,7 @@ public static class Shapes
         var newHeight = maxY - minY + 1;
         var trimmed = new GridShape2D(newWidth, newHeight, allocator);
 
+        // TODO: optimize further more
         // Copy occupied region using direct bit operations
         for (var y = minY; y <= maxY; y++)
         {
@@ -234,7 +280,7 @@ public static class Shapes
                 if (bits.IsSet(sourceIndex))
                 {
                     var destIndex = destRowStart + (x - minX);
-                    trimmed.WritableBits.Set(destIndex, true);
+                    trimmed.SetCell(destIndex, true);
                 }
             }
         }
