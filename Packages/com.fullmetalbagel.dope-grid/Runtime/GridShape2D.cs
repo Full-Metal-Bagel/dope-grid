@@ -7,11 +7,12 @@ using Unity.Mathematics;
 
 namespace DopeGrid;
 
-public struct GridShape2D : IEquatable<GridShape2D>, IDisposable, INativeDisposable
+public struct GridShape2D : IEquatable<GridShape2D>, INativeDisposable
 {
     public int Width { get; }
     public int Height { get; }
-    public int Size { get; }
+    public readonly int Size => _bits.Length;
+
     public UnsafeBitArray.ReadOnly Bits { get; }
     internal unsafe UnsafeBitArray WritableBits => *_bits.GetUnsafeBitArrayPtr();
     private NativeBitArray _bits;
@@ -25,10 +26,10 @@ public struct GridShape2D : IEquatable<GridShape2D>, IDisposable, INativeDisposa
     {
         Width = width;
         Height = height;
-        Size = width * height;
-        var numBits = (Size + 7) / 8 * 8;
-        _bits = new NativeBitArray(numBits, allocator, NativeArrayOptions.ClearMemory);
-        Bits = NativeCollectionExtension.CreateReadOnlyUnsafeBitArray(_bits.GetUnsafeBitArray().Ptr, Size);
+        var numBits = width * height;
+        _bits = new NativeBitArray(numBits, allocator, NativeArrayOptions.UninitializedMemory);
+        UnsafeUtility.MemClear(_bits.GetUnsafeBitArray().Ptr, _bits.Capacity / 8);
+        Bits = _bits.GetReadOnlyUnsafeBitArray();
     }
 
     public readonly int GetIndex(int2 pos) => GetIndex(pos.x, pos.y);
