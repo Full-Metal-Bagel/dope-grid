@@ -2,18 +2,18 @@ using JetBrains.Annotations;
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace DopeGrid;
+namespace DopeGrid.Native;
 
 public static class GridContainerExtension
 {
     [Pure, MustUseReturnValue]
-    public static int2 FindFirstFit(this GridShape2D container, in GridShape2D.ReadOnly item)
+    public static int2 FindFirstFit(this GridShape container, in GridShape.ReadOnly item)
     {
         return container.ToReadOnly().FindFirstFit(item);
     }
 
     [Pure, MustUseReturnValue]
-    public static int2 FindFirstFit(this in GridShape2D.ReadOnly container, in GridShape2D.ReadOnly item)
+    public static int2 FindFirstFit(this in GridShape.ReadOnly container, in GridShape.ReadOnly item)
     {
         var maxY = container.Height - item.Height + 1;
         var maxX = container.Width - item.Width + 1;
@@ -27,13 +27,13 @@ public static class GridContainerExtension
     }
 
     [Pure, MustUseReturnValue]
-    public static int2 FindBestFit(this GridShape2D container, in GridShape2D.ReadOnly item)
+    public static int2 FindBestFit(this GridShape container, in GridShape.ReadOnly item)
     {
         return container.ToReadOnly().FindBestFit(item);
     }
 
     [Pure, MustUseReturnValue]
-    public static int2 FindBestFit(this in GridShape2D.ReadOnly container, in GridShape2D.ReadOnly item)
+    public static int2 FindBestFit(this in GridShape.ReadOnly container, in GridShape.ReadOnly item)
     {
         var bestPos = new int2(-1, -1);
         var bestScore = int.MaxValue;
@@ -58,8 +58,8 @@ public static class GridContainerExtension
     }
 
     public static int PlaceMultipleShapes(
-        this GridShape2D container,
-        NativeArray<GridShape2D> items,
+        this GridShape container,
+        NativeArray<GridShape> items,
         NativeArray<int2> outPositions)
     {
         var placed = 0;
@@ -80,13 +80,13 @@ public static class GridContainerExtension
     }
 
     [Pure, MustUseReturnValue]
-    public static bool CanPlaceItem(this GridShape2D container, in GridShape2D.ReadOnly item, int2 pos)
+    public static bool CanPlaceItem(this GridShape container, in GridShape.ReadOnly item, int2 pos)
     {
         return container.ToReadOnly().CanPlaceItem(item, pos);
     }
 
     [Pure, MustUseReturnValue]
-    public static bool CanPlaceItem(this in GridShape2D.ReadOnly container, in GridShape2D.ReadOnly item, int2 pos)
+    public static bool CanPlaceItem(this in GridShape.ReadOnly container, in GridShape.ReadOnly item, int2 pos)
     {
         // Bounds check
         if (pos.x < 0 || pos.y < 0 || pos.x + item.Width > container.Width || pos.y + item.Height > container.Height)
@@ -108,7 +108,7 @@ public static class GridContainerExtension
         return true;
     }
 
-    public static void PlaceItem(this GridShape2D container, in GridShape2D.ReadOnly item, int2 pos)
+    public static void PlaceItem(this GridShape container, in GridShape.ReadOnly item, int2 pos)
     {
         for (var sy = 0; sy < item.Height; sy++)
         for (var sx = 0; sx < item.Width; sx++)
@@ -122,7 +122,7 @@ public static class GridContainerExtension
         }
     }
 
-    public static void RemoveItem(this GridShape2D container, in GridShape2D.ReadOnly item, int2 pos)
+    public static void RemoveItem(this GridShape container, in GridShape.ReadOnly item, int2 pos)
     {
         for (var sy = 0; sy < item.Height; sy++)
         for (var sx = 0; sx < item.Width; sx++)

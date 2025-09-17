@@ -1,16 +1,16 @@
 using System;
 using NUnit.Framework;
 using Unity.Collections;
-using DopeGrid;
+using DopeGrid.Native;
 
 [TestFixture]
-public class GridShape2DEqualityTests
+public class GridShapeEqualityTests
 {
     [Test]
     public void Equals_IdenticalShapes_ReturnsTrue()
     {
-        using var shape1 = new GridShape2D(3, 3, Allocator.Temp);
-        using var shape2 = new GridShape2D(3, 3, Allocator.Temp);
+        using var shape1 = new GridShape(3, 3, Allocator.Temp);
+        using var shape2 = new GridShape(3, 3, Allocator.Temp);
 
         shape1.SetCell(0, 0, true);
         shape1.SetCell(1, 1, true);
@@ -27,8 +27,8 @@ public class GridShape2DEqualityTests
     [Test]
     public void Equals_DifferentCells_ReturnsFalse()
     {
-        using var shape1 = new GridShape2D(3, 3, Allocator.Temp);
-        using var shape2 = new GridShape2D(3, 3, Allocator.Temp);
+        using var shape1 = new GridShape(3, 3, Allocator.Temp);
+        using var shape2 = new GridShape(3, 3, Allocator.Temp);
 
         shape1.SetCell(0, 0, true);
         shape1.SetCell(1, 1, true);
@@ -43,8 +43,8 @@ public class GridShape2DEqualityTests
     [Test]
     public void Equals_DifferentDimensions_ReturnsFalse()
     {
-        using var shape1 = new GridShape2D(3, 3, Allocator.Temp);
-        using var shape2 = new GridShape2D(3, 4, Allocator.Temp);
+        using var shape1 = new GridShape(3, 3, Allocator.Temp);
+        using var shape2 = new GridShape(3, 4, Allocator.Temp);
 
         shape1.SetCell(0, 0, true);
         shape2.SetCell(0, 0, true);
@@ -56,8 +56,8 @@ public class GridShape2DEqualityTests
     [Test]
     public void Equals_EmptyShapes_ReturnsTrue()
     {
-        using var shape1 = new GridShape2D(5, 5, Allocator.Temp);
-        using var shape2 = new GridShape2D(5, 5, Allocator.Temp);
+        using var shape1 = new GridShape(5, 5, Allocator.Temp);
+        using var shape2 = new GridShape(5, 5, Allocator.Temp);
 
         Assert.IsTrue(shape1.Equals(shape2));
         Assert.IsTrue(shape2.Equals(shape1));
@@ -66,7 +66,7 @@ public class GridShape2DEqualityTests
     [Test]
     public void Equals_SameInstance_ReturnsTrue()
     {
-        using var shape = new GridShape2D(3, 3, Allocator.Temp);
+        using var shape = new GridShape(3, 3, Allocator.Temp);
         shape.SetCell(1, 1, true);
 
         Assert.IsTrue(shape.Equals(shape));
@@ -75,7 +75,7 @@ public class GridShape2DEqualityTests
     [Test]
     public void Equals_ClonedShape_ReturnsTrue()
     {
-        using var original = new GridShape2D(4, 4, Allocator.Temp);
+        using var original = new GridShape(4, 4, Allocator.Temp);
         original.SetCell(0, 0, true);
         original.SetCell(1, 2, true);
         original.SetCell(3, 3, true);
@@ -89,8 +89,8 @@ public class GridShape2DEqualityTests
     [Test]
     public void Equals_AfterClear_ComparesCorrectly()
     {
-        using var shape1 = new GridShape2D(3, 3, Allocator.Temp);
-        using var shape2 = new GridShape2D(3, 3, Allocator.Temp);
+        using var shape1 = new GridShape(3, 3, Allocator.Temp);
+        using var shape2 = new GridShape(3, 3, Allocator.Temp);
 
         shape1.SetCell(1, 1, true);
         shape2.SetCell(1, 1, true);
@@ -126,8 +126,8 @@ public class GridShape2DEqualityTests
     [Test]
     public void GetHashCode_EqualShapes_ReturnsSameHashCode()
     {
-        using var shape1 = new GridShape2D(3, 3, Allocator.Temp);
-        using var shape2 = new GridShape2D(3, 3, Allocator.Temp);
+        using var shape1 = new GridShape(3, 3, Allocator.Temp);
+        using var shape2 = new GridShape(3, 3, Allocator.Temp);
 
         shape1.SetCell(0, 0, true);
         shape1.SetCell(2, 2, true);
@@ -143,10 +143,10 @@ public class GridShape2DEqualityTests
     [Test]
     public void Equals_ObjectOverload_WorksCorrectly()
     {
-        using var shape1 = new GridShape2D(2, 2, Allocator.Temp);
+        using var shape1 = new GridShape(2, 2, Allocator.Temp);
         shape1.SetCell(0, 0, true);
 
-        using var shape2 = new GridShape2D(2, 2, Allocator.Temp);
+        using var shape2 = new GridShape(2, 2, Allocator.Temp);
         shape2.SetCell(0, 0, true);
 
         object objShape2 = shape2;

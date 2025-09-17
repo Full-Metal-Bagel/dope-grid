@@ -1,6 +1,6 @@
 using Unity.Collections;
 
-namespace DopeGrid;
+namespace DopeGrid.Native;
 
 public static class NativeBitArrayExtensions
 {

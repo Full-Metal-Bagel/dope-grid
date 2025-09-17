@@ -1,4 +1,5 @@
 using DopeGrid;
+using DopeGrid.Native;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -21,9 +22,9 @@ public class GridContainerTests
 
     #region Helper Methods
 
-    private GridShape2D CreateSquareShape(int size, Allocator allocator)
+    private GridShape CreateSquareShape(int size, Allocator allocator)
     {
-        var shape = new GridShape2D(size, size, allocator);
+        var shape = new GridShape(size, size, allocator);
         for (var y = 0; y < size; y++)
         for (var x = 0; x < size; x++)
             shape.SetCell(new int2(x, y), true);
@@ -201,7 +202,7 @@ public class GridContainerTests
     public void TryAddItem_HollowSquare()
     {
         // Create a 3x3 hollow square manually since we don't have a premade one
-        var hollowSquare = new GridShape2D(3, 3, Allocator.Temp);
+        var hollowSquare = new GridShape(3, 3, Allocator.Temp);
         hollowSquare.SetCell(new int2(0, 0), true);
         hollowSquare.SetCell(new int2(1, 0), true);
         hollowSquare.SetCell(new int2(2, 0), true);
@@ -249,7 +250,7 @@ public class GridContainerTests
         var line4x1 = Shapes.ImmutableLine(4);
 
         // Create vertical line manually
-        var line1x4 = new GridShape2D(1, 4, Allocator.Temp);
+        var line1x4 = new GridShape(1, 4, Allocator.Temp);
         for (var y = 0; y < 4; y++)
             line1x4.SetCell(new int2(0, y), true);
         var immutableLine1x4 = line1x4.GetOrCreateImmutable();
@@ -292,7 +293,7 @@ public class GridContainerTests
     [Test]
     public void TryAddItem_ItemLargerThanInventory_Fails()
     {
-        var largeItem = new GridShape2D(11, 11, Allocator.Temp);
+        var largeItem = new GridShape(11, 11, Allocator.Temp);
         for (var y = 0; y < 11; y++)
         for (var x = 0; x < 11; x++)
             largeItem.SetCell(x, y, true);
@@ -308,7 +309,7 @@ public class GridContainerTests
     [Test]
     public void TryAddItem_ExactFitItem()
     {
-        var exactFit = new GridShape2D(10, 10, Allocator.Temp);
+        var exactFit = new GridShape(10, 10, Allocator.Temp);
         for (var y = 0; y < 10; y++)
         for (var x = 0; x < 10; x++)
             exactFit.SetCell(new int2(x, y), true);

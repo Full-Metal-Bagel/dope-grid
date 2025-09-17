@@ -1,5 +1,5 @@
 using System;
-using DopeGrid;
+using DopeGrid.Native;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -10,7 +10,7 @@ public class GridContainerShapeConstructorTests
     [Test]
     public void Constructor_WithEmptyShape_CreatesEmptyContainer()
     {
-        using var shape = new GridShape2D(5, 5, Allocator.Temp);
+        using var shape = new GridShape(5, 5, Allocator.Temp);
         using var container = new GridContainer(shape, Allocator.Temp);
 
         Assert.AreEqual(5, container.Width);
@@ -29,7 +29,7 @@ public class GridContainerShapeConstructorTests
     [Test]
     public void Constructor_WithPartiallyFilledShape_CreatesCorrectContainer()
     {
-        using var shape = new GridShape2D(4, 4, Allocator.Temp);
+        using var shape = new GridShape(4, 4, Allocator.Temp);
 
         // Fill some cells to create a pattern
         shape.SetCell(new int2(0, 0), true);
@@ -82,7 +82,7 @@ public class GridContainerShapeConstructorTests
     [Test]
     public void Constructor_ClonesShapeIndependently()
     {
-        using var originalShape = new GridShape2D(3, 3, Allocator.Temp);
+        using var originalShape = new GridShape(3, 3, Allocator.Temp);
         originalShape.SetCell(new int2(1, 1), true);
 
         using var container = new GridContainer(originalShape, Allocator.Temp);
@@ -101,7 +101,7 @@ public class GridContainerShapeConstructorTests
     [Test]
     public void Constructor_InitializedGridMatchesInput()
     {
-        using var shape = new GridShape2D(3, 3, Allocator.Temp);
+        using var shape = new GridShape(3, 3, Allocator.Temp);
         shape.SetCell(new int2(0, 0), true);
         shape.SetCell(new int2(2, 0), true);
         shape.SetCell(new int2(1, 1), true);
@@ -123,7 +123,7 @@ public class GridContainerShapeConstructorTests
     [Test]
     public void Constructor_CurrentGridMatchesInitialGrid()
     {
-        using var shape = new GridShape2D(4, 3, Allocator.Temp);
+        using var shape = new GridShape(4, 3, Allocator.Temp);
         shape.SetCell(new int2(1, 0), true);
         shape.SetCell(new int2(2, 1), true);
 
@@ -140,7 +140,7 @@ public class GridContainerShapeConstructorTests
     public void Constructor_WithLargeShape_WorksCorrectly()
     {
         const int size = 100;
-        using var largeShape = new GridShape2D(size, size, Allocator.Temp);
+        using var largeShape = new GridShape(size, size, Allocator.Temp);
 
         // Create a sparse pattern
         for (var i = 0; i < size * size; i += 7)
@@ -163,7 +163,7 @@ public class GridContainerShapeConstructorTests
     [Test]
     public void Constructor_WithDifferentAllocators()
     {
-        using var shape = new GridShape2D(3, 3, Allocator.Temp);
+        using var shape = new GridShape(3, 3, Allocator.Temp);
         shape.SetCell(new int2(1, 1), true);
 
         // Test with Temp allocator
@@ -188,7 +188,7 @@ public class GridContainerShapeConstructorTests
     [Test]
     public void Constructor_MinimalShape_1x1()
     {
-        using var shape = new GridShape2D(1, 1, Allocator.Temp);
+        using var shape = new GridShape(1, 1, Allocator.Temp);
         using var container = new GridContainer(shape, Allocator.Temp);
 
         Assert.AreEqual(1, container.Width);
@@ -204,7 +204,7 @@ public class GridContainerShapeConstructorTests
     public void Constructor_RectangularShapes()
     {
         // Wide rectangle
-        using var wideShape = new GridShape2D(10, 2, Allocator.Temp);
+        using var wideShape = new GridShape(10, 2, Allocator.Temp);
         using var wideContainer = new GridContainer(wideShape, Allocator.Temp);
 
         Assert.AreEqual(10, wideContainer.Width);
@@ -212,7 +212,7 @@ public class GridContainerShapeConstructorTests
         Assert.AreEqual(20, wideContainer.FreeSpace);
 
         // Tall rectangle
-        using var tallShape = new GridShape2D(2, 10, Allocator.Temp);
+        using var tallShape = new GridShape(2, 10, Allocator.Temp);
         using var tallContainer = new GridContainer(tallShape, Allocator.Temp);
 
         Assert.AreEqual(2, tallContainer.Width);
@@ -223,7 +223,7 @@ public class GridContainerShapeConstructorTests
     [Test]
     public void Constructor_PreFilledShape_BlocksItemPlacement()
     {
-        using var shape = new GridShape2D(3, 3, Allocator.Temp);
+        using var shape = new GridShape(3, 3, Allocator.Temp);
 
         // Block top-left 2x2 area
         shape.SetCell(new int2(0, 0), true);
@@ -234,7 +234,7 @@ public class GridContainerShapeConstructorTests
         using var container = new GridContainer(shape, Allocator.Temp);
 
         // Try to add a 2x2 item - should fail at blocked position
-        using var item = new GridShape2D(2, 2, Allocator.Temp);
+        using var item = new GridShape(2, 2, Allocator.Temp);
         for (var y = 0; y < 2; y++)
         for (var x = 0; x < 2; x++)
             item.SetCell(new int2(x, y), true);
@@ -251,7 +251,7 @@ public class GridContainerShapeConstructorTests
         // There's no valid 2x2 space in this configuration
 
         // But a 1x2 vertical item should fit in the rightmost column
-        using var verticalItem = new GridShape2D(1, 2, Allocator.Temp);
+        using var verticalItem = new GridShape(1, 2, Allocator.Temp);
         verticalItem.SetCell(new int2(0, 0), true);
         verticalItem.SetCell(new int2(0, 1), true);
         Assert.IsTrue(container.TryAddItemAt(verticalItem.GetOrCreateImmutable(), new int2(2, 0)));
@@ -260,7 +260,7 @@ public class GridContainerShapeConstructorTests
     [Test]
     public void Constructor_NonCreatedShape_ThrowsException()
     {
-        var nonCreatedShape = new GridShape2D(); // Default, non-created shape
+        var nonCreatedShape = new GridShape(); // Default, non-created shape
 
         // This should ideally throw an exception or handle gracefully
         // The actual behavior depends on implementation
@@ -274,7 +274,7 @@ public class GridContainerShapeConstructorTests
     public void Constructor_Performance()
     {
         const int size = 200;
-        using var shape = new GridShape2D(size, size, Allocator.Temp);
+        using var shape = new GridShape(size, size, Allocator.Temp);
 
         // Create complex pattern
         for (var y = 0; y < size; y++)

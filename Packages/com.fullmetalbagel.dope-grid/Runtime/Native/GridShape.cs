@@ -5,9 +5,9 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 
-namespace DopeGrid;
+namespace DopeGrid.Native;
 
-public struct GridShape2D : IEquatable<GridShape2D>, INativeDisposable
+public struct GridShape : IEquatable<GridShape>, INativeDisposable
 {
     public int Width { get; }
     public int Height { get; }
@@ -22,7 +22,7 @@ public struct GridShape2D : IEquatable<GridShape2D>, INativeDisposable
     public readonly bool IsCreated => _bits.IsCreated;
     public readonly bool IsEmpty => Width == 0 || Height == 0;
 
-    public unsafe GridShape2D(int width, int height, Allocator allocator)
+    public unsafe GridShape(int width, int height, Allocator allocator)
     {
         Width = width;
         Height = height;
@@ -56,26 +56,26 @@ public struct GridShape2D : IEquatable<GridShape2D>, INativeDisposable
         return _bits.Dispose(inputDeps);
     }
 
-    public readonly GridShape2D Clone(Allocator allocator)
+    public readonly GridShape Clone(Allocator allocator)
     {
         return ToReadOnly().Clone(allocator);
     }
 
-    public void CopyTo(GridShape2D other)
+    public void CopyTo(GridShape other)
     {
         ToReadOnly().CopyTo(other);
     }
 
-    public static implicit operator ReadOnly(GridShape2D shape) => shape.ToReadOnly();
+    public static implicit operator ReadOnly(GridShape shape) => shape.ToReadOnly();
     public readonly ReadOnly ToReadOnly() => new(Width, Height, Bits);
 
     [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
     public override bool Equals(object? obj) => throw new NotSupportedException();
-    public bool Equals(GridShape2D other) => Width == other.Width && Height == other.Height && _bits.SequenceEquals(other._bits);
+    public bool Equals(GridShape other) => Width == other.Width && Height == other.Height && _bits.SequenceEquals(other._bits);
     public override int GetHashCode() => HashCode.Combine(_bits.IsCreated ? _bits.CalculateHashCode() : 0, Width, Height);
 
-    public static bool operator ==(GridShape2D left, GridShape2D right) => left.Equals(right);
-    public static bool operator !=(GridShape2D left, GridShape2D right) => !left.Equals(right);
+    public static bool operator ==(GridShape left, GridShape right) => left.Equals(right);
+    public static bool operator !=(GridShape left, GridShape right) => !left.Equals(right);
 
     [SuppressMessage("Design", "CA1716:Identifiers should not match keywords")]
     public readonly ref struct ReadOnly
@@ -107,14 +107,14 @@ public struct GridShape2D : IEquatable<GridShape2D>, INativeDisposable
         public bool GetCell(int2 pos) => GetCell(pos.x, pos.y);
         public bool GetCell(int x, int y) => Bits.IsSet(GetIndex(x, y));
 
-        public GridShape2D Clone(Allocator allocator)
+        public GridShape Clone(Allocator allocator)
         {
-            var clone = new GridShape2D(Width, Height, allocator);
+            var clone = new GridShape(Width, Height, allocator);
             CopyTo(clone);
             return clone;
         }
 
-        public unsafe void CopyTo(GridShape2D other)
+        public unsafe void CopyTo(GridShape other)
         {
             if (Bits.Ptr == null)
                 throw new InvalidOperationException("Cannot copy from a non-created GridShape2D");

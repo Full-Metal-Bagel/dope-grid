@@ -1,4 +1,4 @@
-using DopeGrid;
+using DopeGrid.Native;
 using NUnit.Framework;
 using Unity.Collections;
 
@@ -133,8 +133,8 @@ public class ImmutableShapeFactoryTests
     {
         var immutableCross = Shapes.ImmutableCross();
 
-        // Convert to mutable GridShape2D
-        using var mutableShape = new GridShape2D(3, 3, Allocator.Temp);
+        // Convert to mutable GridShape
+        using var mutableShape = new GridShape(3, 3, Allocator.Temp);
         immutableCross.CopyTo(mutableShape);
 
         // Verify the pattern was copied correctly

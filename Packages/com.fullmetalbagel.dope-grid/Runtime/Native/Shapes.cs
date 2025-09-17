@@ -5,32 +5,32 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 
-namespace DopeGrid;
+namespace DopeGrid.Native;
 
 public static class Shapes
 {
     [SuppressMessage("Naming", "CA1720:Identifier contains type name")]
     [Pure, MustUseReturnValue]
-    public static GridShape2D Single(Allocator allocator = Allocator.Temp)
+    public static GridShape Single(Allocator allocator = Allocator.Temp)
     {
-        var shape = new GridShape2D(1, 1, allocator);
+        var shape = new GridShape(1, 1, allocator);
         shape.SetCell(new int2(0, 0), true);
         return shape;
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape2D Line(int length, Allocator allocator = Allocator.Temp)
+    public static GridShape Line(int length, Allocator allocator = Allocator.Temp)
     {
-        var shape = new GridShape2D(length, 1, allocator);
+        var shape = new GridShape(length, 1, allocator);
         for (var i = 0; i < length; i++)
             shape.SetCell(new int2(i, 0), true);
         return shape;
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape2D Square(int size, Allocator allocator = Allocator.Temp)
+    public static GridShape Square(int size, Allocator allocator = Allocator.Temp)
     {
-        var shape = new GridShape2D(size, size, allocator);
+        var shape = new GridShape(size, size, allocator);
         for (var y = 0; y < size; y++)
         for (var x = 0; x < size; x++)
             shape.SetCell(new int2(x, y), true);
@@ -38,9 +38,9 @@ public static class Shapes
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape2D LShape(Allocator allocator = Allocator.Temp)
+    public static GridShape LShape(Allocator allocator = Allocator.Temp)
     {
-        var shape = new GridShape2D(2, 2, allocator);
+        var shape = new GridShape(2, 2, allocator);
         shape.SetCell(new int2(0, 0), true);
         shape.SetCell(new int2(0, 1), true);
         shape.SetCell(new int2(1, 1), true);
@@ -48,9 +48,9 @@ public static class Shapes
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape2D TShape(Allocator allocator = Allocator.Temp)
+    public static GridShape TShape(Allocator allocator = Allocator.Temp)
     {
-        var shape = new GridShape2D(3, 2, allocator);
+        var shape = new GridShape(3, 2, allocator);
         shape.SetCell(new int2(0, 0), true);
         shape.SetCell(new int2(1, 0), true);
         shape.SetCell(new int2(2, 0), true);
@@ -59,9 +59,9 @@ public static class Shapes
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape2D Cross(Allocator allocator = Allocator.Temp)
+    public static GridShape Cross(Allocator allocator = Allocator.Temp)
     {
-        var shape = new GridShape2D(3, 3, allocator);
+        var shape = new GridShape(3, 3, allocator);
         shape.SetCell(new int2(1, 0), true);
         shape.SetCell(new int2(0, 1), true);
         shape.SetCell(new int2(1, 1), true);
@@ -72,64 +72,64 @@ public static class Shapes
 
     // Immutable shape factory methods
     [Pure, MustUseReturnValue]
-    public static ImmutableGridShape2D ImmutableSingle()
+    public static ImmutableGridShape ImmutableSingle()
     {
         using var shape = Single(Allocator.Temp);
         return shape.GetOrCreateImmutable();
     }
 
     [Pure, MustUseReturnValue]
-    public static ImmutableGridShape2D ImmutableLine(int length)
+    public static ImmutableGridShape ImmutableLine(int length)
     {
         using var shape = Line(length, Allocator.Temp);
         return shape.GetOrCreateImmutable();
     }
 
     [Pure, MustUseReturnValue]
-    public static ImmutableGridShape2D ImmutableSquare(int size)
+    public static ImmutableGridShape ImmutableSquare(int size)
     {
         using var shape = Square(size, Allocator.Temp);
         return shape.GetOrCreateImmutable();
     }
 
     [Pure, MustUseReturnValue]
-    public static ImmutableGridShape2D ImmutableLShape()
+    public static ImmutableGridShape ImmutableLShape()
     {
         using var shape = LShape(Allocator.Temp);
         return shape.GetOrCreateImmutable();
     }
 
     [Pure, MustUseReturnValue]
-    public static ImmutableGridShape2D ImmutableTShape()
+    public static ImmutableGridShape ImmutableTShape()
     {
         using var shape = TShape(Allocator.Temp);
         return shape.GetOrCreateImmutable();
     }
 
     [Pure, MustUseReturnValue]
-    public static ImmutableGridShape2D ImmutableCross()
+    public static ImmutableGridShape ImmutableCross()
     {
         using var shape = Cross(Allocator.Temp);
         return shape.GetOrCreateImmutable();
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape2D Rotate(this GridShape2D shape, RotationDegree degree, Allocator allocator)
+    public static GridShape Rotate(this GridShape shape, RotationDegree degree, Allocator allocator)
     {
         return shape.ToReadOnly().Rotate(degree, allocator);
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape2D Rotate(this in GridShape2D.ReadOnly shape, RotationDegree degree, Allocator allocator)
+    public static GridShape Rotate(this in GridShape.ReadOnly shape, RotationDegree degree, Allocator allocator)
     {
         var dimensions = shape.GetRotatedDimensions(degree);
-        var rotated = new GridShape2D(dimensions.x, dimensions.y, allocator);
+        var rotated = new GridShape(dimensions.x, dimensions.y, allocator);
         shape.RotateBits(degree, rotated.WritableBits);
         return rotated;
     }
 
     [Pure, MustUseReturnValue]
-    public static int2 GetRotatedDimensions(this in GridShape2D.ReadOnly shape, RotationDegree degree)
+    public static int2 GetRotatedDimensions(this in GridShape.ReadOnly shape, RotationDegree degree)
     {
         return degree switch
         {
@@ -140,12 +140,12 @@ public static class Shapes
         };
     }
 
-    public static GridShape2D.ReadOnly RotateBits(this in GridShape2D.ReadOnly shape, RotationDegree degree, NativeBitArray output)
+    public static GridShape.ReadOnly RotateBits(this in GridShape.ReadOnly shape, RotationDegree degree, NativeBitArray output)
     {
         return shape.RotateBits(degree, output.GetUnsafeBitArray());
     }
 
-    public static GridShape2D.ReadOnly RotateBits(this in GridShape2D.ReadOnly shape, RotationDegree degree, UnsafeBitArray output)
+    public static GridShape.ReadOnly RotateBits(this in GridShape.ReadOnly shape, RotationDegree degree, UnsafeBitArray output)
     {
         var width = shape.Width;
         var height = shape.Height;
@@ -175,24 +175,24 @@ public static class Shapes
                 output.Set(index, true);
             }
         }
-        return new GridShape2D.ReadOnly(newBound, output.AsReadOnly());
+        return new GridShape.ReadOnly(newBound, output.AsReadOnly());
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape2D Flip(this GridShape2D shape, FlipAxis axis, Allocator allocator)
+    public static GridShape Flip(this GridShape shape, FlipAxis axis, Allocator allocator)
     {
         return shape.ToReadOnly().Flip(axis, allocator);
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape2D Flip(this in GridShape2D.ReadOnly shape, FlipAxis axis, Allocator allocator)
+    public static GridShape Flip(this in GridShape.ReadOnly shape, FlipAxis axis, Allocator allocator)
     {
-        var flipped = new GridShape2D(shape.Width, shape.Height, allocator);
+        var flipped = new GridShape(shape.Width, shape.Height, allocator);
         shape.FlipBits(axis, flipped.WritableBits);
         return flipped;
     }
 
-    public static GridShape2D.ReadOnly FlipBits(this in GridShape2D.ReadOnly shape, FlipAxis axis, UnsafeBitArray output)
+    public static GridShape.ReadOnly FlipBits(this in GridShape.ReadOnly shape, FlipAxis axis, UnsafeBitArray output)
     {
         var width = shape.Width;
         var height = shape.Height;
@@ -220,17 +220,17 @@ public static class Shapes
             }
         }
 
-        return new GridShape2D.ReadOnly(width, height, output.AsReadOnly());
+        return new GridShape.ReadOnly(width, height, output.AsReadOnly());
     }
 
     [Pure, MustUseReturnValue]
-    public static bool IsTrimmed(this GridShape2D shape)
+    public static bool IsTrimmed(this GridShape shape)
     {
         return shape.ToReadOnly().IsTrimmed();
     }
 
     [Pure, MustUseReturnValue]
-    public static bool IsTrimmed(this in GridShape2D.ReadOnly shape)
+    public static bool IsTrimmed(this in GridShape.ReadOnly shape)
     {
         // Empty shapes are considered trimmed
         if (shape.Width == 0 || shape.Height == 0)
@@ -242,13 +242,13 @@ public static class Shapes
                HasOccupiedCellInColumn(shape, 0) &&                 // Left column
                HasOccupiedCellInColumn(shape, shape.Width - 1);     // Right column
 
-        static bool HasOccupiedCellInRow(in GridShape2D.ReadOnly shape, int row)
+        static bool HasOccupiedCellInRow(in GridShape.ReadOnly shape, int row)
         {
             var rowStart = row * shape.Width;
             return shape.Bits.TestAny(rowStart, shape.Width);
         }
 
-        static bool HasOccupiedCellInColumn(in GridShape2D.ReadOnly shape, int column)
+        static bool HasOccupiedCellInColumn(in GridShape.ReadOnly shape, int column)
         {
             for (var row = 0; row < shape.Height; row++)
             {
@@ -260,11 +260,11 @@ public static class Shapes
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape2D Trim(this in GridShape2D.ReadOnly shape, Allocator allocator = Allocator.Temp)
+    public static GridShape Trim(this in GridShape.ReadOnly shape, Allocator allocator = Allocator.Temp)
     {
         // Handle empty shapes
         if (shape.Width == 0 || shape.Height == 0)
-            return new GridShape2D(0, 0, allocator);
+            return new GridShape(0, 0, allocator);
 
         // If already trimmed, create a copy with the same cells
         if (shape.IsTrimmed())
@@ -291,7 +291,7 @@ public static class Shapes
 
         // No occupied cells found
         if (minY == -1)
-            return new GridShape2D(0, 0, allocator);
+            return new GridShape(0, 0, allocator);
 
         // Find left and right bounds
         var minX = width;
@@ -333,7 +333,7 @@ public static class Shapes
         // Calculate new dimensions
         var newWidth = maxX - minX + 1;
         var newHeight = maxY - minY + 1;
-        var trimmed = new GridShape2D(newWidth, newHeight, allocator);
+        var trimmed = new GridShape(newWidth, newHeight, allocator);
 
         // Copy each occupied row segment into the output without per-cell writes
         unsafe

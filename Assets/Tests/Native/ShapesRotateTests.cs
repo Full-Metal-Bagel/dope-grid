@@ -2,6 +2,7 @@ using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
 using DopeGrid;
+using DopeGrid.Native;
 
 [TestFixture]
 public class ShapesRotateTests
@@ -162,7 +163,7 @@ public class ShapesRotateTests
     [Test]
     public void Rotate_CustomShape()
     {
-        using var shape = new GridShape2D(3, 2, Allocator.Temp);
+        using var shape = new GridShape(3, 2, Allocator.Temp);
         shape.SetCell(new int2(0, 0), true);
         shape.SetCell(new int2(1, 0), true);
         shape.SetCell(new int2(2, 1), true);
@@ -179,7 +180,7 @@ public class ShapesRotateTests
     [Test]
     public void Rotate_EmptyShape()
     {
-        using var shape = new GridShape2D(2, 2, Allocator.Temp);
+        using var shape = new GridShape(2, 2, Allocator.Temp);
         using var rotated = shape.Rotate(RotationDegree.Rotate90, Allocator.Temp);
 
         Assert.AreEqual(2, rotated.Width);
@@ -198,7 +199,7 @@ public class ShapesRotateTests
         var width = random.Next(5, 20);
         var height = random.Next(5, 20);
 
-        using var shape = new GridShape2D(width, height, Allocator.Temp);
+        using var shape = new GridShape(width, height, Allocator.Temp);
 
         // Randomly populate cells
         var cellsToFill = random.Next(1, width * height / 2); // Fill up to half the grid

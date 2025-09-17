@@ -1,4 +1,4 @@
-using DopeGrid;
+using DopeGrid.Native;
 using NUnit.Framework;
 using Unity.Collections;
 

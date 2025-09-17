@@ -1,4 +1,4 @@
-using DopeGrid;
+using DopeGrid.Native;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -8,11 +8,11 @@ public class GridContainerExtensionTests
     [Test]
     public void FindFirstFit_FindsFirstAvailablePosition()
     {
-        var inventory = new GridShape2D(5, 5, Allocator.Temp);
+        var inventory = new GridShape(5, 5, Allocator.Temp);
         inventory.SetCell(new int2(0, 0), true);
         inventory.SetCell(new int2(1, 0), true);
 
-        var item = new GridShape2D(2, 2, Allocator.Temp);
+        var item = new GridShape(2, 2, Allocator.Temp);
         item.SetCell(new int2(0, 0), true);
         item.SetCell(new int2(1, 0), true);
         item.SetCell(new int2(0, 1), true);
@@ -30,12 +30,12 @@ public class GridContainerExtensionTests
     [Test]
     public void FindFirstFit_ReturnsNegativeWhenNoSpace()
     {
-        var inventory = new GridShape2D(2, 2, Allocator.Temp);
+        var inventory = new GridShape(2, 2, Allocator.Temp);
         for (var y = 0; y < 2; y++)
         for (var x = 0; x < 2; x++)
             inventory.SetCell(new int2(x, y), true);
 
-        var item = new GridShape2D(1, 1, Allocator.Temp);
+        var item = new GridShape(1, 1, Allocator.Temp);
         item.SetCell(new int2(0, 0), true);
 
         var position = inventory.FindFirstFit(item);
@@ -50,10 +50,10 @@ public class GridContainerExtensionTests
     [Test]
     public void CanPlaceItem_ChecksCollisionCorrectly()
     {
-        var inventory = new GridShape2D(5, 5, Allocator.Temp);
+        var inventory = new GridShape(5, 5, Allocator.Temp);
         inventory.SetCell(new int2(2, 2), true);
 
-        var item = new GridShape2D(2, 2, Allocator.Temp);
+        var item = new GridShape(2, 2, Allocator.Temp);
         item.SetCell(new int2(0, 0), true);
         item.SetCell(new int2(1, 0), true);
         item.SetCell(new int2(0, 1), true);
@@ -71,9 +71,9 @@ public class GridContainerExtensionTests
     [Test]
     public void PlaceItem_SetsCorrectCells()
     {
-        var inventory = new GridShape2D(5, 5, Allocator.Temp);
+        var inventory = new GridShape(5, 5, Allocator.Temp);
 
-        var item = new GridShape2D(2, 3, Allocator.Temp);
+        var item = new GridShape(2, 3, Allocator.Temp);
         item.SetCell(new int2(0, 0), true);
         item.SetCell(new int2(0, 1), true);
         item.SetCell(new int2(1, 1), true);
@@ -95,9 +95,9 @@ public class GridContainerExtensionTests
     [Test]
     public void RemoveItem_ClearsCorrectCells()
     {
-        var inventory = new GridShape2D(5, 5, Allocator.Temp);
+        var inventory = new GridShape(5, 5, Allocator.Temp);
 
-        var item = new GridShape2D(2, 2, Allocator.Temp);
+        var item = new GridShape(2, 2, Allocator.Temp);
         item.SetCell(new int2(0, 0), true);
         item.SetCell(new int2(1, 0), true);
         item.SetCell(new int2(0, 1), true);
@@ -117,14 +117,14 @@ public class GridContainerExtensionTests
     [Test]
     public void PlaceMultipleShapes_PlacesAllPossible()
     {
-        var inventory = new GridShape2D(10, 10, Allocator.Temp);
+        var inventory = new GridShape(10, 10, Allocator.Temp);
 
-        var items = new NativeArray<GridShape2D>(3, Allocator.Temp);
+        var items = new NativeArray<GridShape>(3, Allocator.Temp);
         var positions = new NativeArray<int2>(3, Allocator.Temp);
 
         for (var i = 0; i < 3; i++)
         {
-            items[i] = new GridShape2D(3, 3, Allocator.Temp);
+            items[i] = new GridShape(3, 3, Allocator.Temp);
             for (var y = 0; y < 3; y++)
             for (var x = 0; x < 3; x++)
                 items[i].SetCell(new int2(x, y), true);

@@ -1,16 +1,16 @@
 using System;
-using DopeGrid;
+using DopeGrid.Native;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
 
 [TestFixture]
-public class GridShape2DReadOnlyTests
+public class GridShapeReadOnlyTests
 {
     [Test]
     public void AsReadOnly_CreatesReadOnlyView()
     {
-        using var shape = new GridShape2D(5, 5, Allocator.Temp);
+        using var shape = new GridShape(5, 5, Allocator.Temp);
         shape.SetCell(new int2(0, 0), true);
         shape.SetCell(new int2(2, 2), true);
         shape.SetCell(new int2(4, 4), true);
@@ -32,7 +32,7 @@ public class GridShape2DReadOnlyTests
     [Test]
     public void ReadOnly_GetIndex_CalculatesCorrectly()
     {
-        using var shape = new GridShape2D(3, 4, Allocator.Temp);
+        using var shape = new GridShape(3, 4, Allocator.Temp);
         var readOnly = shape.ToReadOnly();
 
         Assert.AreEqual(0, readOnly.GetIndex(new int2(0, 0)));
@@ -46,8 +46,8 @@ public class GridShape2DReadOnlyTests
     [Test]
     public void ReadOnly_Equals_IdenticalShapes()
     {
-        using var shape1 = new GridShape2D(3, 3, Allocator.Temp);
-        using var shape2 = new GridShape2D(3, 3, Allocator.Temp);
+        using var shape1 = new GridShape(3, 3, Allocator.Temp);
+        using var shape2 = new GridShape(3, 3, Allocator.Temp);
 
         shape1.SetCell(new int2(0, 0), true);
         shape1.SetCell(new int2(1, 1), true);
@@ -69,8 +69,8 @@ public class GridShape2DReadOnlyTests
     [Test]
     public void ReadOnly_Equals_DifferentShapes()
     {
-        using var shape1 = new GridShape2D(3, 3, Allocator.Temp);
-        using var shape2 = new GridShape2D(3, 3, Allocator.Temp);
+        using var shape1 = new GridShape(3, 3, Allocator.Temp);
+        using var shape2 = new GridShape(3, 3, Allocator.Temp);
 
         shape1.SetCell(new int2(0, 0), true);
         shape1.SetCell(new int2(1, 1), true);
@@ -90,8 +90,8 @@ public class GridShape2DReadOnlyTests
     [Test]
     public void ReadOnly_Equals_DifferentDimensions()
     {
-        using var shape1 = new GridShape2D(3, 3, Allocator.Temp);
-        using var shape2 = new GridShape2D(3, 4, Allocator.Temp);
+        using var shape1 = new GridShape(3, 3, Allocator.Temp);
+        using var shape2 = new GridShape(3, 4, Allocator.Temp);
 
         shape1.SetCell(new int2(0, 0), true);
         shape2.SetCell(new int2(0, 0), true);
@@ -105,7 +105,7 @@ public class GridShape2DReadOnlyTests
     [Test]
     public void ReadOnly_Equals_ObjectOverload()
     {
-        using var shape = new GridShape2D(2, 2, Allocator.Temp);
+        using var shape = new GridShape(2, 2, Allocator.Temp);
         shape.SetCell(new int2(0, 0), true);
 
         Assert.Catch<NotSupportedException>(() => shape.ToReadOnly().Equals(null));
@@ -115,8 +115,8 @@ public class GridShape2DReadOnlyTests
     [Test]
     public void ReadOnly_GetHashCode_ConsistentForEqualObjects()
     {
-        using var shape1 = new GridShape2D(3, 3, Allocator.Temp);
-        using var shape2 = new GridShape2D(3, 3, Allocator.Temp);
+        using var shape1 = new GridShape(3, 3, Allocator.Temp);
+        using var shape2 = new GridShape(3, 3, Allocator.Temp);
 
         shape1.SetCell(new int2(1, 1), true);
         shape2.SetCell(new int2(1, 1), true);
@@ -133,7 +133,7 @@ public class GridShape2DReadOnlyTests
     [Test]
     public void ReadOnly_ReflectsChangesToOriginalShape()
     {
-        using var shape = new GridShape2D(3, 3, Allocator.Temp);
+        using var shape = new GridShape(3, 3, Allocator.Temp);
         var readOnly = shape.ToReadOnly();
 
         Assert.AreEqual(0, readOnly.OccupiedSpaceCount);

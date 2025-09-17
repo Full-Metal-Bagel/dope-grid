@@ -1,14 +1,14 @@
-using DopeGrid;
+using DopeGrid.Native;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
 
-public class ImmutableGridShape2DTests
+public class ImmutableGridShapeTests
 {
     [Test]
     public void Empty_ReturnsEmptyShape()
     {
-        var empty = ImmutableGridShape2D.Empty;
+        var empty = ImmutableGridShape.Empty;
 
         Assert.AreEqual(0, empty.Id);
         Assert.AreEqual(int2.zero, empty.Bound);
@@ -19,7 +19,7 @@ public class ImmutableGridShape2DTests
     [Test]
     public void GetOrCreateImmutable_SingleCell()
     {
-        var shape = new GridShape2D(1, 1, Allocator.Temp);
+        var shape = new GridShape(1, 1, Allocator.Temp);
         shape.SetCell(new int2(0, 0), true);
 
         var immutable = shape.ToReadOnly().GetOrCreateImmutable();
@@ -202,7 +202,7 @@ public class ImmutableGridShape2DTests
         var immutable = shape.ToReadOnly().GetOrCreateImmutable();
 
         // Implicit conversion
-        GridShape2D.ReadOnly readOnly = immutable;
+        GridShape.ReadOnly readOnly = immutable;
 
         Assert.AreEqual(immutable.Width, readOnly.Width);
         Assert.AreEqual(immutable.Height, readOnly.Height);
@@ -239,7 +239,7 @@ public class ImmutableGridShape2DTests
     public void GetOrCreateImmutable_RequiresTrimmedShape()
     {
         // Create a shape with empty border
-        var shape = new GridShape2D(5, 5, Allocator.Temp);
+        var shape = new GridShape(5, 5, Allocator.Temp);
         shape.SetCell(new int2(2, 2), true); // Single cell in center
 
         // This should throw because shape is not trimmed
@@ -262,7 +262,7 @@ public class ImmutableGridShape2DTests
     [Test]
     public void Pattern_AccessibleAndCorrect()
     {
-        var shape = new GridShape2D(2, 2, Allocator.Temp);
+        var shape = new GridShape(2, 2, Allocator.Temp);
         shape.SetCell(new int2(0, 0), true);
         shape.SetCell(new int2(1, 1), true);
 

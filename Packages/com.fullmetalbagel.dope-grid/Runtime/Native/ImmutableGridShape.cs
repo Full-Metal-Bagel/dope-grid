@@ -8,12 +8,12 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace DopeGrid;
+namespace DopeGrid.Native;
 
-public readonly record struct ImmutableGridShape2D(int Id)
+public readonly record struct ImmutableGridShape(int Id)
 {
     private ImmutableGridShape2DList.Shapes Shapes => ImmutableGridShape2DList.s_shapes.Value;
-    public static ImmutableGridShape2D Empty => new(0);
+    public static ImmutableGridShape Empty => new(0);
 
     public int Id { get; } = Id;
     public int2 Bound => Shapes.Bounds[Id];
@@ -25,8 +25,8 @@ public readonly record struct ImmutableGridShape2D(int Id)
     public int FreeSpaceCount => Size - OccupiedSpaceCount;
     public bool IsEmpty => Width == 0 || Height == 0;
 
-    public ImmutableGridShape2D Rotate90() => new(Shapes.GetOrCreateRotated90(Id));
-    public ImmutableGridShape2D Flip() => new(Shapes.GetOrCreateFlipped(Id));
+    public ImmutableGridShape Rotate90() => new(Shapes.GetOrCreateRotated90(Id));
+    public ImmutableGridShape Flip() => new(Shapes.GetOrCreateFlipped(Id));
 
     public int GetIndex(int2 pos) => GetIndex(pos.x, pos.y);
     public int GetIndex(int x, int y) => y * Width + x;
@@ -34,10 +34,10 @@ public readonly record struct ImmutableGridShape2D(int Id)
     public bool GetCell(int2 pos) => GetCell(pos.x, pos.y);
     public bool GetCell(int x, int y) => Pattern.IsSet(GetIndex(x, y));
 
-    public static implicit operator GridShape2D.ReadOnly(ImmutableGridShape2D shape) => shape.ToReadOnlyGridShape();
-    public GridShape2D.ReadOnly ToReadOnlyGridShape() => new(Width, Height, Pattern);
+    public static implicit operator GridShape.ReadOnly(ImmutableGridShape shape) => shape.ToReadOnlyGridShape();
+    public GridShape.ReadOnly ToReadOnlyGridShape() => new(Width, Height, Pattern);
 
-    public void CopyTo(GridShape2D other)
+    public void CopyTo(GridShape other)
     {
         ToReadOnlyGridShape().CopyTo(other);
     }
@@ -81,15 +81,15 @@ public static class ImmutableGridShape2DList
         }
     }
 
-    public static ImmutableGridShape2D GetOrCreateImmutable(this GridShape2D shape)
+    public static ImmutableGridShape GetOrCreateImmutable(this GridShape shape)
     {
         return shape.ToReadOnly().GetOrCreateImmutable();
     }
 
-    public static ImmutableGridShape2D GetOrCreateImmutable(this in GridShape2D.ReadOnly shape)
+    public static ImmutableGridShape GetOrCreateImmutable(this in GridShape.ReadOnly shape)
     {
         if (!shape.IsTrimmed()) throw new ArgumentException("shape is not trimmed", nameof(shape));
-        return new ImmutableGridShape2D(s_shapes.Value.GetOrCreateShape(shape));
+        return new ImmutableGridShape(s_shapes.Value.GetOrCreateShape(shape));
     }
 
     internal unsafe class Shapes : IDisposable
@@ -115,11 +115,11 @@ public static class ImmutableGridShape2DList
         }
 
         [Pure, MustUseReturnValue]
-        public GridShape2D.ReadOnly GetReadOnlyShape(int id)
+        public GridShape.ReadOnly GetReadOnlyShape(int id)
         {
             var bound = Bounds[id];
             var pattern = GetPattern(id);
-            return new GridShape2D.ReadOnly(bound, pattern);
+            return new GridShape.ReadOnly(bound, pattern);
         }
 
         [Pure, MustUseReturnValue]
@@ -132,7 +132,7 @@ public static class ImmutableGridShape2DList
         }
 
         [Pure, MustUseReturnValue]
-        public int FindExistingShape(in GridShape2D.ReadOnly shape)
+        public int FindExistingShape(in GridShape.ReadOnly shape)
         {
             var sizeInBytes = (shape.Size + 7) / 8;
             for (var i = 0; i < Bounds.Length; i++)
@@ -149,7 +149,7 @@ public static class ImmutableGridShape2DList
             return -1;
         }
 
-        public int GetOrCreateShape(in GridShape2D.ReadOnly shape)
+        public int GetOrCreateShape(in GridShape.ReadOnly shape)
         {
             var id = FindExistingShape(shape);
             if (id < 0) id = AddShape(shape);
@@ -185,7 +185,7 @@ public static class ImmutableGridShape2DList
             return flippedId;
         }
 
-        private int AddShape(in GridShape2D.ReadOnly shape)
+        private int AddShape(in GridShape.ReadOnly shape)
         {
             var id = Bounds.Length;
 
