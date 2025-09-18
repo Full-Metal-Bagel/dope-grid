@@ -1,151 +1,102 @@
 using System;
-using System.Runtime.InteropServices;
 
 namespace DopeGrid;
 
 public ref struct SpanBitArray
 {
-    private readonly Span<ulong> _words;
+    public Span<byte> Bytes { get; }
+    public int BitLength { get; }
+    public bool IsEmpty => BitLength == 0;
 
-    public int Length { get; }
-    public int WordCount => SpanBitArrayUtility.WordCount(Length);
-    public int Capacity => _words.Length * SpanBitArrayUtility.BitsPerWord;
-    public bool IsEmpty => Length == 0;
-
-    public SpanBitArray(Span<ulong> words, int length)
+    public SpanBitArray(Span<byte> bytes, int bitLength)
     {
-        if (length < 0)
-            throw new ArgumentOutOfRangeException(nameof(length), "Length cannot be negative.");
+        if (bitLength < 0)
+            throw new ArgumentOutOfRangeException(nameof(bitLength), "Length cannot be negative.");
 
-        if (length > words.Length * SpanBitArrayUtility.BitsPerWord)
-            throw new ArgumentException("Provided span is too small for the requested length.", nameof(words));
-
-        _words = words;
-        Length = length;
-    }
-
-    public SpanBitArray(Span<byte> bytes, int length)
-    {
-        if ((bytes.Length & (sizeof(ulong) - 1)) != 0)
-            throw new ArgumentException("Byte span length must be a multiple of sizeof(ulong).", nameof(bytes));
-
-        var words = MemoryMarshal.Cast<byte, ulong>(bytes);
-
-        if (length < 0)
-            throw new ArgumentOutOfRangeException(nameof(length), "Length cannot be negative.");
-
-        if (length > words.Length * SpanBitArrayUtility.BitsPerWord)
+        var byteCount = SpanBitArrayUtility.ByteCount(bitLength);
+        if (byteCount > bytes.Length)
             throw new ArgumentException("Provided span is too small for the requested length.", nameof(bytes));
 
-        _words = words;
-        Length = length;
+        Bytes = bytes[..byteCount];
+        BitLength = bitLength;
     }
 
-    public Span<ulong> Words => _words.Slice(0, WordCount);
-    public Span<byte> AsBytes() => MemoryMarshal.AsBytes(Words);
-    public Span<byte> AsTrimmedBytes() => AsBytes().Slice(0, (Length + 7) / 8);
-    public ReadOnlySpanBitArray AsReadOnly() => new ReadOnlySpanBitArray(_words, Length);
+    public ReadOnlySpanBitArray AsReadOnly() => new(Bytes, BitLength);
 
     public bool Get(int index) => AsReadOnly().Get(index);
     public ulong GetBits(int index, int bitCount = 1) => AsReadOnly().GetBits(index, bitCount);
     public bool TestAny(int index, int bitCount) => AsReadOnly().TestAny(index, bitCount);
     public bool TestAll(int index, int bitCount) => AsReadOnly().TestAll(index, bitCount);
     public int CountBits(int index, int bitCount) => AsReadOnly().CountBits(index, bitCount);
+    public bool SequenceEqual(SpanBitArray other) => AsReadOnly().SequenceEqual(other.AsReadOnly());
+    public bool SequenceEqual(ReadOnlySpanBitArray other) => AsReadOnly().SequenceEqual(other);
 
     public void Set(int index, bool value)
     {
-        SpanBitArrayUtility.ValidateIndex(Length, index);
-        var wordIndex = index >> 6;
-        var bitIndex = index & 63;
-        var mask = 1UL << bitIndex;
-        ref var word = ref _words[wordIndex];
-        word = value ? word | mask : word & ~mask;
+        SpanBitArrayUtility.ValidateIndex(BitLength, index);
+        var byteIndex = index >> 3;
+        var bitIndex = index & 7;
+        var mask = (byte)(1 << bitIndex);
+        ref var b = ref Bytes[byteIndex];
+        b = value ? (byte)(b | mask) : (byte)(b & ~mask);
     }
 
     public void Clear()
     {
-        var active = Words;
-        if (!active.IsEmpty)
-            active.Clear();
+        if (!IsEmpty) Bytes.Clear();
     }
 
     public void SetAll(bool value)
     {
-        SetRange(0, Length, value);
+        SetRange(0, BitLength, value);
     }
 
     public void SetRange(int index, int bitCount, bool value)
     {
-        SpanBitArrayUtility.ValidateRange(Length, index, bitCount);
+        SpanBitArrayUtility.ValidateRange(BitLength, index, bitCount);
         if (bitCount == 0)
             return;
 
-        var wordIndex = index >> 6;
-        var bitOffset = index & 63;
+        var byteIndex = index >> 3;
+        var bitOffset = index & 7;
         var remaining = bitCount;
 
         while (remaining > 0)
         {
-            var bits = Math.Min(SpanBitArrayUtility.BitsPerWord - bitOffset, remaining);
-            var mask = SpanBitArrayUtility.Mask(bits) << bitOffset;
-            ref var word = ref _words[wordIndex];
-            word = value ? word | mask : word & ~mask;
+            var bits = Math.Min(SpanBitArrayUtility.BitsPerByte - bitOffset, remaining);
+            var mask = (byte)(((1 << bits) - 1) << bitOffset);
+            ref var b = ref Bytes[byteIndex];
+            b = value ? (byte)(b | mask) : (byte)(b & ~mask);
 
             remaining -= bits;
-            wordIndex++;
+            byteIndex++;
             bitOffset = 0;
         }
     }
 
     public void SetBits(int index, ulong value, int bitCount)
     {
-        SpanBitArrayUtility.ValidateLimitedRange(Length, index, bitCount);
+        SpanBitArrayUtility.ValidateLimitedRange(BitLength, index, bitCount);
         if (bitCount == 0)
             return;
 
-        var wordIndex = index >> 6;
-        var bitOffset = index & 63;
-        var bitsInFirstWord = Math.Min(SpanBitArrayUtility.BitsPerWord - bitOffset, bitCount);
+        var byteIndex = index >> 3;
+        var bitOffset = index & 7;
+        var remaining = bitCount;
+        var valueShift = 0;
 
-        var lowerMask = SpanBitArrayUtility.Mask(bitsInFirstWord) << bitOffset;
-        var lowerValue = (value & SpanBitArrayUtility.Mask(bitsInFirstWord)) << bitOffset;
-        ref var lowerWord = ref _words[wordIndex];
-        lowerWord = (lowerWord & ~lowerMask) | lowerValue;
-
-        var remaining = bitCount - bitsInFirstWord;
-        if (remaining > 0)
+        while (remaining > 0)
         {
-            var upperMask = SpanBitArrayUtility.Mask(remaining);
-            var upperValue = (value >> bitsInFirstWord) & upperMask;
-            ref var upperWord = ref _words[wordIndex + 1];
-            upperWord = (upperWord & ~upperMask) | upperValue;
+            var bits = Math.Min(SpanBitArrayUtility.BitsPerByte - bitOffset, remaining);
+            var mask = (byte)(((1 << bits) - 1) << bitOffset);
+            var chunk = (byte)((value >> valueShift) & ((1UL << bits) - 1));
+            ref var b = ref Bytes[byteIndex];
+            b = (byte)((b & ~mask) | ((chunk << bitOffset) & mask));
+
+            remaining -= bits;
+            valueShift += bits;
+            byteIndex++;
+            bitOffset = 0;
         }
     }
-
-    public void CopyFrom(ReadOnlySpan<byte> source)
-    {
-        var byteCount = (Length + 7) / 8;
-        if (source.Length < byteCount)
-            throw new ArgumentException("Source span is too small.", nameof(source));
-
-        if (byteCount == 0)
-            return;
-
-        source[..byteCount].CopyTo(AsBytes());
-    }
-
-    public void CopyFrom(ReadOnlySpanBitArray source)
-    {
-        if (source.Length != Length)
-            throw new ArgumentException("Source must have the same length as destination.", nameof(source));
-
-        var byteCount = (Length + 7) / 8;
-        if (byteCount == 0)
-            return;
-
-        source.AsBytes()[..byteCount].CopyTo(AsBytes());
-    }
-
-    public void CopyTo(SpanBitArray destination) => AsReadOnly().CopyTo(destination);
-    public void CopyTo(Span<byte> destination) => AsReadOnly().CopyTo(destination);
 }

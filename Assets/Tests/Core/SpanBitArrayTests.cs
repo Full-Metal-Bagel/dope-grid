@@ -5,100 +5,88 @@ using NUnit.Framework;
 [TestFixture]
 public class SpanBitArrayTests
 {
-    [Test]
-    public void Constructor_FromUlongSpan_SetsProperties()
-    {
-        Span<ulong> buffer = stackalloc ulong[2];
-        var bits = new SpanBitArray(buffer, 128);
+    private static int ByteCount(int bitLength) => (bitLength + 7) / 8;
 
-        Assert.AreEqual(128, bits.Length);
-        Assert.AreEqual(2, bits.WordCount);
-        Assert.AreEqual(128, bits.Capacity);
+    [Test]
+    public void Constructor_FromSpan_SetsProperties()
+    {
+        const int bitLength = 128;
+        Span<byte> buffer = stackalloc byte[ByteCount(bitLength)];
+        var bits = new SpanBitArray(buffer, bitLength);
+
+        Assert.AreEqual(bitLength, bits.BitLength);
+        Assert.AreEqual(ByteCount(bitLength), bits.Bytes.Length);
         Assert.IsFalse(bits.IsEmpty);
     }
 
     [Test]
-    public void Constructor_FromUlongSpan_ThrowsWhenLengthTooLarge()
+    public void Constructor_FromSpan_ThrowsWhenLengthTooLarge()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            Span<ulong> buffer = stackalloc ulong[1];
-            _ = new SpanBitArray(buffer, 65);
-        });
-    }
-
-    [Test]
-    public void Constructor_FromByteSpan_Works()
-    {
-        Span<byte> bytes = stackalloc byte[16];
-        var bits = new SpanBitArray(bytes, 128);
-        Assert.AreEqual(128, bits.Length);
-    }
-
-    [Test]
-    public void Constructor_FromByteSpan_ThrowsWhenMisaligned()
-    {
-        Assert.Throws<ArgumentException>(() =>
-        {
-            Span<byte> bytes = stackalloc byte[15];
-            _ = new SpanBitArray(bytes, 120);
+            Span<byte> buffer = stackalloc byte[16];
+            _ = new SpanBitArray(buffer, 129);
         });
     }
 
     [Test]
     public void SetAndGet_BoundaryBits_Works()
     {
-        Span<ulong> buffer = stackalloc ulong[2];
+        const int bitLength = 128;
+        Span<byte> buffer = stackalloc byte[ByteCount(bitLength)];
         buffer.Clear();
-        var bits = new SpanBitArray(buffer, 128);
+        var bits = new SpanBitArray(buffer, bitLength);
 
         bits.Set(0, true);
-        bits.Set(bits.Length - 1, true);
+        bits.Set(bitLength - 1, true);
 
         Assert.IsTrue(bits.Get(0));
-        Assert.IsTrue(bits.Get(bits.Length - 1));
+        Assert.IsTrue(bits.Get(bitLength - 1));
         Assert.IsFalse(bits.Get(1));
     }
 
     [Test]
-    public void SetRange_CrossesMultipleWords()
+    public void SetRange_CrossesMultipleBytes()
     {
-        Span<ulong> buffer = stackalloc ulong[3];
+        const int bitLength = 160;
+        Span<byte> buffer = stackalloc byte[ByteCount(bitLength)];
         buffer.Clear();
-        var bits = new SpanBitArray(buffer, 160);
+        var bits = new SpanBitArray(buffer, bitLength);
 
         bits.SetRange(30, 100, true);
         var readOnly = bits.AsReadOnly();
 
         Assert.IsTrue(readOnly.TestAll(30, 100));
-        Assert.AreEqual(100, readOnly.CountBits(0, bits.Length));
+        Assert.AreEqual(100, readOnly.CountBits(0, bitLength));
 
         bits.SetRange(60, 20, false);
         readOnly = bits.AsReadOnly();
-        Assert.AreEqual(80, readOnly.CountBits(0, bits.Length));
+        Assert.AreEqual(80, readOnly.CountBits(0, bitLength));
         Assert.IsFalse(readOnly.TestAll(30, 100));
     }
 
     [Test]
     public void SetAllAndClear_UpdateAllBits()
     {
-        Span<ulong> buffer = stackalloc ulong[2];
+        const int bitLength = 128;
+        Span<byte> buffer = stackalloc byte[ByteCount(bitLength)];
         buffer.Clear();
-        var bits = new SpanBitArray(buffer, 128);
+        var bits = new SpanBitArray(buffer, bitLength);
 
         bits.SetAll(true);
-        Assert.IsTrue(bits.AsReadOnly().TestAll(0, bits.Length));
+        Assert.IsTrue(bits.AsReadOnly().TestAll(0, bitLength));
 
         bits.Clear();
-        Assert.IsFalse(bits.AsReadOnly().TestAny(0, bits.Length));
+        Assert.IsFalse(bits.AsReadOnly().TestAny(0, bitLength));
     }
 
     [Test]
-    public void SetBits_HandlesFullWord()
+    public void SetBits_HandlesFullRange()
     {
-        Span<ulong> buffer = stackalloc ulong[1];
+        const int bitLength = 64;
+        Span<byte> buffer = stackalloc byte[ByteCount(bitLength)];
         buffer.Clear();
-        var bits = new SpanBitArray(buffer, 64);
+        var bits = new SpanBitArray(buffer, bitLength);
 
         const ulong pattern = 0xDEADBEEFCAFEBABE;
         bits.SetBits(0, pattern, 64);
@@ -111,134 +99,76 @@ public class SpanBitArrayTests
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            Span<ulong> buffer = stackalloc ulong[1];
+            Span<byte> buffer = stackalloc byte[ByteCount(64)];
             var bits = new SpanBitArray(buffer, 64);
+
             bits.SetBits(0, 0, 0);
         });
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            Span<ulong> buffer = stackalloc ulong[1];
+            Span<byte> buffer = stackalloc byte[ByteCount(64)];
             var bits = new SpanBitArray(buffer, 64);
+
             bits.SetBits(0, 0, 65);
         });
     }
 
     [Test]
-    public void CopyFromByteSpan_ThrowsWhenSourceTooSmall()
+    public void SequenceEqual_IgnoresTrailingBitsBeyondLength()
     {
-        Assert.Throws<ArgumentException>(() =>
-        {
-            Span<ulong> buffer = stackalloc ulong[2];
-            var bits = new SpanBitArray(buffer, 128);
+        const int bitLength = 70;
+        Span<byte> buffer1 = stackalloc byte[ByteCount(bitLength)];
+        Span<byte> buffer2 = stackalloc byte[ByteCount(bitLength)];
+        buffer1.Clear();
+        buffer2.Clear();
 
-            Span<byte> smallSource = stackalloc byte[10];
-            bits.CopyFrom(smallSource);
-        });
+        var bits1 = new SpanBitArray(buffer1, bitLength);
+        var bits2 = new SpanBitArray(buffer2, bitLength);
+        bits1.Set(5, true);
+        bits2.Set(5, true);
+
+        buffer1[^1] = 0xFF;
+        buffer2[^1] = 0;
+
+        Assert.IsTrue(bits1.SequenceEqual(bits2));
+
+        bits2.Set(6, true);
+        Assert.IsFalse(bits1.SequenceEqual(bits2));
     }
 
     [Test]
-    public void CopyFromReadOnlySpanBitArray_ThrowsWhenLengthMismatch()
+    public void SequenceEqual_DifferentLengths_ReturnsFalse()
     {
-        Assert.Throws<ArgumentException>(() =>
-        {
-            Span<ulong> sourceBuffer = stackalloc ulong[1];
-            Span<ulong> destinationBuffer = stackalloc ulong[2];
+        Span<byte> buffer1 = stackalloc byte[ByteCount(32)];
+        Span<byte> buffer2 = stackalloc byte[ByteCount(16)];
+        var bits1 = new SpanBitArray(buffer1, 32);
+        var bits2 = new SpanBitArray(buffer2, 16);
 
-            var source = new SpanBitArray(sourceBuffer, 64);
-            var destination = new SpanBitArray(destinationBuffer, 128);
-            destination.CopyFrom(source.AsReadOnly());
-        });
-    }
-
-    [Test]
-    public void CopyToSpanBitArray_CopiesExactly()
-    {
-        Span<ulong> sourceBuffer = stackalloc ulong[2];
-        Span<ulong> destinationBuffer = stackalloc ulong[2];
-        sourceBuffer.Clear();
-        destinationBuffer.Clear();
-
-        var source = new SpanBitArray(sourceBuffer, 128);
-        source.SetRange(10, 5, true);
-        source.Set(100, true);
-
-        var destination = new SpanBitArray(destinationBuffer, 128);
-        source.CopyTo(destination);
-
-        var readOnly = destination.AsReadOnly();
-        Assert.AreEqual(6, readOnly.CountBits(0, destination.Length));
-        Assert.IsTrue(readOnly.TestAll(10, 5));
-        Assert.IsTrue(readOnly.Get(100));
-    }
-
-    [Test]
-    public void CopyToByteSpan_WritesTrimmedBytes()
-    {
-        Span<ulong> buffer = stackalloc ulong[2];
-        buffer.Clear();
-        var bits = new SpanBitArray(buffer, 70);
-        bits.SetBits(0, 0xFFFF, 16);
-        bits.Set(69, true);
-
-        Span<byte> destination = stackalloc byte[16];
-        destination.Clear();
-
-        bits.CopyTo(destination);
-
-        var expected = bits.AsReadOnly().AsTrimmedBytes();
-        for (var i = 0; i < expected.Length; i++)
-        {
-            Assert.AreEqual(expected[i], destination[i]);
-        }
-
-        for (var i = expected.Length; i < destination.Length; i++)
-        {
-            Assert.AreEqual(0, destination[i]);
-        }
-    }
-
-    [Test]
-    public void CopyToByteSpan_ThrowsWhenDestinationTooSmall()
-    {
-        Assert.Throws<ArgumentException>(() =>
-        {
-            Span<byte> destination = stackalloc byte[5];
-            Span<ulong> buffer = stackalloc ulong[2];
-            var bits = new SpanBitArray(buffer, 128);
-            bits.CopyTo(destination);
-        });
+        Assert.IsFalse(bits1.SequenceEqual(bits2));
     }
 }
 
 [TestFixture]
 public class ReadOnlySpanBitArrayTests
 {
+    private static int ByteCount(int bitLength) => (bitLength + 7) / 8;
+
     [Test]
-    public void Constructor_FromUlongSpan_ThrowsWhenLengthTooLarge()
+    public void Constructor_FromSpan_ThrowsWhenLengthTooLarge()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            ReadOnlySpan<ulong> buffer = stackalloc ulong[1];
-            _ = new ReadOnlySpanBitArray(buffer, 65);
+            ReadOnlySpan<byte> buffer = stackalloc byte[16];
+            _ = new ReadOnlySpanBitArray(buffer, 129);
         });
     }
 
     [Test]
-    public void Constructor_FromByteSpan_ThrowsWhenMisaligned()
+    public void GetBits_CrossesByteBoundary_ReturnsCombinedValue()
     {
-        Assert.Throws<ArgumentException>(() =>
-        {
-            ReadOnlySpan<byte> bytes = stackalloc byte[15];
-            _ = new ReadOnlySpanBitArray(bytes, 120);
-        });
-    }
-
-    [Test]
-    public void GetBits_CrossesWordBoundary_ReturnsCombinedValue()
-    {
-        Span<ulong> buffer = stackalloc ulong[2];
-        buffer.Clear();
-        var writable = new SpanBitArray(buffer, 128);
+        Span<byte> writableBytes = stackalloc byte[ByteCount(128)];
+        writableBytes.Clear();
+        var writable = new SpanBitArray(writableBytes, 128);
         writable.SetBits(60, 0b1_0000_0000_0001, 13);
 
         var readOnly = writable.AsReadOnly();
@@ -249,7 +179,7 @@ public class ReadOnlySpanBitArrayTests
     [Test]
     public void TestAny_ReturnsFalseWhenRangeEmpty()
     {
-        Span<ulong> buffer = stackalloc ulong[1];
+        Span<byte> buffer = stackalloc byte[ByteCount(64)];
         buffer.Clear();
         var readOnly = new SpanBitArray(buffer, 64).AsReadOnly();
 
@@ -260,7 +190,7 @@ public class ReadOnlySpanBitArrayTests
     [Test]
     public void TestAll_ReturnsTrueForZeroLength()
     {
-        Span<ulong> buffer = stackalloc ulong[1];
+        Span<byte> buffer = stackalloc byte[ByteCount(64)];
         buffer.Clear();
         var readOnly = new SpanBitArray(buffer, 64).AsReadOnly();
 
@@ -268,9 +198,9 @@ public class ReadOnlySpanBitArrayTests
     }
 
     [Test]
-    public void CountBits_ComputesAcrossWords()
+    public void CountBits_ComputesAcrossBytes()
     {
-        Span<ulong> buffer = stackalloc ulong[2];
+        Span<byte> buffer = stackalloc byte[ByteCount(128)];
         buffer.Clear();
         var writable = new SpanBitArray(buffer, 128);
         writable.Set(0, true);
@@ -285,49 +215,39 @@ public class ReadOnlySpanBitArrayTests
     }
 
     [Test]
-    public void CopyToByteSpan_ThrowsWhenDestinationTooSmall()
+    public void SequenceEqual_IgnoresTrailingBitsBeyondLength()
     {
-        Assert.Throws<ArgumentException>(() =>
-        {
-            Span<ulong> buffer = stackalloc ulong[2];
-            var readOnly = new SpanBitArray(buffer, 128).AsReadOnly();
+        const int bitLength = 70;
+        Span<byte> buffer1 = stackalloc byte[ByteCount(bitLength)];
+        Span<byte> buffer2 = stackalloc byte[ByteCount(bitLength)];
+        buffer1.Clear();
+        buffer2.Clear();
 
-            Span<byte> destination = stackalloc byte[5];
-            readOnly.CopyTo(destination);
-        });
+        var writable1 = new SpanBitArray(buffer1, bitLength);
+        var writable2 = new SpanBitArray(buffer2, bitLength);
+        writable1.Set(5, true);
+        writable2.Set(5, true);
+
+        buffer1[^1] = 0xFF;
+        buffer2[^1] = 0;
+
+        var readOnly1 = writable1.AsReadOnly();
+        var readOnly2 = writable2.AsReadOnly();
+        Assert.IsTrue(readOnly1.SequenceEqual(readOnly2));
+
+        writable2.Set(6, true);
+        readOnly2 = writable2.AsReadOnly();
+        Assert.IsFalse(readOnly1.SequenceEqual(readOnly2));
     }
 
     [Test]
-    public void CopyToSpanBitArray_CopiesBits()
+    public void SequenceEqual_DifferentLengths_ReturnsFalse()
     {
-        Span<ulong> sourceBuffer = stackalloc ulong[2];
-        Span<ulong> destinationBuffer = stackalloc ulong[2];
-        sourceBuffer.Clear();
-        destinationBuffer.Clear();
+        Span<byte> buffer1 = stackalloc byte[ByteCount(32)];
+        Span<byte> buffer2 = stackalloc byte[ByteCount(16)];
+        var readOnly1 = new SpanBitArray(buffer1, 32).AsReadOnly();
+        var readOnly2 = new SpanBitArray(buffer2, 16).AsReadOnly();
 
-        var writable = new SpanBitArray(sourceBuffer, 128);
-        writable.SetBits(40, 0x1234, 16);
-        writable.Set(90, true);
-
-        var destination = new SpanBitArray(destinationBuffer, 128);
-        writable.AsReadOnly().CopyTo(destination);
-
-        Assert.AreEqual(0x34, destination.AsReadOnly().AsBytes()[5]);
-        Assert.IsTrue(destination.Get(90));
-    }
-
-    [Test]
-    public void CopyToSpanBitArray_ThrowsWhenLengthMismatch()
-    {
-        Assert.Throws<ArgumentException>(() =>
-        {
-            Span<ulong> sourceBuffer = stackalloc ulong[2];
-            Span<ulong> destinationBuffer = stackalloc ulong[1];
-
-            var writable = new SpanBitArray(sourceBuffer, 128);
-            var destination = new SpanBitArray(destinationBuffer, 64);
-
-            writable.AsReadOnly().CopyTo(destination);
-        });
+        Assert.IsFalse(readOnly1.SequenceEqual(readOnly2));
     }
 }

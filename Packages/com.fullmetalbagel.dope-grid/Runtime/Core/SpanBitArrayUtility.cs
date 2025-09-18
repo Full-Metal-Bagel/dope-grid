@@ -2,13 +2,14 @@ using System;
 
 namespace DopeGrid;
 
-internal static class SpanBitArrayUtility
+public static class SpanBitArrayUtility
 {
-    internal const int BitsPerWord = 64;
+    internal const int BitsPerChunk = 64;
+    internal const int BitsPerByte = 8;
 
-    internal static int WordCount(int length)
+    public static int ByteCount(int bitLength)
     {
-        return length <= 0 ? 0 : (length + BitsPerWord - 1) / BitsPerWord;
+        return bitLength <= 0 ? 0 : (bitLength + BitsPerByte - 1) / BitsPerByte;
     }
 
     internal static void ValidateIndex(int length, int index)
@@ -37,15 +38,10 @@ internal static class SpanBitArrayUtility
 
     internal static void ValidateLimitedRange(int length, int index, int bitCount)
     {
-        if (bitCount <= 0 || bitCount > BitsPerWord)
+        if (bitCount <= 0 || bitCount > BitsPerChunk)
             throw new ArgumentOutOfRangeException(nameof(bitCount), "Bit count must be between 1 and 64.");
 
         ValidateRange(length, index, bitCount);
-    }
-
-    internal static ulong Mask(int bitCount)
-    {
-        return bitCount >= BitsPerWord ? ulong.MaxValue : (1UL << bitCount) - 1UL;
     }
 
     internal static int PopCount(ulong value)
