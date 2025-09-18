@@ -21,6 +21,7 @@ public ref struct SpanBitArray
         BitLength = bitLength;
     }
 
+    public static implicit operator ReadOnlySpanBitArray(SpanBitArray bits) => bits.AsReadOnly();
     public ReadOnlySpanBitArray AsReadOnly() => new(Bytes, BitLength);
 
     public bool Get(int index) => AsReadOnly().Get(index);
@@ -30,6 +31,8 @@ public ref struct SpanBitArray
     public int CountBits(int index, int bitCount) => AsReadOnly().CountBits(index, bitCount);
     public bool SequenceEqual(SpanBitArray other) => AsReadOnly().SequenceEqual(other.AsReadOnly());
     public bool SequenceEqual(ReadOnlySpanBitArray other) => AsReadOnly().SequenceEqual(other);
+    public void CopyTo(SpanBitArray other) => AsReadOnly().CopyTo(other);
+    public void CopyTo(SpanBitArray other, int destIndex, int sourceIndex, int bitCount) => AsReadOnly().CopyTo(other, destIndex, sourceIndex, bitCount);
 
     public void Set(int index, bool value)
     {

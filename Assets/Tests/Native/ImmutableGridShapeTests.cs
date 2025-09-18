@@ -271,10 +271,10 @@ public class ImmutableGridShapeTests
 
         var pattern = immutable.Pattern;
 
-        Assert.IsTrue(pattern.IsSet(0)); // (0,0)
-        Assert.IsFalse(pattern.IsSet(1)); // (1,0)
-        Assert.IsFalse(pattern.IsSet(2)); // (0,1)
-        Assert.IsTrue(pattern.IsSet(3)); // (1,1)
+        Assert.IsTrue(pattern.Get(0)); // (0,0)
+        Assert.IsFalse(pattern.Get(1)); // (1,0)
+        Assert.IsFalse(pattern.Get(2)); // (0,1)
+        Assert.IsTrue(pattern.Get(3)); // (1,1)
 
         shape.Dispose();
         trimmedShape.Dispose();

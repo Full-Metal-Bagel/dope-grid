@@ -21,8 +21,6 @@ public readonly ref struct ReadOnlySpanBitArray
         BitLength = bitLength;
     }
 
-    public ReadOnlySpan<byte> AsTrimmedBytes() => Bytes;
-
     public bool Get(int index)
     {
         SpanBitArrayUtility.ValidateIndex(BitLength, index);
@@ -159,6 +157,11 @@ public readonly ref struct ReadOnlySpanBitArray
         return (Bytes[fullBytes] & mask) == (other.Bytes[fullBytes] & mask);
     }
 
+    public void CopyTo(SpanBitArray other)
+    {
+        CopyTo(other, 0, 0, BitLength);
+    }
+
     public void CopyTo(SpanBitArray other, int destIndex, int sourceIndex, int bitCount)
     {
         SpanBitArrayUtility.ValidateRange(BitLength, sourceIndex, bitCount);
@@ -167,85 +170,63 @@ public readonly ref struct ReadOnlySpanBitArray
         if (bitCount == 0)
             return;
 
-        var sourceBitOffset = sourceIndex & 7;
-        var destBitOffset = destIndex & 7;
-
-        // Fast path: fully byte-aligned copy
-        if (sourceBitOffset == 0 && destBitOffset == 0 && (bitCount & 7) == 0)
-        {
-            var sourceByteIndex = sourceIndex >> 3;
-            var destByteIndex = destIndex >> 3;
-            var byteCount = bitCount >> 3;
-            Bytes.Slice(sourceByteIndex, byteCount).CopyTo(other.Bytes.Slice(destByteIndex, byteCount));
-            return;
-        }
-
-        // Fast path: same bit alignment - can copy bytes in the middle
-        if (sourceBitOffset == destBitOffset && bitCount >= 8)
-        {
-            var sourceBitIndex = sourceIndex;
-            var destBitIndex = destIndex;
-            var remaining = bitCount;
-
-            // Handle unaligned prefix bits (if any)
-            if (sourceBitOffset != 0)
-            {
-                var prefixBits = Math.Min(8 - sourceBitOffset, remaining);
-                var prefixValue = GetBits(sourceBitIndex, prefixBits);
-                other.SetBits(destBitIndex, prefixValue, prefixBits);
-
-                sourceBitIndex += prefixBits;
-                destBitIndex += prefixBits;
-                remaining -= prefixBits;
-            }
-
-            // Copy whole bytes in the middle
-            if (remaining >= 8)
-            {
-                var byteCount = remaining >> 3;
-                var sourceByteIndex = sourceBitIndex >> 3;
-                var destByteIndex = destBitIndex >> 3;
-                Bytes.Slice(sourceByteIndex, byteCount).CopyTo(other.Bytes.Slice(destByteIndex, byteCount));
-
-                var bitsCopied = byteCount << 3;
-                sourceBitIndex += bitsCopied;
-                destBitIndex += bitsCopied;
-                remaining -= bitsCopied;
-            }
-
-            // Handle remaining suffix bits (if any)
-            if (remaining > 0)
-            {
-                var suffixValue = GetBits(sourceBitIndex, remaining);
-                other.SetBits(destBitIndex, suffixValue, remaining);
-            }
-
-            return;
-        }
-
-        // General case: different alignments or small copies
         var srcIndex = sourceIndex;
         var dstIndex = destIndex;
         var bitsLeft = bitCount;
 
-        // Process in chunks, optimizing for larger chunks when possible
-        while (bitsLeft > 0)
+        // Align destination to byte boundary to enable bulk copying
+        var destBitOffset = dstIndex & 7;
+        if (destBitOffset != 0)
         {
-            // Try to process 64 bits at a time for better performance
-            var chunkSize = Math.Min(bitsLeft, 64);
+            var prefix = Math.Min(8 - destBitOffset, bitsLeft);
+            var prefixValue = GetBits(srcIndex, prefix);
+            other.SetBits(dstIndex, prefixValue, prefix);
 
-            // For smaller remaining bits, process them all at once
-            if (bitsLeft <= 8)
+            srcIndex += prefix;
+            dstIndex += prefix;
+            bitsLeft -= prefix;
+        }
+
+        if (bitsLeft == 0)
+            return;
+
+        // Copy whole bytes while possible
+        if (bitsLeft >= 8)
+        {
+            var srcBitOffset = srcIndex & 7;
+            var srcByteIndex = srcIndex >> 3;
+            var destByteIndex = dstIndex >> 3;
+            var fullBytes = bitsLeft >> 3;
+
+            var destSlice = other.Bytes.Slice(destByteIndex, fullBytes);
+
+            if (srcBitOffset == 0)
             {
-                chunkSize = bitsLeft;
+                Bytes.Slice(srcByteIndex, fullBytes).CopyTo(destSlice);
+            }
+            else
+            {
+                var shiftLeft = 8 - srcBitOffset;
+                for (var i = 0; i < fullBytes; i++)
+                {
+                    var current = Bytes[srcByteIndex + i];
+                    var nextIndex = srcByteIndex + i + 1;
+                    var next = nextIndex < Bytes.Length ? Bytes[nextIndex] : (byte)0;
+                    destSlice[i] = (byte)((current >> srcBitOffset) | (next << shiftLeft));
+                }
             }
 
-            var chunk = GetBits(srcIndex, chunkSize);
-            other.SetBits(dstIndex, chunk, chunkSize);
-
-            srcIndex += chunkSize;
-            dstIndex += chunkSize;
-            bitsLeft -= chunkSize;
+            var bitsCopied = fullBytes << 3;
+            srcIndex += bitsCopied;
+            dstIndex += bitsCopied;
+            bitsLeft -= bitsCopied;
         }
+
+        if (bitsLeft == 0)
+            return;
+
+        // Copy any remaining bits with bit-level helper
+        var tail = GetBits(srcIndex, bitsLeft);
+        other.SetBits(dstIndex, tail, bitsLeft);
     }
 }

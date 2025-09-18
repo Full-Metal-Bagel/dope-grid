@@ -16,7 +16,7 @@ public class ImmutableShapeFactoryTests
 
         // Verify pattern
         var pattern = immutable.Pattern;
-        Assert.IsTrue(pattern.IsSet(0));
+        Assert.IsTrue(pattern.Get(0));
     }
 
     [Test]
@@ -32,7 +32,7 @@ public class ImmutableShapeFactoryTests
         var pattern = immutable.Pattern;
         for (var i = 0; i < 4; i++)
         {
-            Assert.IsTrue(pattern.IsSet(i));
+            Assert.IsTrue(pattern.Get(i));
         }
     }
 
@@ -49,7 +49,7 @@ public class ImmutableShapeFactoryTests
         var pattern = immutable.Pattern;
         for (var i = 0; i < 9; i++)
         {
-            Assert.IsTrue(pattern.IsSet(i));
+            Assert.IsTrue(pattern.Get(i));
         }
     }
 
@@ -64,10 +64,10 @@ public class ImmutableShapeFactoryTests
 
         // Verify L pattern (0,0), (0,1), (1,1)
         var pattern = immutable.Pattern;
-        Assert.IsTrue(pattern.IsSet(0));  // (0,0)
-        Assert.IsTrue(pattern.IsSet(2));  // (0,1)
-        Assert.IsTrue(pattern.IsSet(3));  // (1,1)
-        Assert.IsFalse(pattern.IsSet(1)); // (1,0)
+        Assert.IsTrue(pattern.Get(0));  // (0,0)
+        Assert.IsTrue(pattern.Get(2));  // (0,1)
+        Assert.IsTrue(pattern.Get(3));  // (1,1)
+        Assert.IsFalse(pattern.Get(1)); // (1,0)
     }
 
     [Test]
@@ -81,12 +81,12 @@ public class ImmutableShapeFactoryTests
 
         // Verify T pattern - top row fully filled, bottom row middle only
         var pattern = immutable.Pattern;
-        Assert.IsTrue(pattern.IsSet(0));  // (0,0)
-        Assert.IsTrue(pattern.IsSet(1));  // (1,0)
-        Assert.IsTrue(pattern.IsSet(2));  // (2,0)
-        Assert.IsFalse(pattern.IsSet(3)); // (0,1)
-        Assert.IsTrue(pattern.IsSet(4));  // (1,1)
-        Assert.IsFalse(pattern.IsSet(5)); // (2,1)
+        Assert.IsTrue(pattern.Get(0));  // (0,0)
+        Assert.IsTrue(pattern.Get(1));  // (1,0)
+        Assert.IsTrue(pattern.Get(2));  // (2,0)
+        Assert.IsFalse(pattern.Get(3)); // (0,1)
+        Assert.IsTrue(pattern.Get(4));  // (1,1)
+        Assert.IsFalse(pattern.Get(5)); // (2,1)
     }
 
     [Test]
@@ -100,15 +100,15 @@ public class ImmutableShapeFactoryTests
 
         // Verify cross pattern
         var pattern = immutable.Pattern;
-        Assert.IsFalse(pattern.IsSet(0)); // (0,0)
-        Assert.IsTrue(pattern.IsSet(1));  // (1,0)
-        Assert.IsFalse(pattern.IsSet(2)); // (2,0)
-        Assert.IsTrue(pattern.IsSet(3));  // (0,1)
-        Assert.IsTrue(pattern.IsSet(4));  // (1,1)
-        Assert.IsTrue(pattern.IsSet(5));  // (2,1)
-        Assert.IsFalse(pattern.IsSet(6)); // (0,2)
-        Assert.IsTrue(pattern.IsSet(7));  // (1,2)
-        Assert.IsFalse(pattern.IsSet(8)); // (2,2)
+        Assert.IsFalse(pattern.Get(0)); // (0,0)
+        Assert.IsTrue(pattern.Get(1));  // (1,0)
+        Assert.IsFalse(pattern.Get(2)); // (2,0)
+        Assert.IsTrue(pattern.Get(3));  // (0,1)
+        Assert.IsTrue(pattern.Get(4));  // (1,1)
+        Assert.IsTrue(pattern.Get(5));  // (2,1)
+        Assert.IsFalse(pattern.Get(6)); // (0,2)
+        Assert.IsTrue(pattern.Get(7));  // (1,2)
+        Assert.IsFalse(pattern.Get(8)); // (2,2)
     }
 
     [Test]

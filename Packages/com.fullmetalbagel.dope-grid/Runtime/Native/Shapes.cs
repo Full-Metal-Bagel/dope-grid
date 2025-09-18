@@ -124,7 +124,7 @@ public static class Shapes
     {
         var dimensions = shape.GetRotatedDimensions(degree);
         var rotated = new GridShape(dimensions.x, dimensions.y, allocator);
-        shape.RotateBits(degree, rotated.WritableBits);
+        shape.RotateBits(degree, rotated.Bits);
         return rotated;
     }
 
@@ -140,12 +140,7 @@ public static class Shapes
         };
     }
 
-    public static GridShape.ReadOnly RotateBits(this in GridShape.ReadOnly shape, RotationDegree degree, NativeBitArray output)
-    {
-        return shape.RotateBits(degree, output.GetUnsafeBitArray());
-    }
-
-    public static GridShape.ReadOnly RotateBits(this in GridShape.ReadOnly shape, RotationDegree degree, UnsafeBitArray output)
+    public static GridShape.ReadOnly RotateBits(this in GridShape.ReadOnly shape, RotationDegree degree, SpanBitArray output)
     {
         var width = shape.Width;
         var height = shape.Height;
@@ -188,11 +183,11 @@ public static class Shapes
     public static GridShape Flip(this in GridShape.ReadOnly shape, FlipAxis axis, Allocator allocator)
     {
         var flipped = new GridShape(shape.Width, shape.Height, allocator);
-        shape.FlipBits(axis, flipped.WritableBits);
+        shape.FlipBits(axis, flipped.Bits);
         return flipped;
     }
 
-    public static GridShape.ReadOnly FlipBits(this in GridShape.ReadOnly shape, FlipAxis axis, UnsafeBitArray output)
+    public static GridShape.ReadOnly FlipBits(this in GridShape.ReadOnly shape, FlipAxis axis, SpanBitArray output)
     {
         var width = shape.Width;
         var height = shape.Height;
@@ -206,7 +201,7 @@ public static class Shapes
             for (var x = 0; x < width; x++)
             {
                 var sourceIndex = rowStart + x;
-                if (!bits.IsSet(sourceIndex)) continue;
+                if (!bits.Get(sourceIndex)) continue;
 
                 var flippedPos = axis switch
                 {
@@ -336,31 +331,28 @@ public static class Shapes
         var trimmed = new GridShape(newWidth, newHeight, allocator);
 
         // Copy each occupied row segment into the output without per-cell writes
-        unsafe
+        var destBits = trimmed.Bits;
+
+        for (var row = 0; row < newHeight; row++)
         {
-            var destBits = trimmed.WritableBits;
+            var srcIndex = (minY + row) * width + minX;
+            var destIndex = row * newWidth;
 
-            for (var row = 0; row < newHeight; row++)
+            var remaining = newWidth;
+            var offset = 0;
+
+            while (remaining > 0)
             {
-                var srcIndex = (minY + row) * width + minX;
-                var destIndex = row * newWidth;
+                var chunkSize = math.min(remaining, 64);
+                var chunk = bits.GetBits(srcIndex + offset, chunkSize);
 
-                var remaining = newWidth;
-                var offset = 0;
-
-                while (remaining > 0)
+                if (chunk != 0)
                 {
-                    var chunkSize = math.min(remaining, 64);
-                    var chunk = bits.GetBits(srcIndex + offset, chunkSize);
-
-                    if (chunk != 0)
-                    {
-                        destBits.SetBits(destIndex + offset, chunk, chunkSize);
-                    }
-
-                    remaining -= chunkSize;
-                    offset += chunkSize;
+                    destBits.SetBits(destIndex + offset, chunk, chunkSize);
                 }
+
+                remaining -= chunkSize;
+                offset += chunkSize;
             }
         }
 

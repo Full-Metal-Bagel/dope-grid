@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 
@@ -65,13 +64,12 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
     }
 
     public static implicit operator ReadOnly(GridShape shape) => shape.ToReadOnly();
-    public readonly ReadOnly ToReadOnly() => new(Width, Height, Bits);
+    public readonly ReadOnly ToReadOnly() => new(Width, Height, ReadOnlyBits);
 
+    public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on GridShape and GridShape.ReadOnly is not supported.");
     [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
-    public override bool Equals(object? obj) => throw new NotSupportedException();
-    public bool Equals(GridShape other) => Width == other.Width && Height == other.Height && _bits.SequenceEquals(other._bits);
-    public override int GetHashCode() => HashCode.Combine(_bits.IsCreated ? _bits.CalculateHashCode() : 0, Width, Height);
-
+    public override bool Equals(object? obj) => throw new NotSupportedException("Equals(object) on GridShape and GridShape.ReadOnly is not supported.");
+    public readonly bool Equals(GridShape other) => ToReadOnly().Equals(other.ToReadOnly());
     public static bool operator ==(GridShape left, GridShape right) => left.Equals(right);
     public static bool operator !=(GridShape left, GridShape right) => !left.Equals(right);
 
@@ -112,7 +110,7 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
             return clone;
         }
 
-        public unsafe void CopyTo(GridShape other)
+        public void CopyTo(GridShape other)
         {
             if (!other.IsCreated)
                 throw new InvalidOperationException("Cannot copy to a non-created GridShape2D");
@@ -120,21 +118,13 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
             if (Width != other.Width || Height != other.Height)
                 throw new ArgumentException($"Cannot copy to GridShape2D with different dimensions. Source: {Width}x{Height}, Target: {other.Width}x{other.Height}");
 
-            if (Bits.BitLength == 0)
-            {
-                other.Clear();
-                return;
-            }
-
-            var destBits = other.Bits;
-            var sizeInBytes = (Bits.Length + 7) / 8;
-            UnsafeUtility.MemCpy(destBits.Ptr, Bits.Ptr, sizeInBytes);
+            Bits.CopyTo(other.Bits);
         }
 
+        public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on GridShape and GridShape.ReadOnly is not supported.");
         [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
-        public override bool Equals(object? obj) => throw new NotSupportedException();
-        public bool Equals(ReadOnly other) => Width == other.Width && Height == other.Height && Bits.SequenceEquals(other.Bits);
-        public override int GetHashCode() => HashCode.Combine(Bits.CalculateHashCode(), Width, Height);
+        public override bool Equals(object? obj) => throw new NotSupportedException("Equals(object) on GridShape and GridShape.ReadOnly is not supported.");
+        public bool Equals(ReadOnly other) => Width == other.Width && Height == other.Height && Bits.SequenceEqual(other.Bits);
         public static bool operator ==(ReadOnly left, ReadOnly right) => left.Equals(right);
         public static bool operator !=(ReadOnly left, ReadOnly right) => !left.Equals(right);
     }

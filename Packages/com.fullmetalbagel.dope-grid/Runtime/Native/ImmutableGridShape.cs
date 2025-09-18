@@ -20,7 +20,7 @@ public readonly record struct ImmutableGridShape(int Id)
     public int Width => Bound.x;
     public int Height => Bound.y;
     public int Size => Width * Height;
-    public UnsafeBitArray.ReadOnly Pattern => Shapes.GetPattern(Id);
+    public ReadOnlySpanBitArray Pattern => Shapes.GetPattern(Id);
     public int OccupiedSpaceCount => Pattern.CountBits(0, Size);
     public int FreeSpaceCount => Size - OccupiedSpaceCount;
     public bool IsEmpty => Width == 0 || Height == 0;
@@ -32,7 +32,7 @@ public readonly record struct ImmutableGridShape(int Id)
     public int GetIndex(int x, int y) => y * Width + x;
 
     public bool GetCell(int2 pos) => GetCell(pos.x, pos.y);
-    public bool GetCell(int x, int y) => Pattern.IsSet(GetIndex(x, y));
+    public bool GetCell(int x, int y) => Pattern.Get(GetIndex(x, y));
 
     public static implicit operator GridShape.ReadOnly(ImmutableGridShape shape) => shape.ToReadOnlyGridShape();
     public GridShape.ReadOnly ToReadOnlyGridShape() => new(Width, Height, Pattern);
@@ -123,18 +123,19 @@ public static class ImmutableGridShape2DList
         }
 
         [Pure, MustUseReturnValue]
-        public UnsafeBitArray.ReadOnly GetPattern(int id)
+        public SpanBitArray GetPattern(int id)
         {
             var begin = PatternBegins[id];
             var size = Bounds[id];
-            var ptr = (ulong*)UnsafeUtility.AddressOf(ref Patterns.ElementAt(begin));
-            return NativeCollectionExtension.CreateReadOnlyUnsafeBitArray(ptr, size.x * size.y);
+            var ptr = UnsafeUtility.AddressOf(ref Patterns.ElementAt(begin));
+            var bitLength = size.x * size.y;
+            var span = new Span<byte>(ptr, SpanBitArrayUtility.ByteCount(bitLength));
+            return new SpanBitArray(span, bitLength);
         }
 
         [Pure, MustUseReturnValue]
         public int FindExistingShape(in GridShape.ReadOnly shape)
         {
-            var sizeInBytes = (shape.Size + 7) / 8;
             for (var i = 0; i < Bounds.Length; i++)
             {
                 var bound = Bounds[i];
@@ -142,8 +143,7 @@ public static class ImmutableGridShape2DList
                     continue;
 
                 var pattern = GetPattern(i);
-                var result = UnsafeUtility.MemCmp(pattern.Ptr, shape.Bits.Ptr, sizeInBytes);
-                if (result == 0)
+                if (pattern.SequenceEqual(shape.Bits))
                     return i;
             }
             return -1;
@@ -201,9 +201,8 @@ public static class ImmutableGridShape2DList
             Patterns.Resize(Patterns.Length + ulongCount, NativeArrayOptions.ClearMemory);
 
             // Direct memory copy from shape's bit array to patterns
-            var sourcePtr = shape.Bits.Ptr;
-            var destPtr = Patterns.GetUnsafePtr() + patternBegin;
-            UnsafeUtility.MemCpy(destPtr, sourcePtr, sizeInBytes);
+            var pattern = GetPattern(id);
+            shape.Bits.CopyTo(pattern);
             Bounds.Add(new int2(shape.Width, shape.Height));
 
             Rotate90Indices.Add(-1);

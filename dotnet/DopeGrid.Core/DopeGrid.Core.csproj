@@ -20,7 +20,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="../../Packages/com.fullmetalbagel.dope-grid/Runtime/**/*.cs" />
+        <Compile Include="../../Packages/com.fullmetalbagel.dope-grid/Runtime/Core/**/*.cs" />
         <Link Include="../../.editorconfig" />
     </ItemGroup>
 

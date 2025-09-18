@@ -250,4 +250,69 @@ public class ReadOnlySpanBitArrayTests
 
         Assert.IsFalse(readOnly1.SequenceEqual(readOnly2));
     }
+
+    [Test]
+    public void CopyToAlignedSpanBitArray_CopiesExactBits()
+    {
+        Span<byte> sourceBuffer = stackalloc byte[ByteCount(64)];
+        sourceBuffer.Clear();
+        var source = new SpanBitArray(sourceBuffer, 64);
+        source.SetBits(0, 0b1010_1100, 8);
+        source.SetBits(16, 0xFFFF, 16);
+
+        Span<byte> destinationBuffer = stackalloc byte[ByteCount(64)];
+        destinationBuffer.Fill(0x55);
+        var destination = new SpanBitArray(destinationBuffer, 64);
+
+        source.AsReadOnly().CopyTo(destination);
+
+        Assert.AreEqual(0b1010_1100, destination.Bytes[0]);
+        Assert.AreEqual(0xFF, destination.Bytes[2]);
+        Assert.AreEqual(0xFF, destination.Bytes[3]);
+        for (var i = 4; i < destination.Bytes.Length; i++)
+        {
+            Assert.AreEqual(0x00, destination.Bytes[i]);
+        }
+    }
+
+    [Test]
+    public void CopyToUnalignedDest_ShiftsCorrectly()
+    {
+        Span<byte> sourceBuffer = stackalloc byte[ByteCount(32)];
+        sourceBuffer.Clear();
+        var source = new SpanBitArray(sourceBuffer, 32);
+        source.SetBits(0, 0b1111_0000, 8);
+
+        Span<byte> destinationBuffer = stackalloc byte[ByteCount(32)];
+        destinationBuffer.Clear();
+        var destination = new SpanBitArray(destinationBuffer, 32);
+
+        source.AsReadOnly().CopyTo(destination, destIndex: 3, sourceIndex: 0, bitCount: 8);
+
+        // Expect 0b1111_0000 shifted by 3 bits = 0b0001_1110 in first byte and remaining bits in second
+        Assert.AreEqual(0b0001_1110, destination.Bytes[0]);
+        Assert.AreEqual(0b0000_0111, destination.Bytes[1]);
+    }
+
+    [Test]
+    public void CopyToWithOffsets_CopiesPartialRange()
+    {
+        Span<byte> sourceBuffer = stackalloc byte[ByteCount(64)];
+        sourceBuffer.Clear();
+        var source = new SpanBitArray(sourceBuffer, 64);
+        source.SetBits(8, 0xABCD, 16);
+
+        Span<byte> destinationBuffer = stackalloc byte[ByteCount(64)];
+        destinationBuffer.Fill(0xFF);
+        var destination = new SpanBitArray(destinationBuffer, 64);
+
+        source.AsReadOnly().CopyTo(destination, destIndex: 20, sourceIndex: 8, bitCount: 16);
+
+        Assert.AreEqual(0xFF, destination.Bytes[0]);
+        Assert.AreEqual(0xFF, destination.Bytes[1]);
+        Assert.AreEqual(0xFF, destination.Bytes[2]);
+
+        var expectedValue = source.AsReadOnly().GetBits(8, 16);
+        Assert.AreEqual(expectedValue, destination.AsReadOnly().GetBits(20, 16));
+    }
 }

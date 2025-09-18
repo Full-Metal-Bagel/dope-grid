@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="../../Assets/Tests/**/*.cs"/>
+    <Compile Include="../../Assets/Tests/Core/**/*.cs"/>
     <Link Include="..\..\.editorconfig"/>
   </ItemGroup>
 

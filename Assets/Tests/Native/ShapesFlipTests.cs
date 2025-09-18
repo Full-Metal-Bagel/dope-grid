@@ -1,3 +1,4 @@
+using System;
 using DopeGrid;
 using DopeGrid.Native;
 using NUnit.Framework;
@@ -188,14 +189,13 @@ public class ShapesFlipTests
         shape.SetCell(0, 0, true);
         shape.SetCell(1, 1, true);
 
-        var output = new UnsafeBitArray(9, Allocator.Temp);
+        var output = new SpanBitArray(new byte[2].AsSpan(), 9);
         var result = shape.ToReadOnly().FlipBits(FlipAxis.Horizontal, output);
 
-        Assert.IsTrue(output.IsSet(2)); // (2, 0)
-        Assert.IsTrue(output.IsSet(4)); // (1, 1)
+        Assert.IsTrue(output.Get(2)); // (2, 0)
+        Assert.IsTrue(output.Get(4)); // (1, 1)
 
         shape.Dispose();
-        output.Dispose();
     }
 
     [Test]
