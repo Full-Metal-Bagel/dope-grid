@@ -11,39 +11,37 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
 {
     public int Width { get; }
     public int Height { get; }
-    public readonly int Size => _bits.Length;
+    public readonly int Size => Width * Height;
 
-    public UnsafeBitArray.ReadOnly Bits { get; }
-    internal unsafe UnsafeBitArray WritableBits => *_bits.GetUnsafeBitArrayPtr();
-    private NativeBitArray _bits;
+    public readonly ReadOnlySpanBitArray ReadOnlyBits => new(_bits.AsReadOnlySpan(), Size);
+    internal SpanBitArray Bits => new(_bits.AsSpan(), Size);
+    private NativeArray<byte> _bits;
 
-    public readonly int OccupiedSpaceCount => Bits.CountBits(0, Size);
+    public readonly int OccupiedSpaceCount => ReadOnlyBits.CountBits(0, Size);
     public readonly int FreeSpaceCount => Size - OccupiedSpaceCount;
     public readonly bool IsCreated => _bits.IsCreated;
     public readonly bool IsEmpty => Width == 0 || Height == 0;
 
-    public unsafe GridShape(int width, int height, Allocator allocator)
+    public GridShape(int width, int height, Allocator allocator)
     {
         Width = width;
         Height = height;
-        var numBits = width * height;
-        _bits = new NativeBitArray(numBits, allocator, NativeArrayOptions.UninitializedMemory);
-        UnsafeUtility.MemClear(_bits.GetUnsafeBitArray().Ptr, _bits.Capacity / 8);
-        Bits = _bits.GetReadOnlyUnsafeBitArray();
+        var bitLength = width * height;
+        _bits = new NativeArray<byte>(SpanBitArrayUtility.ByteCount(bitLength), allocator);
     }
 
     public readonly int GetIndex(int2 pos) => GetIndex(pos.x, pos.y);
     public readonly int GetIndex(int x, int y) => y * Width + x;
 
     public readonly bool GetCell(int2 pos) => GetCell(pos.x, pos.y);
-    public readonly bool GetCell(int x, int y) => Bits.IsSet(GetIndex(x, y));
+    public readonly bool GetCell(int x, int y) => ReadOnlyBits.Get(GetIndex(x, y));
 
     public void SetCell(int2 pos, bool value) => SetCell(pos.x, pos.y, value);
-    public void SetCell(int x, int y, bool value) => _bits.Set(GetIndex(x, y), value);
+    public void SetCell(int x, int y, bool value) => Bits.Set(GetIndex(x, y), value);
 
     public void Clear()
     {
-        _bits.Clear();
+        _bits.AsSpan().Clear();
     }
 
     public void Dispose()
@@ -83,20 +81,20 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
         public int Width { get; }
         public int Height { get; }
         public int2 Bound => new(Width, Height);
-        public UnsafeBitArray.ReadOnly Bits { get; }
+        public ReadOnlySpanBitArray Bits { get; }
 
         public int Size => Width * Height;
         public int OccupiedSpaceCount => Bits.CountBits(0, Size);
         public int FreeSpaceCount => Size - OccupiedSpaceCount;
 
-        internal ReadOnly(int width, int height, UnsafeBitArray.ReadOnly bits)
+        internal ReadOnly(int width, int height, ReadOnlySpanBitArray bits)
         {
             Width = width;
             Height = height;
             Bits = bits;
         }
 
-        internal ReadOnly(int2 bound, UnsafeBitArray.ReadOnly bits)
+        internal ReadOnly(int2 bound, ReadOnlySpanBitArray bits)
             : this(bound.x, bound.y, bits)
         {
         }
@@ -105,7 +103,7 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
         public int GetIndex(int x, int y) => y * Width + x;
 
         public bool GetCell(int2 pos) => GetCell(pos.x, pos.y);
-        public bool GetCell(int x, int y) => Bits.IsSet(GetIndex(x, y));
+        public bool GetCell(int x, int y) => Bits.Get(GetIndex(x, y));
 
         public GridShape Clone(Allocator allocator)
         {
@@ -116,22 +114,19 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
 
         public unsafe void CopyTo(GridShape other)
         {
-            if (Bits.Ptr == null)
-                throw new InvalidOperationException("Cannot copy from a non-created GridShape2D");
-
             if (!other.IsCreated)
                 throw new InvalidOperationException("Cannot copy to a non-created GridShape2D");
 
             if (Width != other.Width || Height != other.Height)
                 throw new ArgumentException($"Cannot copy to GridShape2D with different dimensions. Source: {Width}x{Height}, Target: {other.Width}x{other.Height}");
 
-            if (Bits.Length == 0)
+            if (Bits.BitLength == 0)
             {
                 other.Clear();
                 return;
             }
 
-            var destBits = other.WritableBits;
+            var destBits = other.Bits;
             var sizeInBytes = (Bits.Length + 7) / 8;
             UnsafeUtility.MemCpy(destBits.Ptr, Bits.Ptr, sizeInBytes);
         }
