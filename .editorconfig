@@ -516,6 +516,8 @@ dotnet_diagnostic.IDE2000.severity = warning
 # dotnet_diagnostic.CA2012.severity = suggestion
 # # CA2249: Use string.Contains instead of string.IndexOf to improve readability.
 # dotnet_diagnostic.CA2249.severity = suggestion
+# CA2225:Operator overloads have named alternates
+dotnet_diagnostic.CA2225.severity = suggestion
 # # IDE0005: Remove unnecessary usings
 # dotnet_diagnostic.IDE0005.severity = suggestion
 # # IDE0020: Use pattern matching to avoid is check followed by a cast (with variable)
