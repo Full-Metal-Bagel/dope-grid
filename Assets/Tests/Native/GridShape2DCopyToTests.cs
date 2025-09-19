@@ -96,26 +96,6 @@ public class GridShapeCopyToTests
     }
 
     [Test]
-    public void CopyTo_NonCreatedSource_ThrowsException()
-    {
-        var source = new GridShape(); // Not created
-        using var target = new GridShape(3, 3, Allocator.Temp);
-
-        Assert.Throws<InvalidOperationException>(() => source.CopyTo(target),
-            "Should throw when source is not created");
-    }
-
-    [Test]
-    public void CopyTo_NonCreatedTarget_ThrowsException()
-    {
-        using var source = new GridShape(3, 3, Allocator.Temp);
-        var target = new GridShape(); // Not created
-
-        Assert.Throws<InvalidOperationException>(() => source.CopyTo(target),
-            "Should throw when target is not created");
-    }
-
-    [Test]
     public void CopyTo_ComplexShapes()
     {
         using var cross = Shapes.Cross(Allocator.Temp);

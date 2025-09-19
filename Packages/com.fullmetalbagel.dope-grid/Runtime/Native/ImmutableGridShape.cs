@@ -83,7 +83,7 @@ public static class ImmutableGridShape2DList
 
     public static ImmutableGridShape GetOrCreateImmutable(this GridShape shape)
     {
-        return shape.ToReadOnly().GetOrCreateImmutable();
+        return shape.AsReadOnly().GetOrCreateImmutable();
     }
 
     public static ImmutableGridShape GetOrCreateImmutable(this in GridShape.ReadOnly shape)
@@ -189,6 +189,9 @@ public static class ImmutableGridShape2DList
         {
             var id = Bounds.Length;
 
+            // Add bounds first so GetPattern can access it
+            Bounds.Add(new int2(shape.Width, shape.Height));
+
             // Store pattern
             var patternBegin = Patterns.Length;
             PatternBegins.Add(patternBegin);
@@ -203,7 +206,6 @@ public static class ImmutableGridShape2DList
             // Direct memory copy from shape's bit array to patterns
             var pattern = GetPattern(id);
             shape.Bits.CopyTo(pattern);
-            Bounds.Add(new int2(shape.Width, shape.Height));
 
             Rotate90Indices.Add(-1);
             FlipIndices.Add(-1);

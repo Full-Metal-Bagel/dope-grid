@@ -127,7 +127,7 @@ public class ShapesTrimTests
         shape.SetCell(0, 0, true);
         shape.SetCell(2, 2, true);
 
-        var readOnly = shape.ToReadOnly();
+        var readOnly = shape.AsReadOnly();
         Assert.IsTrue(readOnly.IsTrimmed());
 
         shape.Dispose();
@@ -137,7 +137,7 @@ public class ShapesTrimTests
     public void Trim_EmptyShape_ReturnsEmptyShape()
     {
         var shape = new GridShape(5, 5, Allocator.Temp);
-        var trimmed = shape.ToReadOnly().Trim(Allocator.Temp);
+        var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
 
         Assert.AreEqual(0, trimmed.Width);
         Assert.AreEqual(0, trimmed.Height);
@@ -156,7 +156,7 @@ public class ShapesTrimTests
         shape.SetCell(0, 2, true);
         shape.SetCell(2, 2, true);
 
-        var trimmed = shape.ToReadOnly().Trim(Allocator.Temp);
+        var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
 
         Assert.AreEqual(shape.Width, trimmed.Width);
         Assert.AreEqual(shape.Height, trimmed.Height);
@@ -181,7 +181,7 @@ public class ShapesTrimTests
         shape.SetCell(1, 2, true);
         shape.SetCell(2, 2, true);
 
-        var trimmed = shape.ToReadOnly().Trim(Allocator.Temp);
+        var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
 
         Assert.AreEqual(2, trimmed.Width);
         Assert.AreEqual(2, trimmed.Height);
@@ -205,7 +205,7 @@ public class ShapesTrimTests
         shape.SetCell(2, 1, true);
         shape.SetCell(2, 2, true);
 
-        var trimmed = shape.ToReadOnly().Trim(Allocator.Temp);
+        var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
 
         Assert.AreEqual(1, trimmed.Width);
         Assert.AreEqual(3, trimmed.Height);
@@ -227,7 +227,7 @@ public class ShapesTrimTests
         shape.SetCell(1, 2, true);
         shape.SetCell(2, 2, true);
 
-        var trimmed = shape.ToReadOnly().Trim(Allocator.Temp);
+        var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
 
         Assert.AreEqual(3, trimmed.Width);
         Assert.AreEqual(1, trimmed.Height);
@@ -245,7 +245,7 @@ public class ShapesTrimTests
         var shape = new GridShape(5, 5, Allocator.Temp);
         shape.SetCell(2, 2, true);
 
-        var trimmed = shape.ToReadOnly().Trim(Allocator.Temp);
+        var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
 
         Assert.AreEqual(1, trimmed.Width);
         Assert.AreEqual(1, trimmed.Height);
@@ -267,7 +267,7 @@ public class ShapesTrimTests
         shape.SetCell(2, 3, true); // Bottom-left of trimmed area
         shape.SetCell(4, 3, true); // Bottom-right of trimmed area
 
-        var trimmed = shape.ToReadOnly().Trim(Allocator.Temp);
+        var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
 
         Assert.AreEqual(3, trimmed.Width);  // From x=2 to x=4
         Assert.AreEqual(3, trimmed.Height); // From y=1 to y=3
@@ -301,7 +301,7 @@ public class ShapesTrimTests
         shape.SetCell(2, 3, true);
         shape.SetCell(3, 3, true);
 
-        var trimmed = shape.ToReadOnly().Trim(Allocator.Temp);
+        var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
 
         Assert.AreEqual(3, trimmed.Width);
         Assert.AreEqual(3, trimmed.Height);

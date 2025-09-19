@@ -116,7 +116,7 @@ public static class Shapes
     [Pure, MustUseReturnValue]
     public static GridShape Rotate(this GridShape shape, RotationDegree degree, Allocator allocator)
     {
-        return shape.ToReadOnly().Rotate(degree, allocator);
+        return shape.AsReadOnly().Rotate(degree, allocator);
     }
 
     [Pure, MustUseReturnValue]
@@ -176,7 +176,7 @@ public static class Shapes
     [Pure, MustUseReturnValue]
     public static GridShape Flip(this GridShape shape, FlipAxis axis, Allocator allocator)
     {
-        return shape.ToReadOnly().Flip(axis, allocator);
+        return shape.AsReadOnly().Flip(axis, allocator);
     }
 
     [Pure, MustUseReturnValue]
@@ -221,7 +221,7 @@ public static class Shapes
     [Pure, MustUseReturnValue]
     public static bool IsTrimmed(this GridShape shape)
     {
-        return shape.ToReadOnly().IsTrimmed();
+        return shape.AsReadOnly().IsTrimmed();
     }
 
     [Pure, MustUseReturnValue]

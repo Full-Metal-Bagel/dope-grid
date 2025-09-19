@@ -114,16 +114,4 @@ public class GridShapeTests
 
         grid.Dispose();
     }
-
-    [Test]
-    public void IsCreated_ReflectsDisposalState()
-    {
-        var grid = new GridShape(3, 3, Allocator.Temp);
-
-        Assert.IsTrue(grid.IsCreated);
-
-        grid.Dispose();
-
-        Assert.IsFalse(grid.IsCreated);
-    }
 }

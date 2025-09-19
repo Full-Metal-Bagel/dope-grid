@@ -22,7 +22,7 @@ public class ImmutableGridShapeTests
         var shape = new GridShape(1, 1, Allocator.Temp);
         shape.SetCell(new int2(0, 0), true);
 
-        var immutable = shape.ToReadOnly().GetOrCreateImmutable();
+        var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
         Assert.AreNotEqual(0, immutable.Id);
         Assert.AreEqual(1, immutable.Width);
@@ -36,7 +36,7 @@ public class ImmutableGridShapeTests
     {
         var shape = Shapes.Line(3, Allocator.Temp);
 
-        var immutable = shape.ToReadOnly().GetOrCreateImmutable();
+        var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
         Assert.AreNotEqual(0, immutable.Id);
         Assert.AreEqual(3, immutable.Width);
@@ -50,7 +50,7 @@ public class ImmutableGridShapeTests
     {
         var shape = Shapes.LShape(Allocator.Temp);
 
-        var immutable = shape.ToReadOnly().GetOrCreateImmutable();
+        var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
         Assert.AreNotEqual(0, immutable.Id);
         Assert.AreEqual(2, immutable.Width);
@@ -65,8 +65,8 @@ public class ImmutableGridShapeTests
         var shape1 = Shapes.TShape(Allocator.Temp);
         var shape2 = Shapes.TShape(Allocator.Temp);
 
-        var immutable1 = shape1.ToReadOnly().GetOrCreateImmutable();
-        var immutable2 = shape2.ToReadOnly().GetOrCreateImmutable();
+        var immutable1 = shape1.AsReadOnly().GetOrCreateImmutable();
+        var immutable2 = shape2.AsReadOnly().GetOrCreateImmutable();
 
         Assert.AreEqual(immutable1.Id, immutable2.Id);
 
@@ -79,7 +79,7 @@ public class ImmutableGridShapeTests
     {
         // Create horizontal line
         var shape = Shapes.Line(3, Allocator.Temp);
-        var immutable = shape.ToReadOnly().GetOrCreateImmutable();
+        var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
         // Rotate 90 degrees
         var rotated = immutable.Rotate90();
@@ -110,7 +110,7 @@ public class ImmutableGridShapeTests
     {
         // Create 2x2 square
         var shape = Shapes.Square(2, Allocator.Temp);
-        var immutable = shape.ToReadOnly().GetOrCreateImmutable();
+        var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
         // Rotating a square should return the same shape
         var rotated = immutable.Rotate90();
@@ -126,7 +126,7 @@ public class ImmutableGridShapeTests
     public void Rotate90_LShape()
     {
         var shape = Shapes.LShape(Allocator.Temp);
-        var immutable = shape.ToReadOnly().GetOrCreateImmutable();
+        var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
         // L-shape should have 4 distinct rotations
         var rotated90 = immutable.Rotate90();
@@ -151,7 +151,7 @@ public class ImmutableGridShapeTests
     {
         // Horizontal line
         var shape = Shapes.Line(3, Allocator.Temp);
-        var immutable = shape.ToReadOnly().GetOrCreateImmutable();
+        var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
         // Flipping horizontal line horizontally should return same shape
         var flipped = immutable.Flip();
@@ -165,7 +165,7 @@ public class ImmutableGridShapeTests
     public void Flip_LShape()
     {
         var shape = Shapes.LShape(Allocator.Temp);
-        var immutable = shape.ToReadOnly().GetOrCreateImmutable();
+        var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
         // Flipping L-shape should create a different shape
         var flipped = immutable.Flip();
@@ -185,7 +185,7 @@ public class ImmutableGridShapeTests
     public void Flip_TShape()
     {
         var shape = Shapes.TShape(Allocator.Temp);
-        var immutable = shape.ToReadOnly().GetOrCreateImmutable();
+        var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
         var flipped = immutable.Flip();
 
@@ -199,7 +199,7 @@ public class ImmutableGridShapeTests
     public void ToReadOnlyGridShape_ConversionWorks()
     {
         var shape = Shapes.Cross(Allocator.Temp);
-        var immutable = shape.ToReadOnly().GetOrCreateImmutable();
+        var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
         // Implicit conversion
         GridShape.ReadOnly readOnly = immutable;
@@ -219,7 +219,7 @@ public class ImmutableGridShapeTests
     public void ComplexTransformations_LShape()
     {
         var shape = Shapes.LShape(Allocator.Temp);
-        var immutable = shape.ToReadOnly().GetOrCreateImmutable();
+        var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
         // Rotate then flip
         var rotatedThenFlipped = immutable.Rotate90().Flip();
@@ -245,12 +245,12 @@ public class ImmutableGridShapeTests
         // This should throw because shape is not trimmed
         Assert.Throws<System.ArgumentException>(() =>
         {
-            shape.ToReadOnly().GetOrCreateImmutable();
+            shape.AsReadOnly().GetOrCreateImmutable();
         });
 
         // Trim and try again
-        var trimmed = shape.ToReadOnly().Trim(Allocator.Temp);
-        var immutable = trimmed.ToReadOnly().GetOrCreateImmutable();
+        var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
+        var immutable = trimmed.AsReadOnly().GetOrCreateImmutable();
 
         Assert.AreEqual(1, immutable.Width);
         Assert.AreEqual(1, immutable.Height);
@@ -266,8 +266,8 @@ public class ImmutableGridShapeTests
         shape.SetCell(new int2(0, 0), true);
         shape.SetCell(new int2(1, 1), true);
 
-        var trimmedShape = shape.ToReadOnly().Trim(Allocator.Temp);
-        var immutable = trimmedShape.ToReadOnly().GetOrCreateImmutable();
+        var trimmedShape = shape.AsReadOnly().Trim(Allocator.Temp);
+        var immutable = trimmedShape.AsReadOnly().GetOrCreateImmutable();
 
         var pattern = immutable.Pattern;
 
@@ -287,8 +287,8 @@ public class ImmutableGridShapeTests
         var shape1 = Shapes.LShape(Allocator.Temp);
         var shape2 = Shapes.LShape(Allocator.Temp);
 
-        var immutable1 = shape1.ToReadOnly().GetOrCreateImmutable();
-        var immutable2 = shape2.ToReadOnly().GetOrCreateImmutable();
+        var immutable1 = shape1.AsReadOnly().GetOrCreateImmutable();
+        var immutable2 = shape2.AsReadOnly().GetOrCreateImmutable();
 
         // They should share the same ID
         Assert.AreEqual(immutable1.Id, immutable2.Id);
@@ -307,7 +307,7 @@ public class ImmutableGridShapeTests
     public void SingleCellShape_SymmetricUnderAllTransformations()
     {
         var shape = Shapes.Single(Allocator.Temp);
-        var immutable = shape.ToReadOnly().GetOrCreateImmutable();
+        var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
         // All transformations should return the same shape
         var rotated90 = immutable.Rotate90();

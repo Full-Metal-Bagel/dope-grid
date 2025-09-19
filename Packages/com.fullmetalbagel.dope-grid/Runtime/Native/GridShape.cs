@@ -18,8 +18,14 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
 
     public readonly int OccupiedSpaceCount => ReadOnlyBits.CountBits(0, Size);
     public readonly int FreeSpaceCount => Size - OccupiedSpaceCount;
-    public readonly bool IsCreated => _bits.IsCreated;
     public readonly bool IsEmpty => Width == 0 || Height == 0;
+
+    public GridShape()
+    {
+        _bits = new NativeArray<byte>(0, Allocator.Temp);
+        Width = 0;
+        Height = 0;
+    }
 
     public GridShape(int width, int height, Allocator allocator)
     {
@@ -55,21 +61,21 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
 
     public readonly GridShape Clone(Allocator allocator)
     {
-        return ToReadOnly().Clone(allocator);
+        return AsReadOnly().Clone(allocator);
     }
 
     public void CopyTo(GridShape other)
     {
-        ToReadOnly().CopyTo(other);
+        AsReadOnly().CopyTo(other);
     }
 
-    public static implicit operator ReadOnly(GridShape shape) => shape.ToReadOnly();
-    public readonly ReadOnly ToReadOnly() => new(Width, Height, ReadOnlyBits);
+    public static implicit operator ReadOnly(GridShape shape) => shape.AsReadOnly();
+    public readonly ReadOnly AsReadOnly() => new(Width, Height, ReadOnlyBits);
 
     public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on GridShape and GridShape.ReadOnly is not supported.");
     [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
     public override bool Equals(object? obj) => throw new NotSupportedException("Equals(object) on GridShape and GridShape.ReadOnly is not supported.");
-    public readonly bool Equals(GridShape other) => ToReadOnly().Equals(other.ToReadOnly());
+    public readonly bool Equals(GridShape other) => AsReadOnly().Equals(other.AsReadOnly());
     public static bool operator ==(GridShape left, GridShape right) => left.Equals(right);
     public static bool operator !=(GridShape left, GridShape right) => !left.Equals(right);
 
@@ -112,9 +118,6 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
 
         public void CopyTo(GridShape other)
         {
-            if (!other.IsCreated)
-                throw new InvalidOperationException("Cannot copy to a non-created GridShape2D");
-
             if (Width != other.Width || Height != other.Height)
                 throw new ArgumentException($"Cannot copy to GridShape2D with different dimensions. Source: {Width}x{Height}, Target: {other.Width}x{other.Height}");
 

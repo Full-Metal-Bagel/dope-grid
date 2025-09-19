@@ -2,7 +2,7 @@ using System;
 
 namespace DopeGrid;
 
-public ref struct SpanBitArray
+public readonly ref struct SpanBitArray
 {
     public Span<byte> Bytes { get; }
     public int BitLength { get; }

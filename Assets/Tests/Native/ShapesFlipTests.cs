@@ -190,7 +190,7 @@ public class ShapesFlipTests
         shape.SetCell(1, 1, true);
 
         var output = new SpanBitArray(new byte[2].AsSpan(), 9);
-        var result = shape.ToReadOnly().FlipBits(FlipAxis.Horizontal, output);
+        var result = shape.AsReadOnly().FlipBits(FlipAxis.Horizontal, output);
 
         Assert.IsTrue(output.Get(2)); // (2, 0)
         Assert.IsTrue(output.Get(4)); // (1, 1)
