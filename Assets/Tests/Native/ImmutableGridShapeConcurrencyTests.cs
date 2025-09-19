@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using DopeGrid.Native;
 using NUnit.Framework;
 using Unity.Burst;
@@ -372,10 +371,10 @@ public class ImmutableGridShapeConcurrencyTests
         {
             var baseShape = new ImmutableGridShape(BaseShapeId);
 
-            var rot90 = baseShape.Rotate90(Allocator.TempJob);
-            var rot180 = rot90.Rotate90(Allocator.TempJob);
-            var rot270 = rot180.Rotate90(Allocator.TempJob);
-            var rot360 = rot270.Rotate90(Allocator.TempJob);
+            var rot90 = baseShape.Rotate90(Allocator.Temp);
+            var rot180 = rot90.Rotate90(Allocator.Temp);
+            var rot270 = rot180.Rotate90(Allocator.Temp);
+            var rot360 = rot270.Rotate90(Allocator.Temp);
 
             RotationResults[0] = rot90.Id;
             RotationResults[1] = rot180.Id;
@@ -434,17 +433,20 @@ public class ImmutableGridShapeConcurrencyTests
         }
     }
 
-    [BurstCompile]
     struct StressTestJob : IJobParallelFor
     {
         public int OperationsPerJob;
-        [ReadOnly] public NativeArray<int> Seeds;
+        [ReadOnly] public NativeArray<Random> RandomGenerators;
         public NativeArray<int> SuccessCount;
+        public NativeArray<int> FailureCount;
+        public NativeArray<int> FirstFailureOperation;
 
         public void Execute(int index)
         {
-            var random = new Random((uint)Seeds[index]);
+            var random = RandomGenerators[index];
             var successfulOps = 0;
+            var failedOps = 0;
+            var firstFailure = -1;
 
             for (int op = 0; op < OperationsPerJob; op++)
             {
@@ -457,17 +459,19 @@ public class ImmutableGridShapeConcurrencyTests
                         case 0: // Create random shape
                         {
                             var size = random.NextInt(1, 4);
-                            var shape = new GridShape(size, size, Allocator.TempJob);
+                            var shape = new GridShape(size, size, Allocator.Temp);
                             shape.SetCell(new int2(0, 0), true);
 
                             if (random.NextBool())
                                 shape.SetCell(new int2(size - 1, size - 1), true);
 
-                            var trimmed = shape.AsReadOnly().Trim(Allocator.TempJob);
+                            var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
                             var immutable = trimmed.AsReadOnly().GetOrCreateImmutable();
 
                             if (immutable.Id > 0)
                                 successfulOps++;
+                            else
+                                throw new Exception($"Invalid ID returned: {immutable.Id}");
 
                             trimmed.Dispose();
                             shape.Dispose();
@@ -480,25 +484,27 @@ public class ImmutableGridShapeConcurrencyTests
 
                             switch (shapeType)
                             {
-                                case 0: testShape = Shapes.Line(3, Allocator.TempJob); break;
-                                case 1: testShape = Shapes.Square(2, Allocator.TempJob); break;
-                                case 2: testShape = Shapes.LShape(Allocator.TempJob); break;
-                                default: testShape = Shapes.TShape(Allocator.TempJob); break;
+                                case 0: testShape = Shapes.Line(3, Allocator.Temp); break;
+                                case 1: testShape = Shapes.Square(2, Allocator.Temp); break;
+                                case 2: testShape = Shapes.LShape(Allocator.Temp); break;
+                                default: testShape = Shapes.TShape(Allocator.Temp); break;
                             }
 
                             var immutable = testShape.AsReadOnly().GetOrCreateImmutable();
-                            var rotated = immutable.Rotate90(Allocator.TempJob);
-                            var flipped = immutable.Flip(Allocator.TempJob);
+                            var rotated = immutable.Rotate90(Allocator.Temp);
+                            var flipped = immutable.Flip(Allocator.Temp);
 
                             if (rotated.Id > 0 && flipped.Id > 0)
                                 successfulOps++;
+                            else
+                                throw new Exception($"Invalid transform IDs: rot={rotated.Id}, flip={flipped.Id}");
 
                             testShape.Dispose();
                             break;
                         }
                         case 2: // Verify shape properties
                         {
-                            var shape = Shapes.Cross(Allocator.TempJob);
+                            var shape = Shapes.Cross(Allocator.Temp);
                             var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
                             if (immutable.Width > 0 && immutable.Height > 0 &&
@@ -506,19 +512,30 @@ public class ImmutableGridShapeConcurrencyTests
                             {
                                 successfulOps++;
                             }
+                            else
+                            {
+                                throw new Exception($"Invalid properties: W={immutable.Width}, H={immutable.Height}, Occ={immutable.OccupiedSpaceCount}");
+                            }
 
                             shape.Dispose();
                             break;
                         }
                     }
                 }
-                catch
+                catch (Exception e)
                 {
-                    // Count failures implicitly by not incrementing successfulOps
+                    failedOps++;
+                    if (firstFailure == -1)
+                    {
+                        firstFailure = op * 10 + operation; // Encode both op index and operation type
+                        Debug.LogError($"Job {index}, Op {op}, Type {operation} failed: {e.Message}");
+                    }
                 }
             }
 
             SuccessCount[index] = successfulOps;
+            FailureCount[index] = failedOps;
+            FirstFailureOperation[index] = firstFailure;
         }
     }
 
@@ -528,23 +545,27 @@ public class ImmutableGridShapeConcurrencyTests
         const int jobCount = 50;
         const int operationsPerJob = 100;
 
-        var seeds = new NativeArray<int>(jobCount, Allocator.TempJob);
+        var randomGenerators = new NativeArray<Random>(jobCount, Allocator.TempJob);
         var successCounts = new NativeArray<int>(jobCount, Allocator.TempJob);
+        var failureCounts = new NativeArray<int>(jobCount, Allocator.TempJob);
+        var firstFailureOps = new NativeArray<int>(jobCount, Allocator.TempJob);
 
         try
         {
-            // Initialize seeds
-            var random = new System.Random(42);
+            // Initialize random generators outside the job
+            var systemRandom = new System.Random(42);
             for (int i = 0; i < jobCount; i++)
             {
-                seeds[i] = random.Next();
+                randomGenerators[i] = new Random((uint)systemRandom.Next());
             }
 
             var job = new StressTestJob
             {
                 OperationsPerJob = operationsPerJob,
-                Seeds = seeds,
-                SuccessCount = successCounts
+                RandomGenerators = randomGenerators,
+                SuccessCount = successCounts,
+                FailureCount = failureCounts,
+                FirstFailureOperation = firstFailureOps
             };
 
             var handle = job.Schedule(jobCount, 1);
@@ -552,11 +573,24 @@ public class ImmutableGridShapeConcurrencyTests
 
             // Verify all jobs completed successfully
             var totalSuccess = 0;
+            var totalFailures = 0;
             for (int i = 0; i < jobCount; i++)
             {
                 totalSuccess += successCounts[i];
+                totalFailures += failureCounts[i];
+
+                if (failureCounts[i] > 0)
+                {
+                    var firstFail = firstFailureOps[i];
+                    var opIndex = firstFail / 10;
+                    var opType = firstFail % 10;
+                    Debug.LogWarning($"Job {i}: {successCounts[i]} successes, {failureCounts[i]} failures. First failure at op {opIndex}, type {opType}");
+                }
+
                 Assert.Greater(successCounts[i], 0, $"Job {i} had no successful operations");
             }
+
+            Debug.Log($"Total: {totalSuccess} successes, {totalFailures} failures out of {jobCount * operationsPerJob} operations");
 
             var expectedMinSuccess = jobCount * operationsPerJob * 0.8f; // Expect at least 80% success
             Assert.Greater(totalSuccess, expectedMinSuccess,
@@ -564,8 +598,10 @@ public class ImmutableGridShapeConcurrencyTests
         }
         finally
         {
-            seeds.Dispose();
+            randomGenerators.Dispose();
             successCounts.Dispose();
+            failureCounts.Dispose();
+            firstFailureOps.Dispose();
         }
     }
 
