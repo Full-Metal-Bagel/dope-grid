@@ -132,9 +132,9 @@ public static class Shapes
     {
         return degree switch
         {
-            RotationDegree.Rotate90 => shape.Bound.yx,
-            RotationDegree.Rotate180 => shape.Bound,
-            RotationDegree.Rotate270 => shape.Bound.yx,
+            RotationDegree.Clockwise90 => shape.Bound.yx,
+            RotationDegree.Clockwise180 => shape.Bound,
+            RotationDegree.Clockwise270 => shape.Bound.yx,
             _ => throw new NotImplementedException()
         };
     }
@@ -153,13 +153,13 @@ public static class Shapes
 
                 int2 rotatedPos = degree switch
                 {
-                    RotationDegree.Rotate90 =>
+                    RotationDegree.Clockwise90 =>
                         // (x,y) -> (height-1-y, x)
                         new int2(height - 1 - y, x),
-                    RotationDegree.Rotate180 =>
+                    RotationDegree.Clockwise180 =>
                         // (x,y) -> (width-1-x, height-1-y)
                         new int2(width - 1 - x, height - 1 - y),
-                    RotationDegree.Rotate270 =>
+                    RotationDegree.Clockwise270 =>
                         // (x,y) -> (y, width-1-x)
                         new int2(y, width - 1 - x),
                     _ => throw new ArgumentException($"Invalid rotation degree: {degree}")

@@ -200,7 +200,7 @@ public static class ImmutableGridShape2DList
             if (rotatedId < 0)
             {
                 var shape = GetReadOnlyShape(id);
-                using var rotatedShape = shape.Rotate(RotationDegree.Rotate90, allocator);
+                using var rotatedShape = shape.Rotate(RotationDegree.Clockwise90, allocator);
                 rotatedId = GetOrCreateShape(rotatedShape);
                 _rotate90Indices[id] = rotatedId;
             }

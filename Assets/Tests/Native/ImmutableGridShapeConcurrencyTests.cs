@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using DopeGrid.Native;
 using NUnit.Framework;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;

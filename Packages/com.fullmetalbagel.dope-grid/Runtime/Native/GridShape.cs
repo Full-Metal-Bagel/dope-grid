@@ -44,6 +44,46 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
     public void SetCell(int2 pos, bool value) => SetCell(pos.x, pos.y, value);
     public void SetCell(int x, int y, bool value) => Bits.Set(GetIndex(x, y), value);
 
+    public bool this[int x, int y]
+    {
+        readonly get => GetCell(x, y);
+        set => SetCell(x, y, value);
+    }
+
+    public bool this[int2 pos]
+    {
+        readonly get => GetCell(pos);
+        set => SetCell(pos, value);
+    }
+
+    public GridShape Fill(bool value)
+    {
+        Bits.SetAll(value);
+        return this;
+    }
+
+    public GridShape FillRect(int x, int y, int width, int height, bool value = true)
+    {
+        for (int dy = 0; dy < height; dy++)
+        {
+            for (int dx = 0; dx < width; dx++)
+            {
+                var px = x + dx;
+                var py = y + dy;
+                if (px >= 0 && px < Width && py >= 0 && py < Height)
+                {
+                    SetCell(px, py, value);
+                }
+            }
+        }
+        return this;
+    }
+
+    public GridShape FillRect(int2 pos, int2 size, bool value = true)
+    {
+        return FillRect(pos.x, pos.y, size.x, size.y, value);
+    }
+
     public void Clear()
     {
         _bits.AsSpan().Clear();
