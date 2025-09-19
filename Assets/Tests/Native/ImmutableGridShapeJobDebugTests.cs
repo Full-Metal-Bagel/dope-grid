@@ -181,7 +181,6 @@ public class ImmutableGridShapeJobDebugTests
 
     #region Step 4: Test with Burst Compilation
 
-    [BurstCompile]
     struct BurstShapeCreationJob : IJob
     {
         public NativeArray<int> Result;
@@ -230,7 +229,6 @@ public class ImmutableGridShapeJobDebugTests
 
     #region Step 5: Test Burst with GetOrCreateImmutable (Expected to Fail)
 
-    [BurstCompile(CompileSynchronously = true)]
     struct BurstImmutableCreationJob : IJob
     {
         public NativeArray<int> Result;

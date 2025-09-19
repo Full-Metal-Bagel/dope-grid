@@ -45,7 +45,7 @@ public readonly record struct ImmutableGridShape(int Id)
 
 public static class ImmutableGridShape2DList
 {
-    internal static readonly Lazy<Shapes> s_shapes = new(() => new Shapes(Allocator.Persistent));
+    internal static Lazy<Shapes> s_shapes = new(() => new Shapes(Allocator.Persistent));
 
     static ImmutableGridShape2DList()
     {
@@ -78,6 +78,7 @@ public static class ImmutableGridShape2DList
         if (s_shapes.IsValueCreated)
         {
             s_shapes.Value.Dispose();
+            s_shapes = new Lazy<Shapes>(() => new Shapes(Allocator.Persistent));
         }
     }
 
@@ -92,7 +93,7 @@ public static class ImmutableGridShape2DList
         return new ImmutableGridShape(s_shapes.Value.GetOrCreateShape(shape));
     }
 
-    internal unsafe class Shapes : IDisposable
+    internal unsafe struct Shapes : IDisposable
     {
         private NativeList<ulong> _patterns;
         public NativeArray<ulong>.ReadOnly Patterns => _patterns.AsReadOnly();
