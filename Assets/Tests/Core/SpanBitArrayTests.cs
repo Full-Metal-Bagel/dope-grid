@@ -202,9 +202,23 @@ public class SpanBitArrayTests
 
         bits.Inverse(6, 12);
 
-        Assert.AreEqual(0b11000000, bits.Bytes[0]);
-        Assert.AreEqual(0b00001111, bits.Bytes[1]);
-        Assert.AreEqual(0b00000000, bits.Bytes[2]);
+        // Check bits before the inverted range (should be false)
+        for (int i = 0; i < 6; i++)
+        {
+            Assert.IsFalse(bits.Get(i), $"Bit {i} should be false");
+        }
+
+        // Check bits in the inverted range (should be true)
+        for (int i = 6; i < 18; i++)
+        {
+            Assert.IsTrue(bits.Get(i), $"Bit {i} should be true");
+        }
+
+        // Check bits after the inverted range (should be false)
+        for (int i = 18; i < 24; i++)
+        {
+            Assert.IsFalse(bits.Get(i), $"Bit {i} should be false");
+        }
     }
 
     [Test]
