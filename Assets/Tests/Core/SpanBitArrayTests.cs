@@ -144,6 +144,147 @@ public class SpanBitArrayTests
 
         Assert.IsFalse(bits1.SequenceEqual(bits2));
     }
+
+    [Test]
+    public void Inverse_SingleBit_FlipsBit()
+    {
+        const int bitLength = 64;
+        Span<byte> buffer = stackalloc byte[ByteCount(bitLength)];
+        buffer.Clear();
+        var bits = new SpanBitArray(buffer, bitLength);
+
+        bits.Inverse(0);
+        Assert.IsTrue(bits.Get(0));
+
+        bits.Inverse(0);
+        Assert.IsFalse(bits.Get(0));
+
+        bits.Inverse(63);
+        Assert.IsTrue(bits.Get(63));
+
+        bits.Inverse(63);
+        Assert.IsFalse(bits.Get(63));
+    }
+
+    [Test]
+    public void Inverse_MultipleBits_FlipsAllBits()
+    {
+        const int bitLength = 64;
+        Span<byte> buffer = stackalloc byte[ByteCount(bitLength)];
+        buffer.Clear();
+        var bits = new SpanBitArray(buffer, bitLength);
+
+        bits.SetRange(10, 10, true);
+        Assert.AreEqual(10, bits.AsReadOnly().CountBits(0, bitLength));
+
+        bits.Inverse(5, 20);
+
+        Assert.IsTrue(bits.Get(5));
+        Assert.IsTrue(bits.Get(6));
+        Assert.IsTrue(bits.Get(7));
+        Assert.IsTrue(bits.Get(8));
+        Assert.IsTrue(bits.Get(9));
+        Assert.IsFalse(bits.Get(10));
+        Assert.IsFalse(bits.Get(11));
+        Assert.IsFalse(bits.Get(19));
+        Assert.IsTrue(bits.Get(20));
+        Assert.IsTrue(bits.Get(24));
+        Assert.IsFalse(bits.Get(25));
+    }
+
+    [Test]
+    public void Inverse_CrossesByteBoundary()
+    {
+        const int bitLength = 128;
+        Span<byte> buffer = stackalloc byte[ByteCount(bitLength)];
+        buffer.Clear();
+        var bits = new SpanBitArray(buffer, bitLength);
+
+        bits.Inverse(6, 12);
+
+        Assert.AreEqual(0b11000000, bits.Bytes[0]);
+        Assert.AreEqual(0b00001111, bits.Bytes[1]);
+        Assert.AreEqual(0b00000000, bits.Bytes[2]);
+    }
+
+    [Test]
+    public void Inverse_EntireRange_FlipsAllBits()
+    {
+        const int bitLength = 32;
+        Span<byte> buffer = stackalloc byte[ByteCount(bitLength)];
+        buffer.Clear();
+        var bits = new SpanBitArray(buffer, bitLength);
+
+        bits.SetBits(0, 0x55555555, 32);
+
+        bits.Inverse(0, 32);
+
+        Assert.AreEqual(0xAAAAAAAA, bits.GetBits(0, 32));
+    }
+
+    [Test]
+    public void Inverse_ZeroBitCount_DoesNothing()
+    {
+        const int bitLength = 64;
+        Span<byte> buffer = stackalloc byte[ByteCount(bitLength)];
+        buffer.Fill(0x55);
+        var bits = new SpanBitArray(buffer, bitLength);
+
+        var originalValue = bits.GetBits(0, 32);
+        bits.Inverse(10, 0);
+
+        Assert.AreEqual(originalValue, bits.GetBits(0, 32));
+    }
+
+    [Test]
+    public void Inverse_LargeBitRange_HandlesCorrectly()
+    {
+        const int bitLength = 256;
+        Span<byte> buffer = stackalloc byte[ByteCount(bitLength)];
+        buffer.Clear();
+        var bits = new SpanBitArray(buffer, bitLength);
+
+        bits.Inverse(50, 150);
+
+        Assert.AreEqual(0, bits.AsReadOnly().CountBits(0, 50));
+        Assert.AreEqual(150, bits.AsReadOnly().CountBits(50, 150));
+        Assert.AreEqual(0, bits.AsReadOnly().CountBits(200, 56));
+
+        bits.Inverse(50, 150);
+        Assert.AreEqual(0, bits.AsReadOnly().CountBits(0, bitLength));
+    }
+
+    [Test]
+    public void Inverse_NonAlignedBits_WorksCorrectly()
+    {
+        const int bitLength = 128;
+        Span<byte> buffer = stackalloc byte[ByteCount(bitLength)];
+        buffer.Clear();
+        var bits = new SpanBitArray(buffer, bitLength);
+
+        bits.SetRange(0, bitLength, true);
+
+        bits.Inverse(13, 47);
+
+        Assert.IsTrue(bits.AsReadOnly().TestAll(0, 13));
+        Assert.IsFalse(bits.AsReadOnly().TestAny(13, 47));
+        Assert.IsTrue(bits.AsReadOnly().TestAll(60, bitLength - 60));
+    }
+
+    [Test]
+    public void Inverse_NoParameters_InvertsAllBits()
+    {
+        const int bitLength = 64;
+        Span<byte> buffer = stackalloc byte[ByteCount(bitLength)];
+        buffer.Clear();
+        var bits = new SpanBitArray(buffer, bitLength);
+
+        bits.SetBits(0, 0x0F0F0F0F0F0F0F0F, 64);
+
+        bits.Inverse();
+
+        Assert.AreEqual(0xF0F0F0F0F0F0F0F0, bits.GetBits(0, 64));
+    }
 }
 
 [TestFixture]

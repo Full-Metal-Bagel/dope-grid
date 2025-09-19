@@ -26,37 +26,6 @@ public static class GridContainerExtension
         return new int2(-1, -1);
     }
 
-    [Pure, MustUseReturnValue]
-    public static int2 FindBestFit(this GridShape container, in GridShape.ReadOnly item)
-    {
-        return container.AsReadOnly().FindBestFit(item);
-    }
-
-    [Pure, MustUseReturnValue]
-    public static int2 FindBestFit(this in GridShape.ReadOnly container, in GridShape.ReadOnly item)
-    {
-        var bestPos = new int2(-1, -1);
-        var bestScore = int.MaxValue;
-
-        var maxY = container.Height - item.Height + 1;
-        var maxX = container.Width - item.Width + 1;
-
-        for (var y = 0; y < maxY; y++)
-        for (var x = 0; x < maxX; x++)
-            if (container.CanPlaceItem(item, new int2(x, y)))
-            {
-                // Score based on position (prefer top-left)
-                var score = y * container.Width + x;
-                if (score < bestScore)
-                {
-                    bestScore = score;
-                    bestPos = new int2(x, y);
-                }
-            }
-
-        return bestPos;
-    }
-
     public static int PlaceMultipleShapes(
         this GridShape container,
         NativeArray<GridShape> items,

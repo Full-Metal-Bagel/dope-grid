@@ -102,4 +102,32 @@ public readonly ref struct SpanBitArray
             bitOffset = 0;
         }
     }
+
+    public void Inverse()
+    {
+        Inverse(0, BitLength);
+    }
+
+    public void Inverse(int index, int bitCount = 1)
+    {
+        SpanBitArrayUtility.ValidateRange(BitLength, index, bitCount);
+        if (bitCount == 0)
+            return;
+
+        var byteIndex = index >> 3;
+        var bitOffset = index & 7;
+        var remaining = bitCount;
+
+        while (remaining > 0)
+        {
+            var bits = Math.Min(SpanBitArrayUtility.BitsPerByte - bitOffset, remaining);
+            var mask = (byte)(((1 << bits) - 1) << bitOffset);
+            ref var b = ref Bytes[byteIndex];
+            b ^= mask;
+
+            remaining -= bits;
+            byteIndex++;
+            bitOffset = 0;
+        }
+    }
 }

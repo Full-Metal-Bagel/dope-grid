@@ -98,6 +98,7 @@ public struct GridContainer : IDisposable
 
     public void Dispose()
     {
+        _initializedGrid.Dispose();
         _grid.Dispose();
         _items.Dispose();
         _itemPositions.Dispose();

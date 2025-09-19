@@ -32,7 +32,7 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
         Width = width;
         Height = height;
         var bitLength = width * height;
-        _bits = new NativeArray<byte>(SpanBitArrayUtility.ByteCount(bitLength), allocator);
+        _bits = new NativeArray<byte>(SpanBitArrayUtility.ByteCount(bitLength), allocator, NativeArrayOptions.ClearMemory);
     }
 
     public readonly int GetIndex(int2 pos) => GetIndex(pos.x, pos.y);

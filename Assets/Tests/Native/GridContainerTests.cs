@@ -265,7 +265,7 @@ public class GridContainerTests
     }
 
     [Test]
-    public void RemoveItem_WithMultipleItems_MaintainsOrder()
+    public void RemoveItem_WithMultipleItems_CorrectlyUpdatesCount()
     {
         var item1 = CreateSquareShape(2, Allocator.Temp);
         var item2 = CreateSquareShape(3, Allocator.Temp);
