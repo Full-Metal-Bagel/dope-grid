@@ -1,0 +1,19 @@
+{
+    "name": "DopeGrid.Native",
+    "rootNamespace": "DopeGrid.Native",
+    "references": [
+        "Unity.Collections",
+        "Unity.Burst",
+        "Unity.Mathematics",
+        "DropGrid.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
