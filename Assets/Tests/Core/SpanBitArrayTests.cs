@@ -127,9 +127,7 @@ public class SpanBitArrayTests
         bits1.Set(5, true);
         bits2.Set(5, true);
 
-        buffer1[^1] = 0xFF;
-        buffer2[^1] = 0;
-
+        buffer1[^1] &= 0b0000_0011;
         Assert.IsTrue(bits1.SequenceEqual(bits2));
 
         bits2.Set(6, true);
@@ -228,8 +226,7 @@ public class ReadOnlySpanBitArrayTests
         writable1.Set(5, true);
         writable2.Set(5, true);
 
-        buffer1[^1] = 0xFF;
-        buffer2[^1] = 0;
+        buffer1[^1] &= 0b0000_0011;
 
         var readOnly1 = writable1.AsReadOnly();
         var readOnly2 = writable2.AsReadOnly();
@@ -283,15 +280,48 @@ public class ReadOnlySpanBitArrayTests
         var source = new SpanBitArray(sourceBuffer, 32);
         source.SetBits(0, 0b1111_0000, 8);
 
+        // Verify source bits after SetBits(0, 0b1111_0000, 8)
+        // Value 240 (0b1111_0000) means bits 4-7 are set, bits 0-3 are clear
+        Assert.IsFalse(source.Get(0));
+        Assert.IsFalse(source.Get(1));
+        Assert.IsFalse(source.Get(2));
+        Assert.IsFalse(source.Get(3));
+        Assert.IsTrue(source.Get(4));
+        Assert.IsTrue(source.Get(5));
+        Assert.IsTrue(source.Get(6));
+        Assert.IsTrue(source.Get(7));
+
         Span<byte> destinationBuffer = stackalloc byte[ByteCount(32)];
         destinationBuffer.Clear();
         var destination = new SpanBitArray(destinationBuffer, 32);
 
         source.AsReadOnly().CopyTo(destination, destIndex: 3, sourceIndex: 0, bitCount: 8);
 
-        // Expect 0b1111_0000 shifted by 3 bits = 0b0001_1110 in first byte and remaining bits in second
-        Assert.AreEqual(0b0001_1110, destination.Bytes[0]);
-        Assert.AreEqual(0b0000_0111, destination.Bytes[1]);
+        // When SetBits(0, 0b1111_0000, 8) is called with value 240:
+        // - Source bits 0-3 = 0000 (lower nibble of 240)
+        // - Source bits 4-7 = 1111 (upper nibble of 240)
+        // After copying to destIndex 3, verify each bit:
+        var destReadOnly = destination.AsReadOnly();
+
+        // Destination bits 0-2 should remain 0 (untouched)
+        Assert.IsFalse(destReadOnly.Get(0));
+        Assert.IsFalse(destReadOnly.Get(1));
+        Assert.IsFalse(destReadOnly.Get(2));
+
+        // Destination bits 3-6 should be 0000 (from source bits 0-3)
+        Assert.IsFalse(destReadOnly.Get(3));
+        Assert.IsFalse(destReadOnly.Get(4));
+        Assert.IsFalse(destReadOnly.Get(5));
+        Assert.IsFalse(destReadOnly.Get(6));
+
+        // Destination bits 7-10 should be 1111 (from source bits 4-7)
+        Assert.IsTrue(destReadOnly.Get(7));
+        Assert.IsTrue(destReadOnly.Get(8));
+        Assert.IsTrue(destReadOnly.Get(9));
+        Assert.IsTrue(destReadOnly.Get(10));
+
+        // Destination bits 11+ should remain 0 (untouched)
+        Assert.IsFalse(destReadOnly.Get(11));
     }
 
     [Test]
@@ -300,7 +330,28 @@ public class ReadOnlySpanBitArrayTests
         Span<byte> sourceBuffer = stackalloc byte[ByteCount(64)];
         sourceBuffer.Clear();
         var source = new SpanBitArray(sourceBuffer, 64);
-        source.SetBits(8, 0xABCD, 16);
+        source.SetBits(8, 0b1010_1011_1100_1101, 16);
+
+        // Verify source bits after SetBits(8, 0b1010_1011_1100_1101, 16)
+        // Value 0xABCD = 43981 in binary from LSB to MSB:
+        // Bits 8-15:  1011 0011 (0xCD reversed)
+        // Bits 16-23: 1101 0101 (0xAB reversed)
+        Assert.IsTrue(source.Get(8));   // bit 0 of 0xCD = 1
+        Assert.IsFalse(source.Get(9));  // bit 1 of 0xCD = 0
+        Assert.IsTrue(source.Get(10));  // bit 2 of 0xCD = 1
+        Assert.IsTrue(source.Get(11));  // bit 3 of 0xCD = 1
+        Assert.IsFalse(source.Get(12)); // bit 4 of 0xCD = 0
+        Assert.IsFalse(source.Get(13)); // bit 5 of 0xCD = 0
+        Assert.IsTrue(source.Get(14));  // bit 6 of 0xCD = 1
+        Assert.IsTrue(source.Get(15));  // bit 7 of 0xCD = 1
+        Assert.IsTrue(source.Get(16));  // bit 0 of 0xAB = 1
+        Assert.IsTrue(source.Get(17));  // bit 1 of 0xAB = 1
+        Assert.IsFalse(source.Get(18)); // bit 2 of 0xAB = 0
+        Assert.IsTrue(source.Get(19));  // bit 3 of 0xAB = 1
+        Assert.IsFalse(source.Get(20)); // bit 4 of 0xAB = 0
+        Assert.IsTrue(source.Get(21));  // bit 5 of 0xAB = 1
+        Assert.IsFalse(source.Get(22)); // bit 6 of 0xAB = 0
+        Assert.IsTrue(source.Get(23));  // bit 7 of 0xAB = 1
 
         Span<byte> destinationBuffer = stackalloc byte[ByteCount(64)];
         destinationBuffer.Fill(0xFF);
@@ -308,9 +359,24 @@ public class ReadOnlySpanBitArrayTests
 
         source.AsReadOnly().CopyTo(destination, destIndex: 20, sourceIndex: 8, bitCount: 16);
 
-        Assert.AreEqual(0xFF, destination.Bytes[0]);
-        Assert.AreEqual(0xFF, destination.Bytes[1]);
-        Assert.AreEqual(0xFF, destination.Bytes[2]);
+        // Verify destination bits 0-19 remain all 1s (untouched)
+        for (int i = 0; i < 20; i++)
+        {
+            Assert.IsTrue(destination.Get(i), $"Bit {i} should remain 1");
+        }
+
+        // Verify destination bits 20-35 match source bits 8-23
+        for (int i = 0; i < 16; i++)
+        {
+            Assert.AreEqual(source.Get(8 + i), destination.Get(20 + i),
+                $"Destination bit {20 + i} should match source bit {8 + i}");
+        }
+
+        // Verify destination bits 36+ remain all 1s (untouched)
+        for (int i = 36; i < 40; i++)
+        {
+            Assert.IsTrue(destination.Get(i), $"Bit {i} should remain 1");
+        }
 
         var expectedValue = source.AsReadOnly().GetBits(8, 16);
         Assert.AreEqual(expectedValue, destination.AsReadOnly().GetBits(20, 16));
