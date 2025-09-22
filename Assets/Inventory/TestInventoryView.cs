@@ -44,7 +44,7 @@ public class TestInventoryView : MonoBehaviour
 
     private void PopulateSampleItems()
     {
-        if (_definitions.Count == 0) return;
+        if (_uiItems == null || _uiItems.Length == 0) return;
 
         var rotations = new[]
         {
@@ -55,20 +55,22 @@ public class TestInventoryView : MonoBehaviour
         };
 
         var instanceId = 1;
-        foreach (var kv in _definitions)
+        foreach (var ui in _uiItems)
         {
-            var guid = kv.Key;
-            var ui = kv.Value;
+            if (ui == null) continue;
+            if (!Guid.TryParse(ui.Id, out var guid)) continue;
 
             // Build model item definition from UI shape
             var itemDef = new ItemDefinition(guid, ui.Shape.ToImmutableGridShape());
             var rotation = rotations[(instanceId - 1) % rotations.Length];
             var candidate = new InventoryItem(instanceId, itemDef, rotation, new int2(-1, -1));
 
-            _inventory.TryAutoPlaceItem(candidate, out _);
+            if (!_inventory.TryAutoPlaceItem(candidate, out _))
+            {
+                Debug.LogWarning($"Inventory full; failed to place item instance {instanceId} ({ui.name}).");
+            }
 
             instanceId++;
-            if (instanceId > 8) break; // keep it tidy for testing
         }
     }
 

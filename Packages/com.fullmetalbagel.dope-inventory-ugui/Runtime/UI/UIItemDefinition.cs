@@ -7,7 +7,7 @@ namespace DopeGrid.Inventory
     public class UIItemDefinition : ScriptableObject
     {
         [field: SerializeField, HideInInspector] public string Id { get; private set; } = Guid.NewGuid().ToString();
-        [field: SerializeField] public EditorGridShape Shape { get; private set; }
+        [field: SerializeField, EditorGridShapeReferenceImage(nameof(Image))] public EditorGridShape Shape { get; private set; }
         [field: SerializeField] public Sprite Image { get; private set; } = null!;
     }
 }

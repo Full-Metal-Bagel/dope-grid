@@ -66,7 +66,7 @@ public static class ImmutableGridShape2DList
 #if UNITY_EDITOR
     private static void OnPlayModeStateChanged(PlayModeStateChange state)
     {
-        if (state == PlayModeStateChange.ExitingPlayMode || state == PlayModeStateChange.ExitingEditMode)
+        if (state is PlayModeStateChange.EnteredEditMode or PlayModeStateChange.ExitingEditMode)
         {
             Cleanup();
         }

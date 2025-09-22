@@ -63,7 +63,7 @@ namespace DopeGrid.Inventory
 
                 var image = GetOrCreateItemView(instanceId);
                 image.sprite = itemUI.Image;
-                image.preserveAspect = true;
+                image.preserveAspect = false;
 
                 // Compute rect by shape and position using top-left origin
                 var size = new Vector2(item.Shape.Width * _cellSize.x, item.Shape.Height * _cellSize.y);

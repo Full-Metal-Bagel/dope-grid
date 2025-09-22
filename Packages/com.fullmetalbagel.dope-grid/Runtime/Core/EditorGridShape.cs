@@ -3,6 +3,13 @@ using UnityEngine;
 
 namespace DopeGrid;
 
+[AttributeUsage(AttributeTargets.Field)]
+public class EditorGridShapeReferenceImageAttribute : Attribute
+{
+    public string MemberName { get; }
+    public EditorGridShapeReferenceImageAttribute(string memberName) => MemberName = memberName;
+}
+
 [Serializable]
 public struct EditorGridShape
 {
