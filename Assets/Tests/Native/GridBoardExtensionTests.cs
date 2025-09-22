@@ -3,7 +3,7 @@ using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
 
-public class GridContainerExtensionTests
+public class GridBoardExtensionTests
 {
     [Test]
     public void FindFirstFit_FindsFirstAvailablePosition()

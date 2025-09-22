@@ -11,7 +11,7 @@ public class GridContainerShapeConstructorTests
     public void Constructor_WithEmptyShape_CreatesEmptyContainer()
     {
         using var shape = new GridShape(5, 5, Allocator.Temp);
-        using var container = new GridContainer(shape, Allocator.Temp);
+        using var container = new GridBoard(shape, Allocator.Temp);
 
         Assert.AreEqual(5, container.Width);
         Assert.AreEqual(5, container.Height);
@@ -37,7 +37,7 @@ public class GridContainerShapeConstructorTests
         shape.SetCell(new int2(2, 2), true);
         shape.SetCell(new int2(3, 3), true);
 
-        using var container = new GridContainer(shape, Allocator.Temp);
+        using var container = new GridBoard(shape, Allocator.Temp);
 
         Assert.AreEqual(4, container.Width);
         Assert.AreEqual(4, container.Height);
@@ -59,7 +59,7 @@ public class GridContainerShapeConstructorTests
     public void Constructor_WithComplexShape_PreservesInitialState()
     {
         using var cross = Shapes.Cross(Allocator.Temp);
-        using var container = new GridContainer(cross, Allocator.Temp);
+        using var container = new GridBoard(cross, Allocator.Temp);
 
         Assert.AreEqual(3, container.Width);
         Assert.AreEqual(3, container.Height);
@@ -85,7 +85,7 @@ public class GridContainerShapeConstructorTests
         using var originalShape = new GridShape(3, 3, Allocator.Temp);
         originalShape.SetCell(new int2(1, 1), true);
 
-        using var container = new GridContainer(originalShape, Allocator.Temp);
+        using var container = new GridBoard(originalShape, Allocator.Temp);
 
         // Modify original shape after creating container
         originalShape.SetCell(new int2(0, 0), true);
@@ -106,7 +106,7 @@ public class GridContainerShapeConstructorTests
         shape.SetCell(new int2(2, 0), true);
         shape.SetCell(new int2(1, 1), true);
 
-        using var container = new GridContainer(shape, Allocator.Temp);
+        using var container = new GridBoard(shape, Allocator.Temp);
 
         var initializedGrid = container.InitializedGrid;
 
@@ -127,7 +127,7 @@ public class GridContainerShapeConstructorTests
         shape.SetCell(new int2(1, 0), true);
         shape.SetCell(new int2(2, 1), true);
 
-        using var container = new GridContainer(shape, Allocator.Temp);
+        using var container = new GridBoard(shape, Allocator.Temp);
 
         var currentGrid = container.CurrentGrid;
         var initializedGrid = container.InitializedGrid;
@@ -150,7 +150,7 @@ public class GridContainerShapeConstructorTests
             largeShape.SetCell(new int2(x, y), true);
         }
 
-        using var container = new GridContainer(largeShape, Allocator.Temp);
+        using var container = new GridBoard(largeShape, Allocator.Temp);
 
         Assert.AreEqual(size, container.Width);
         Assert.AreEqual(size, container.Height);
@@ -167,19 +167,19 @@ public class GridContainerShapeConstructorTests
         shape.SetCell(new int2(1, 1), true);
 
         // Test with Temp allocator
-        using (var container = new GridContainer(shape, Allocator.Temp))
+        using (var container = new GridBoard(shape, Allocator.Temp))
         {
             Assert.AreEqual(8, container.FreeSpace);
         }
 
         // Test with TempJob allocator
-        using (var container = new GridContainer(shape, Allocator.TempJob))
+        using (var container = new GridBoard(shape, Allocator.TempJob))
         {
             Assert.AreEqual(8, container.FreeSpace);
         }
 
         // Test with Persistent allocator
-        using (var container = new GridContainer(shape, Allocator.Persistent))
+        using (var container = new GridBoard(shape, Allocator.Persistent))
         {
             Assert.AreEqual(8, container.FreeSpace);
         }
@@ -189,14 +189,14 @@ public class GridContainerShapeConstructorTests
     public void Constructor_MinimalShape_1x1()
     {
         using var shape = new GridShape(1, 1, Allocator.Temp);
-        using var container = new GridContainer(shape, Allocator.Temp);
+        using var container = new GridBoard(shape, Allocator.Temp);
 
         Assert.AreEqual(1, container.Width);
         Assert.AreEqual(1, container.Height);
         Assert.AreEqual(1, container.FreeSpace);
 
         shape.SetCell(new int2(0, 0), true);
-        using var fullContainer = new GridContainer(shape, Allocator.Temp);
+        using var fullContainer = new GridBoard(shape, Allocator.Temp);
         Assert.AreEqual(0, fullContainer.FreeSpace);
     }
 
@@ -205,7 +205,7 @@ public class GridContainerShapeConstructorTests
     {
         // Wide rectangle
         using var wideShape = new GridShape(10, 2, Allocator.Temp);
-        using var wideContainer = new GridContainer(wideShape, Allocator.Temp);
+        using var wideContainer = new GridBoard(wideShape, Allocator.Temp);
 
         Assert.AreEqual(10, wideContainer.Width);
         Assert.AreEqual(2, wideContainer.Height);
@@ -213,7 +213,7 @@ public class GridContainerShapeConstructorTests
 
         // Tall rectangle
         using var tallShape = new GridShape(2, 10, Allocator.Temp);
-        using var tallContainer = new GridContainer(tallShape, Allocator.Temp);
+        using var tallContainer = new GridBoard(tallShape, Allocator.Temp);
 
         Assert.AreEqual(2, tallContainer.Width);
         Assert.AreEqual(10, tallContainer.Height);
@@ -231,7 +231,7 @@ public class GridContainerShapeConstructorTests
         shape.SetCell(new int2(0, 1), true);
         shape.SetCell(new int2(1, 1), true);
 
-        using var container = new GridContainer(shape, Allocator.Temp);
+        using var container = new GridBoard(shape, Allocator.Temp);
 
         // Try to add a 2x2 item - should fail at blocked position
         using var item = new GridShape(2, 2, Allocator.Temp);
@@ -266,7 +266,7 @@ public class GridContainerShapeConstructorTests
         // The actual behavior depends on implementation
         Assert.Throws<ArgumentException>(() =>
         {
-            using var container = new GridContainer(nonCreatedShape, Allocator.Temp);
+            using var container = new GridBoard(nonCreatedShape, Allocator.Temp);
         });
     }
 
@@ -289,7 +289,7 @@ public class GridContainerShapeConstructorTests
 
         for (var i = 0; i < iterations; i++)
         {
-            using var container = new GridContainer(shape, Allocator.Temp);
+            using var container = new GridBoard(shape, Allocator.Temp);
             // Use container to prevent optimization
             var _ = container.FreeSpace;
         }
