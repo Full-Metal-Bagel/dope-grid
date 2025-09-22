@@ -157,7 +157,7 @@ MonoBehaviour:
   m_BlockingObjects: 0
   m_BlockingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 55
 --- !u!114 &477252070
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -170,10 +170,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -395,9 +395,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 738009267}
-  - component: {fileID: 738009270}
   - component: {fileID: 738009269}
   - component: {fileID: 738009268}
+  - component: {fileID: 738009271}
+  - component: {fileID: 738009270}
   m_Layer: 5
   m_Name: Panel
   m_TagString: Untagged
@@ -437,14 +438,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 0}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -471,17 +472,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 738009266}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 99121ddeef89f44c38eaf117d5786fb6, type: 3}
+  m_Script: {fileID: 11500000, guid: c38a11c83645c45f88fce8da4c71d745, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _width: 10
-  _height: 6
   _cellSize: {x: 64, y: 64}
-  _cellPadding: {x: 4, y: 4}
-  _backgroundColor: {r: 0.08, g: 0.08, b: 0.08, a: 0.9}
-  _initialItems: []
-  _content: {fileID: 738009267}
-  _background: {fileID: 738009268}
+--- !u!114 &738009271
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 738009266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 834434dce45c4d348879a1213cd1a192, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _view: {fileID: 738009270}
+  _width: 6
+  _height: 6
+  _uiItems:
+  - {fileID: 11400000, guid: 4f3233bd22b03416da6034fb4858fbb0, type: 2}
+  - {fileID: 11400000, guid: 19a27dfc98e614aedab050dd9c477376, type: 2}
+  - {fileID: 11400000, guid: 46f978667dadb47cc89a7d3a9ac13a41, type: 2}
+  - {fileID: 11400000, guid: 97b2a71d72238403fb5a8c0ee44e98d3, type: 2}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -603,14 +617,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99121ddeef89f44c38eaf117d5786fb6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _width: 10
-  _height: 6
-  _cellSize: {x: 64, y: 64}
-  _cellPadding: {x: 4, y: 4}
-  _backgroundColor: {r: 0.08, g: 0.08, b: 0.08, a: 0.9}
-  _initialItems: []
-  _content: {fileID: 0}
-  _background: {fileID: 0}
 --- !u!4 &1417098827
 Transform:
   m_ObjectHideFlags: 0

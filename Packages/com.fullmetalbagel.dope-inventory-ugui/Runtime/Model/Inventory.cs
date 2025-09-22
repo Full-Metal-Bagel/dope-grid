@@ -10,8 +10,8 @@ public struct Inventory : INativeDisposable
     private ValueGridShape<int> _grid;
     public ValueGridShape<int> Grid => _grid;
 
-    private NativeList<ItemRuntime> _items;
-    public NativeList<ItemRuntime> Items => _items;
+    private NativeList<InventoryItem> _items;
+    public NativeList<InventoryItem> Items => _items;
 
     public int Width => _grid.Width;
     public int Height => _grid.Height;
@@ -22,17 +22,17 @@ public struct Inventory : INativeDisposable
     public Inventory(int width, int height, Allocator allocator)
     {
         _grid = new ValueGridShape<int>(width, height, -1, allocator); // -1 means empty cell
-        _items = new NativeList<ItemRuntime>(allocator);
+        _items = new NativeList<InventoryItem>(allocator);
     }
 
-    public bool TryPlaceItem(in ItemRuntime item)
+    public bool TryPlaceItem(in InventoryItem inventoryItem)
     {
-        var shape = item.Shape;
-        if (!CanPlaceItem(shape, item.Position)) return false;
+        var shape = inventoryItem.Shape;
+        if (!CanPlaceItem(shape, inventoryItem.Position)) return false;
 
         var itemIndex = _items.Length;
-        _items.Add(item);
-        PlaceItemOnGrid(shape, item.Position, itemIndex);
+        _items.Add(inventoryItem);
+        PlaceItemOnGrid(shape, inventoryItem.Position, itemIndex);
         return true;
     }
 
@@ -78,7 +78,7 @@ public struct Inventory : INativeDisposable
         PlaceItemOnGrid(shape, newPosition, itemIndex);
 
         // Update item's position
-        var updatedItem = new ItemRuntime(item.InstanceId, item.Definition, item.Rotation, newPosition);
+        var updatedItem = new InventoryItem(item.InstanceId, item.Definition, item.Rotation, newPosition);
         _items[itemIndex] = updatedItem;
 
         return true;
@@ -97,9 +97,9 @@ public struct Inventory : INativeDisposable
         return GetItemAt(position) != -1;
     }
 
-    public bool CanPlaceItemAt(in ItemRuntime item, int2 position)
+    public bool CanPlaceItemAt(in InventoryItem inventoryItem, int2 position)
     {
-        var itemAtPosition = new ItemRuntime(item.InstanceId, item.Definition, item.Rotation, position);
+        var itemAtPosition = new InventoryItem(inventoryItem.InstanceId, inventoryItem.Definition, inventoryItem.Rotation, position);
         return CanPlaceItem(itemAtPosition.Shape, position);
     }
 
@@ -145,15 +145,15 @@ public struct Inventory : INativeDisposable
         return -1;
     }
 
-    public bool TryGetItem(int itemIndex, out ItemRuntime item)
+    public bool TryGetItem(int itemIndex, out InventoryItem inventoryItem)
     {
         if (itemIndex >= 0 && itemIndex < _items.Length)
         {
-            item = _items[itemIndex];
+            inventoryItem = _items[itemIndex];
             return true;
         }
 
-        item = default;
+        inventoryItem = default;
         return false;
     }
 
@@ -176,11 +176,11 @@ public struct Inventory : INativeDisposable
         return false;
     }
 
-    public bool TryAutoPlaceItem(in ItemRuntime item, out int2 position)
+    public bool TryAutoPlaceItem(in InventoryItem inventoryItem, out int2 position)
     {
-        if (TryFindFirstFitPosition(item.Shape, out position))
+        if (TryFindFirstFitPosition(inventoryItem.Shape, out position))
         {
-            var placedItem = new ItemRuntime(item.InstanceId, item.Definition, item.Rotation, position);
+            var placedItem = new InventoryItem(inventoryItem.InstanceId, inventoryItem.Definition, inventoryItem.Rotation, position);
             return TryPlaceItem(placedItem);
         }
 

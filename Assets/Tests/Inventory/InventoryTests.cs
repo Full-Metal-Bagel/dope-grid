@@ -1,3 +1,4 @@
+using System;
 using DopeGrid;
 using DopeGrid.Inventory;
 using DopeGrid.Native;
@@ -17,11 +18,11 @@ public class InventoryTests
     public void Setup()
     {
         // Create test item definitions with different shapes
-        _singleCellItem = new ItemDefinition(1, Shapes.ImmutableSingle());
-        _squareItem2x2 = new ItemDefinition(2, Shapes.ImmutableSquare(2));
-        _lShapeItem = new ItemDefinition(3, Shapes.ImmutableLShape());
-        _lineItem3x1 = new ItemDefinition(4, Shapes.ImmutableLine(3));
-        _tShapeItem = new ItemDefinition(5, Shapes.ImmutableTShape());
+        _singleCellItem = new ItemDefinition(new Guid("6D5D5967-6E91-43FD-AB41-9E2004F5C021"), Shapes.ImmutableSingle());
+        _squareItem2x2 = new ItemDefinition(new Guid("00BFF2FF-324E-4146-A155-9335FC42CBC3"), Shapes.ImmutableSquare(2));
+        _lShapeItem = new ItemDefinition(new Guid("A85328FB-8BAE-420D-827A-69C38DB047D0"), Shapes.ImmutableLShape());
+        _lineItem3x1 = new ItemDefinition(new Guid("244B8E6C-C7D2-4D13-9ED7-3BED35A41D02"), Shapes.ImmutableLine(3));
+        _tShapeItem = new ItemDefinition(new Guid("7D14D41D-E4D3-483F-84BC-9FEE4A44C66B"), Shapes.ImmutableTShape());
     }
 
     #region Constructor and Properties Tests
@@ -65,7 +66,7 @@ public class InventoryTests
     public void Properties_UpdateCorrectlyAfterAddingItems()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
 
         Assert.IsTrue(inventory.IsEmpty);
 
@@ -85,7 +86,7 @@ public class InventoryTests
     public void TryPlaceItem_PlacesSingleCellItem()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(2, 2));
+        var item = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(2, 2));
 
         var result = inventory.TryPlaceItem(item);
 
@@ -102,7 +103,7 @@ public class InventoryTests
     public void TryPlaceItem_PlacesSquareItem()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _squareItem2x2, RotationDegree.None, new int2(1, 1));
+        var item = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(1, 1));
 
         var result = inventory.TryPlaceItem(item);
 
@@ -119,7 +120,7 @@ public class InventoryTests
     public void TryPlaceItem_PlacesLShapeItem()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _lShapeItem, RotationDegree.None, new int2(1, 1));
+        var item = new InventoryItem(1, _lShapeItem, RotationDegree.None, new int2(1, 1));
 
         var result = inventory.TryPlaceItem(item);
 
@@ -137,7 +138,7 @@ public class InventoryTests
     public void TryPlaceItem_FailsWhenOutOfBounds()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _squareItem2x2, RotationDegree.None, new int2(4, 4));
+        var item = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(4, 4));
 
         var result = inventory.TryPlaceItem(item);
 
@@ -151,7 +152,7 @@ public class InventoryTests
     public void TryPlaceItem_FailsWhenNegativePosition()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(-1, 0));
+        var item = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(-1, 0));
 
         var result = inventory.TryPlaceItem(item);
 
@@ -165,8 +166,8 @@ public class InventoryTests
     public void TryPlaceItem_FailsWhenOverlapping()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item1 = new ItemRuntime(1, _squareItem2x2, RotationDegree.None, new int2(1, 1));
-        var item2 = new ItemRuntime(2, _squareItem2x2, RotationDegree.None, new int2(2, 2));
+        var item1 = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(1, 1));
+        var item2 = new InventoryItem(2, _squareItem2x2, RotationDegree.None, new int2(2, 2));
 
         inventory.TryPlaceItem(item1);
         var result = inventory.TryPlaceItem(item2); // Overlaps at (2,2)
@@ -181,9 +182,9 @@ public class InventoryTests
     public void TryPlaceItem_MultipleNonOverlappingItems()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item1 = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
-        var item2 = new ItemRuntime(2, _singleCellItem, RotationDegree.None, new int2(2, 0));
-        var item3 = new ItemRuntime(3, _singleCellItem, RotationDegree.None, new int2(4, 0));
+        var item1 = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item2 = new InventoryItem(2, _singleCellItem, RotationDegree.None, new int2(2, 0));
+        var item3 = new InventoryItem(3, _singleCellItem, RotationDegree.None, new int2(4, 0));
 
         Assert.IsTrue(inventory.TryPlaceItem(item1));
         Assert.IsTrue(inventory.TryPlaceItem(item2));
@@ -205,7 +206,7 @@ public class InventoryTests
     public void RemoveItem_RemovesSingleItem()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(2, 2));
+        var item = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(2, 2));
 
         inventory.TryPlaceItem(item);
         var result = inventory.RemoveItem(0);
@@ -221,7 +222,7 @@ public class InventoryTests
     public void RemoveItem_RemovesSquareItem()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _squareItem2x2, RotationDegree.None, new int2(1, 1));
+        var item = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(1, 1));
 
         inventory.TryPlaceItem(item);
         var result = inventory.RemoveItem(0);
@@ -239,9 +240,9 @@ public class InventoryTests
     public void RemoveItem_UpdatesIndicesWhenRemovingMiddleItem()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item1 = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
-        var item2 = new ItemRuntime(2, _singleCellItem, RotationDegree.None, new int2(2, 0));
-        var item3 = new ItemRuntime(3, _singleCellItem, RotationDegree.None, new int2(4, 0));
+        var item1 = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item2 = new InventoryItem(2, _singleCellItem, RotationDegree.None, new int2(2, 0));
+        var item3 = new InventoryItem(3, _singleCellItem, RotationDegree.None, new int2(4, 0));
 
         inventory.TryPlaceItem(item1);
         inventory.TryPlaceItem(item2);
@@ -278,7 +279,7 @@ public class InventoryTests
     public void TryMoveItem_MovesItemToNewPosition()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
 
         inventory.TryPlaceItem(item);
         var result = inventory.TryMoveItem(0, new int2(3, 3));
@@ -295,7 +296,7 @@ public class InventoryTests
     public void TryMoveItem_MovesSquareItem()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _squareItem2x2, RotationDegree.None, new int2(0, 0));
+        var item = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(0, 0));
 
         inventory.TryPlaceItem(item);
         var result = inventory.TryMoveItem(0, new int2(2, 2));
@@ -321,8 +322,8 @@ public class InventoryTests
     public void TryMoveItem_FailsWhenBlockedByOtherItem()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item1 = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
-        var item2 = new ItemRuntime(2, _singleCellItem, RotationDegree.None, new int2(2, 0));
+        var item1 = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item2 = new InventoryItem(2, _singleCellItem, RotationDegree.None, new int2(2, 0));
 
         inventory.TryPlaceItem(item1);
         inventory.TryPlaceItem(item2);
@@ -340,7 +341,7 @@ public class InventoryTests
     public void TryMoveItem_CanMoveToOverlapOwnPosition()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _squareItem2x2, RotationDegree.None, new int2(1, 1));
+        var item = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(1, 1));
 
         inventory.TryPlaceItem(item);
         var result = inventory.TryMoveItem(0, new int2(2, 1)); // Partial overlap with self
@@ -359,7 +360,7 @@ public class InventoryTests
     public void TryMoveItem_FailsWhenOutOfBounds()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _squareItem2x2, RotationDegree.None, new int2(0, 0));
+        var item = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(0, 0));
 
         inventory.TryPlaceItem(item);
         var result = inventory.TryMoveItem(0, new int2(4, 4));
@@ -378,8 +379,8 @@ public class InventoryTests
     public void GetItemAt_ReturnsCorrectItemIndex()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item1 = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
-        var item2 = new ItemRuntime(2, _squareItem2x2, RotationDegree.None, new int2(2, 2));
+        var item1 = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item2 = new InventoryItem(2, _squareItem2x2, RotationDegree.None, new int2(2, 2));
 
         inventory.TryPlaceItem(item1);
         inventory.TryPlaceItem(item2);
@@ -419,7 +420,7 @@ public class InventoryTests
     public void IsPositionOccupied_WorksCorrectly()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(2, 2));
+        var item = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(2, 2));
 
         Assert.IsFalse(inventory.IsPositionOccupied(new int2(2, 2)));
 
@@ -435,8 +436,8 @@ public class InventoryTests
     public void ContainsItem_FindsItemByInstanceId()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item1 = new ItemRuntime(100, _singleCellItem, RotationDegree.None, new int2(0, 0));
-        var item2 = new ItemRuntime(200, _singleCellItem, RotationDegree.None, new int2(2, 0));
+        var item1 = new InventoryItem(100, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item2 = new InventoryItem(200, _singleCellItem, RotationDegree.None, new int2(2, 0));
 
         inventory.TryPlaceItem(item1);
         inventory.TryPlaceItem(item2);
@@ -452,8 +453,8 @@ public class InventoryTests
     public void FindItemIndex_ReturnsCorrectIndex()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item1 = new ItemRuntime(100, _singleCellItem, RotationDegree.None, new int2(0, 0));
-        var item2 = new ItemRuntime(200, _singleCellItem, RotationDegree.None, new int2(2, 0));
+        var item1 = new InventoryItem(100, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item2 = new InventoryItem(200, _singleCellItem, RotationDegree.None, new int2(2, 0));
 
         inventory.TryPlaceItem(item1);
         inventory.TryPlaceItem(item2);
@@ -469,7 +470,7 @@ public class InventoryTests
     public void TryGetItem_RetrievesItemSuccessfully()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(100, _singleCellItem, RotationDegree.None, new int2(2, 2));
+        var item = new InventoryItem(100, _singleCellItem, RotationDegree.None, new int2(2, 2));
 
         inventory.TryPlaceItem(item);
 
@@ -490,7 +491,7 @@ public class InventoryTests
         var result = inventory.TryGetItem(0, out var item);
 
         Assert.IsFalse(result);
-        Assert.AreEqual(default(ItemRuntime), item);
+        Assert.AreEqual(default(InventoryItem), item);
 
         inventory.Dispose();
     }
@@ -499,8 +500,8 @@ public class InventoryTests
     public void CanPlaceItemAt_ValidatesPlacement()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item1 = new ItemRuntime(1, _squareItem2x2, RotationDegree.None, new int2(1, 1));
-        var item2 = new ItemRuntime(2, _squareItem2x2, RotationDegree.None, new int2(0, 0));
+        var item1 = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(1, 1));
+        var item2 = new InventoryItem(2, _squareItem2x2, RotationDegree.None, new int2(0, 0));
 
         inventory.TryPlaceItem(item1);
 
@@ -519,8 +520,8 @@ public class InventoryTests
 
         Assert.AreEqual(25, inventory.GetFreeSpaceCount());
 
-        var item1 = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
-        var item2 = new ItemRuntime(2, _squareItem2x2, RotationDegree.None, new int2(2, 2));
+        var item1 = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item2 = new InventoryItem(2, _squareItem2x2, RotationDegree.None, new int2(2, 2));
 
         inventory.TryPlaceItem(item1);
         Assert.AreEqual(24, inventory.GetFreeSpaceCount());
@@ -538,7 +539,7 @@ public class InventoryTests
 
         Assert.AreEqual(0, inventory.GetOccupiedSpaceCount());
 
-        var item1 = new ItemRuntime(1, _lShapeItem, RotationDegree.None, new int2(0, 0));
+        var item1 = new InventoryItem(1, _lShapeItem, RotationDegree.None, new int2(0, 0));
 
         inventory.TryPlaceItem(item1);
         Assert.AreEqual(3, inventory.GetOccupiedSpaceCount()); // L-shape occupies 3 cells
@@ -554,7 +555,7 @@ public class InventoryTests
     public void TryFindFirstFitPosition_FindsValidPosition()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
 
         inventory.TryPlaceItem(item);
 
@@ -570,7 +571,7 @@ public class InventoryTests
     public void TryFindFirstFitPosition_FailsWhenNoSpace()
     {
         var inventory = new Inventory(2, 2, Allocator.Temp);
-        var item = new ItemRuntime(1, _squareItem2x2, RotationDegree.None, new int2(0, 0));
+        var item = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(0, 0));
 
         inventory.TryPlaceItem(item);
 
@@ -586,8 +587,8 @@ public class InventoryTests
     public void TryAutoPlaceItem_PlacesItemAutomatically()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item1 = new ItemRuntime(1, _squareItem2x2, RotationDegree.None, new int2(0, 0));
-        var item2 = new ItemRuntime(2, _squareItem2x2, RotationDegree.None, new int2(-1, -1)); // Invalid position
+        var item1 = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(0, 0));
+        var item2 = new InventoryItem(2, _squareItem2x2, RotationDegree.None, new int2(-1, -1)); // Invalid position
 
         inventory.TryPlaceItem(item1);
 
@@ -611,12 +612,12 @@ public class InventoryTests
         {
             for (int x = 0; x < 3; x++)
             {
-                var item = new ItemRuntime(y * 3 + x + 1, _singleCellItem, RotationDegree.None, new int2(x, y));
+                var item = new InventoryItem(y * 3 + x + 1, _singleCellItem, RotationDegree.None, new int2(x, y));
                 inventory.TryPlaceItem(item);
             }
         }
 
-        var newItem = new ItemRuntime(100, _singleCellItem, RotationDegree.None, new int2(-1, -1));
+        var newItem = new InventoryItem(100, _singleCellItem, RotationDegree.None, new int2(-1, -1));
         var result = inventory.TryAutoPlaceItem(newItem, out var position);
 
         Assert.IsFalse(result);
@@ -634,8 +635,8 @@ public class InventoryTests
     public void Clear_RemovesAllItems()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item1 = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
-        var item2 = new ItemRuntime(2, _squareItem2x2, RotationDegree.None, new int2(2, 2));
+        var item1 = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item2 = new InventoryItem(2, _squareItem2x2, RotationDegree.None, new int2(2, 2));
 
         inventory.TryPlaceItem(item1);
         inventory.TryPlaceItem(item2);
@@ -661,7 +662,7 @@ public class InventoryTests
     public void Clear_AllowsPlacingItemsAfterClear()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item1 = new ItemRuntime(1, _squareItem2x2, RotationDegree.None, new int2(0, 0));
+        var item1 = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(0, 0));
 
         inventory.TryPlaceItem(item1);
         inventory.Clear();
@@ -679,7 +680,7 @@ public class InventoryTests
     public void Dispose_ReleasesResources()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
 
         inventory.TryPlaceItem(item);
         inventory.Dispose();
@@ -692,7 +693,7 @@ public class InventoryTests
     public void DisposeWithJobHandle_CompletesSuccessfully()
     {
         var inventory = new Inventory(5, 5, Allocator.TempJob);
-        var item = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
 
         inventory.TryPlaceItem(item);
 
@@ -713,14 +714,14 @@ public class InventoryTests
         var inventory = new Inventory(5, 5, Allocator.Temp);
 
         // Horizontal line (3x1)
-        var horizontalLine = new ItemRuntime(1, _lineItem3x1, RotationDegree.None, new int2(1, 1));
+        var horizontalLine = new InventoryItem(1, _lineItem3x1, RotationDegree.None, new int2(1, 1));
         Assert.IsTrue(inventory.TryPlaceItem(horizontalLine));
         Assert.AreEqual(0, inventory.Grid[1, 1]);
         Assert.AreEqual(0, inventory.Grid[2, 1]);
         Assert.AreEqual(0, inventory.Grid[3, 1]);
 
         // Vertical line (1x3) - rotated 90 degrees
-        var verticalLine = new ItemRuntime(2, _lineItem3x1, RotationDegree.Clockwise90, new int2(0, 2));
+        var verticalLine = new InventoryItem(2, _lineItem3x1, RotationDegree.Clockwise90, new int2(0, 2));
         Assert.IsTrue(inventory.TryPlaceItem(verticalLine));
         Assert.AreEqual(1, inventory.Grid[0, 2]);
         Assert.AreEqual(1, inventory.Grid[0, 3]);
@@ -735,19 +736,19 @@ public class InventoryTests
         var inventory = new Inventory(5, 5, Allocator.Temp);
 
         // Original L-shape
-        var lShape0 = new ItemRuntime(1, _lShapeItem, RotationDegree.None, new int2(0, 0));
+        var lShape0 = new InventoryItem(1, _lShapeItem, RotationDegree.None, new int2(0, 0));
         Assert.IsTrue(inventory.TryPlaceItem(lShape0));
 
         // Rotated 90 degrees
-        var lShape90 = new ItemRuntime(2, _lShapeItem, RotationDegree.Clockwise90, new int2(3, 0));
+        var lShape90 = new InventoryItem(2, _lShapeItem, RotationDegree.Clockwise90, new int2(3, 0));
         Assert.IsTrue(inventory.TryPlaceItem(lShape90));
 
         // Rotated 180 degrees
-        var lShape180 = new ItemRuntime(3, _lShapeItem, RotationDegree.Clockwise180, new int2(0, 3));
+        var lShape180 = new InventoryItem(3, _lShapeItem, RotationDegree.Clockwise180, new int2(0, 3));
         Assert.IsTrue(inventory.TryPlaceItem(lShape180));
 
         // Rotated 270 degrees
-        var lShape270 = new ItemRuntime(4, _lShapeItem, RotationDegree.Clockwise270, new int2(3, 3));
+        var lShape270 = new InventoryItem(4, _lShapeItem, RotationDegree.Clockwise270, new int2(3, 3));
         Assert.IsTrue(inventory.TryPlaceItem(lShape270));
 
         Assert.AreEqual(4, inventory.ItemCount);
@@ -761,17 +762,17 @@ public class InventoryTests
         var inventory = new Inventory(3, 3, Allocator.Temp);
 
         // 3x1 line fits horizontally
-        var horizontalLine = new ItemRuntime(1, _lineItem3x1, RotationDegree.None, new int2(0, 0));
+        var horizontalLine = new InventoryItem(1, _lineItem3x1, RotationDegree.None, new int2(0, 0));
         Assert.IsTrue(inventory.TryPlaceItem(horizontalLine));
         inventory.Clear();
 
         // 3x1 line rotated 90 degrees (becomes 1x3) fits vertically
-        var verticalLine = new ItemRuntime(2, _lineItem3x1, RotationDegree.Clockwise90, new int2(0, 0));
+        var verticalLine = new InventoryItem(2, _lineItem3x1, RotationDegree.Clockwise90, new int2(0, 0));
         Assert.IsTrue(inventory.TryPlaceItem(verticalLine));
         inventory.Clear();
 
         // 3x1 line at bottom-right doesn't fit
-        var lineOutOfBounds = new ItemRuntime(3, _lineItem3x1, RotationDegree.None, new int2(1, 2));
+        var lineOutOfBounds = new InventoryItem(3, _lineItem3x1, RotationDegree.None, new int2(1, 2));
         Assert.IsFalse(inventory.TryPlaceItem(lineOutOfBounds));
 
         inventory.Dispose();
@@ -783,7 +784,7 @@ public class InventoryTests
         var inventory = new Inventory(5, 5, Allocator.Temp);
 
         // Place a rotated T-shape
-        var tShape = new ItemRuntime(1, _tShapeItem, RotationDegree.Clockwise90, new int2(0, 0));
+        var tShape = new InventoryItem(1, _tShapeItem, RotationDegree.Clockwise90, new int2(0, 0));
         Assert.IsTrue(inventory.TryPlaceItem(tShape));
 
         // Move it to a new position
@@ -806,10 +807,10 @@ public class InventoryTests
         var inventory = new Inventory(3, 3, Allocator.Temp);
 
         // Single cell at each corner
-        var topLeft = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
-        var topRight = new ItemRuntime(2, _singleCellItem, RotationDegree.None, new int2(2, 0));
-        var bottomLeft = new ItemRuntime(3, _singleCellItem, RotationDegree.None, new int2(0, 2));
-        var bottomRight = new ItemRuntime(4, _singleCellItem, RotationDegree.None, new int2(2, 2));
+        var topLeft = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var topRight = new InventoryItem(2, _singleCellItem, RotationDegree.None, new int2(2, 0));
+        var bottomLeft = new InventoryItem(3, _singleCellItem, RotationDegree.None, new int2(0, 2));
+        var bottomRight = new InventoryItem(4, _singleCellItem, RotationDegree.None, new int2(2, 2));
 
         Assert.IsTrue(inventory.TryPlaceItem(topLeft));
         Assert.IsTrue(inventory.TryPlaceItem(topRight));
@@ -825,8 +826,8 @@ public class InventoryTests
     public void RemoveItem_LastItemDoesNotTriggerIndexUpdate()
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
-        var item1 = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
-        var item2 = new ItemRuntime(2, _singleCellItem, RotationDegree.None, new int2(2, 0));
+        var item1 = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item2 = new InventoryItem(2, _singleCellItem, RotationDegree.None, new int2(2, 0));
 
         inventory.TryPlaceItem(item1);
         inventory.TryPlaceItem(item2);
@@ -847,10 +848,10 @@ public class InventoryTests
         var inventory = new Inventory(6, 6, Allocator.Temp);
 
         // Place several items
-        var item1 = new ItemRuntime(1, _squareItem2x2, RotationDegree.None, new int2(0, 0));
-        var item2 = new ItemRuntime(2, _lShapeItem, RotationDegree.Clockwise90, new int2(3, 0));
-        var item3 = new ItemRuntime(3, _tShapeItem, RotationDegree.None, new int2(0, 3));
-        var item4 = new ItemRuntime(4, _lineItem3x1, RotationDegree.Clockwise90, new int2(5, 0));
+        var item1 = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(0, 0));
+        var item2 = new InventoryItem(2, _lShapeItem, RotationDegree.Clockwise90, new int2(3, 0));
+        var item3 = new InventoryItem(3, _tShapeItem, RotationDegree.None, new int2(0, 3));
+        var item4 = new InventoryItem(4, _lineItem3x1, RotationDegree.Clockwise90, new int2(5, 0));
 
         Assert.IsTrue(inventory.TryPlaceItem(item1));
         Assert.IsTrue(inventory.TryPlaceItem(item2));
@@ -867,7 +868,7 @@ public class InventoryTests
         Assert.AreEqual(3, inventory.ItemCount);
 
         // Try auto-place a new item
-        var item5 = new ItemRuntime(5, _squareItem2x2, RotationDegree.None, new int2(-1, -1));
+        var item5 = new InventoryItem(5, _squareItem2x2, RotationDegree.None, new int2(-1, -1));
         Assert.IsTrue(inventory.TryAutoPlaceItem(item5, out var autoPosition));
         Assert.AreEqual(new int2(0, 0), autoPosition); // Should place where item1 was
 
@@ -888,7 +889,7 @@ public class InventoryTests
         Assert.AreEqual(0, inventory.Height);
         Assert.IsTrue(inventory.IsEmpty);
 
-        var item = new ItemRuntime(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
+        var item = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
         Assert.IsFalse(inventory.TryPlaceItem(item));
         Assert.IsFalse(inventory.TryFindFirstFitPosition(_singleCellItem.Shape, out _));
 
