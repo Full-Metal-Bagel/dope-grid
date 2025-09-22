@@ -27,7 +27,7 @@ namespace DopeGrid.Inventory
 
         private void Update()
         {
-            var inv = _view.Inventory;
+            var inv = _view.InventoryModel;
             if (!inv.IsCreated)
                 return;
 
@@ -81,7 +81,7 @@ namespace DopeGrid.Inventory
 
         private void UpdateItemIndices()
         {
-            var inv = _view.Inventory;
+            var inv = _view.InventoryModel;
             var cellSize = _view.CellSize;
 
             // Count needed labels across all items
@@ -92,27 +92,8 @@ namespace DopeGrid.Inventory
                 needed += it.Shape.OccupiedSpaceCount;
             }
 
-            while (_itemTexts.Count < needed)
-            {
-                var go = new GameObject("ItemCell", typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
-                go.transform.SetParent(_root, false);
-                var rt = (RectTransform)go.transform;
-                EnsureTopLeft(rt);
-                rt.sizeDelta = cellSize;
-
-                var txt = go.GetComponent<Text>();
-                txt.raycastTarget = false;
-                txt.alignment = TextAnchor.MiddleCenter;
-                txt.color = _textColor;
-                if (s_font != null) txt.font = s_font;
-                _itemTexts.Add(txt);
-            }
-
-            for (int i = needed; i < _itemTexts.Count; i++)
-            {
-                var t = _itemTexts[i];
-                if (t != null) t.gameObject.SetActive(false);
-            }
+            EnsureTextPool(_itemTexts, needed, _root!);
+            DeactivateSurplus(_itemTexts, needed);
 
             // Fill labels
             var idx = 0;
@@ -142,33 +123,14 @@ namespace DopeGrid.Inventory
 
         private void UpdateEmptyCells()
         {
-            var inv = _view.Inventory;
+            var inv = _view.InventoryModel;
             var cellSize = _view.CellSize;
             var width = inv.Width;
             var height = inv.Height;
             var needed = math.max(0, width * height);
 
-            while (_emptyTexts.Count < needed)
-            {
-                var go = new GameObject("EmptyCell", typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
-                go.transform.SetParent(_root, false);
-                var rt = (RectTransform)go.transform;
-                EnsureTopLeft(rt);
-                rt.sizeDelta = cellSize;
-
-                var txt = go.GetComponent<Text>();
-                txt.raycastTarget = false;
-                txt.alignment = TextAnchor.MiddleCenter;
-                txt.color = _textColor;
-                if (s_font != null) txt.font = s_font;
-                _emptyTexts.Add(txt);
-            }
-
-            for (int i = needed; i < _emptyTexts.Count; i++)
-            {
-                var t = _emptyTexts[i];
-                if (t != null) t.gameObject.SetActive(false);
-            }
+            EnsureTextPool(_emptyTexts, needed, _root!);
+            DeactivateSurplus(_emptyTexts, needed);
 
             var fs = Mathf.Max(10, Mathf.RoundToInt(Mathf.Min(cellSize.x, cellSize.y) * 0.5f));
             for (int i = 0; i < needed; i++)
@@ -195,6 +157,36 @@ namespace DopeGrid.Inventory
                 if (t != null) t.gameObject.SetActive(active);
             }
         }
+
+        private void EnsureTextPool(List<Text> pool, int needed, Transform parent)
+        {
+            while (pool.Count < needed)
+            {
+                pool.Add(CreateText(parent));
+            }
+        }
+
+        private void DeactivateSurplus(List<Text> pool, int needed)
+        {
+            for (int i = needed; i < pool.Count; i++)
+            {
+                var t = pool[i];
+                if (t != null) t.gameObject.SetActive(false);
+            }
+        }
+
+        private Text CreateText(Transform parent)
+        {
+            var go = new GameObject("DbgText", typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            EnsureTopLeft(rt);
+            var txt = go.GetComponent<Text>();
+            txt.raycastTarget = false;
+            txt.alignment = TextAnchor.MiddleCenter;
+            txt.color = _textColor;
+            if (s_font != null) txt.font = s_font;
+            return txt;
+        }
     }
 }
-
