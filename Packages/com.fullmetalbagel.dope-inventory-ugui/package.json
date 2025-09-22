@@ -1,0 +1,15 @@
+{
+  "name": "com.fullmetalbagel.dope-inventory-ugui",
+  "version": "1.0.0",
+  "unity": "2022.3",
+  "displayName": "Dope Inventory (uGUI)",
+  "repository": {
+    "url": "https://github.com/Full-Metal-Bagel/dope-grid.git",
+    "type": "git"
+  },
+  "dependencies": {
+    "com.fullmetalbagel.dope-grid": "1.0.0",
+    "com.unity.ugui": "1.0.0"
+  },
+  "hideInEditor": true
+}

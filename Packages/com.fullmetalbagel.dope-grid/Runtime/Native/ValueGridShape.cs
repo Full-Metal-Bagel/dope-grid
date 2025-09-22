@@ -16,13 +16,7 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
 
     private NativeArray<T> _values;
 
-    public ValueGridShape()
-    {
-        Width = 0;
-        Height = 0;
-        _values = new NativeArray<T>(0, Allocator.Temp);
-    }
-
+    public ValueGridShape() : this(0, 0, Allocator.Temp) { }
     public ValueGridShape(int width, int height, Allocator allocator)
     {
         Width = width;

@@ -357,4 +357,86 @@ public static class Shapes
 
         return trimmed;
     }
+
+    [Pure, MustUseReturnValue]
+    public static ImmutableGridShape GetRotatedShape(this ImmutableGridShape shape, RotationDegree rotation)
+    {
+        return rotation switch
+        {
+            RotationDegree.None => shape,
+            RotationDegree.Clockwise90 => shape.Rotate90(),
+            RotationDegree.Clockwise180 => shape.Rotate90().Rotate90(),
+            RotationDegree.Clockwise270 => shape.Rotate90().Rotate90().Rotate90(),
+            _ => throw new ArgumentOutOfRangeException(nameof(rotation), rotation, null)
+        };
+    }
+
+    public static void FillShape<T>(this ValueGridShape<T> grid, ImmutableGridShape shape, int2 pos, T value)
+        where T : unmanaged, IEquatable<T>
+    {
+        // Check bounds to prevent out of range access
+        var maxX = math.min(shape.Width, grid.Width - pos.x);
+        var maxY = math.min(shape.Height, grid.Height - pos.y);
+        var startX = math.max(0, -pos.x);
+        var startY = math.max(0, -pos.y);
+
+        // Fill only the cells where the shape has true values
+        for (int y = startY; y < maxY; y++)
+        {
+            for (int x = startX; x < maxX; x++)
+            {
+                if (shape.GetCell(x, y))
+                {
+                    var gridPos = new int2(pos.x + x, pos.y + y);
+                    grid.SetValue(gridPos, value);
+                }
+            }
+        }
+    }
+
+    public static bool IsWithinBounds<T>(this ValueGridShape<T> grid, ImmutableGridShape shape, int2 position)
+        where T : unmanaged, IEquatable<T>
+    {
+        return position.x >= 0 && position.y >= 0 &&
+               position.x + shape.Width <= grid.Width &&
+               position.y + shape.Height <= grid.Height;
+    }
+
+    public static bool CheckShapeCells<T>(this ValueGridShape<T> grid, ImmutableGridShape shape, int2 position, Func<int2, T, bool> cellPredicate)
+        where T : unmanaged, IEquatable<T>
+    {
+        for (int y = 0; y < shape.Height; y++)
+        {
+            for (int x = 0; x < shape.Width; x++)
+            {
+                if (shape.GetCell(x, y))
+                {
+                    var gridPos = new int2(position.x + x, position.y + y);
+                    var cellValue = grid[gridPos];
+                    if (!cellPredicate(gridPos, cellValue))
+                        return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public static bool CheckShapeCells<T, TData>(this ValueGridShape<T> grid, ImmutableGridShape shape, int2 position, Func<int2, T, TData, bool> cellPredicate, TData data)
+        where T : unmanaged, IEquatable<T>
+    {
+        for (int y = 0; y < shape.Height; y++)
+        {
+            for (int x = 0; x < shape.Width; x++)
+            {
+                if (shape.GetCell(x, y))
+                {
+                    var gridPos = new int2(position.x + x, position.y + y);
+                    var cellValue = grid[gridPos];
+                    if (!cellPredicate(gridPos, cellValue, data))
+                        return false;
+                }
+            }
+        }
+        return true;
+    }
 }
