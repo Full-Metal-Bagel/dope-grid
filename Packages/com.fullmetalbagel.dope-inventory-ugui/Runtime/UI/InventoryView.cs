@@ -18,6 +18,17 @@ namespace DopeGrid.Inventory
         private readonly Dictionary<int, Image> _itemViews = new(); // instanceId -> Image
         private RectTransform Rect => (RectTransform)transform;
 
+        internal Inventory Inventory => _inventory;
+        internal Vector2 CellSize => _cellSize;
+        internal RectTransform RectTransform => Rect;
+
+        protected override void Awake()
+        {
+#if UNITY_EDITOR
+            gameObject.AddComponent<InventoryViewDebugOverlay>();
+#endif
+        }
+
         public void Initialize(Inventory inventory, IReadOnlyDictionary<Guid, UIItemDefinition> definitions)
         {
             _inventory = inventory;
@@ -84,8 +95,8 @@ namespace DopeGrid.Inventory
 
         private Image GetOrCreateItemView(int instanceId)
         {
-            if (_itemViews.TryGetValue(instanceId, out var img) && img != null)
-                return img;
+            if (_itemViews.TryGetValue(instanceId, out var existing) && existing != null)
+                return existing;
 
             // TODO: pool
             var go = new GameObject($"Item_{instanceId}", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
@@ -94,7 +105,7 @@ namespace DopeGrid.Inventory
             var rt = (RectTransform)go.transform;
             EnsureTopLeftAnchors(rt);
 
-            img = go.GetComponent<Image>();
+            var img = go.GetComponent<Image>();
             _itemViews[instanceId] = img;
             return img;
         }
