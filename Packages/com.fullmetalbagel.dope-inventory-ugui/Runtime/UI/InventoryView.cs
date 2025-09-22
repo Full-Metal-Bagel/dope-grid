@@ -76,16 +76,19 @@ namespace DopeGrid.Inventory
                 image.sprite = itemUI.Image;
                 image.preserveAspect = false;
 
-                // Compute rect by shape and position using top-left origin
-                var size = new Vector2(item.Shape.Width * _cellSize.x, item.Shape.Height * _cellSize.y);
+                // Compute target AABB (rotated shape) and pre-rotation rect size
+                var rotatedSize = new Vector2(item.Shape.Width * _cellSize.x, item.Shape.Height * _cellSize.y);
+                var preRotSize = item.Rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
+                    ? new Vector2(rotatedSize.y, rotatedSize.x)
+                    : rotatedSize;
                 var pos = item.Position; // int2, top-left origin in model
                 var anchoredPos = GridToAnchoredPosition(pos);
 
                 var rt = (RectTransform)image.transform;
                 EnsureTopLeftAnchors(rt);
-                rt.sizeDelta = size;
+                rt.sizeDelta = preRotSize;
                 var angleZ = GetZRotation(item.Rotation);
-                var offset = GetRotationOffset(size, item.Rotation);
+                var offset = GetRotationOffset(preRotSize, item.Rotation);
                 rt.anchoredPosition = anchoredPos + offset;
                 rt.localEulerAngles = new Vector3(0f, 0f, angleZ);
             }
