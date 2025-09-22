@@ -79,3 +79,4 @@ The `ImmutableGridShape` system is designed for thread-safe operations:
 - Use `Allocator.TempJob` for temporary native collections in jobs
 - Dispose native collections properly to avoid memory leaks
 - The project uses Unity's native collections and job system extensively - be familiar with their constraints
+- never generate .meta file

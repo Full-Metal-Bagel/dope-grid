@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEditor;
 
@@ -108,6 +110,16 @@ namespace DopeGrid.Editor
             position.y += HeaderHeight + Spacing * 2;
 
             var gridStartX = position.x + (position.width - newWidth * (ButtonSize + Spacing)) * 0.5f;
+
+            // Background reference image support
+            var refSprite = EditorGridShapeDrawerHelpers.GetReferencedSprite(property, fieldInfo);
+            if (refSprite != null)
+            {
+                var gridWidthPx = newWidth * ButtonSize + Math.Max(0, newWidth - 1) * Spacing;
+                var gridHeightPx = newHeight * ButtonSize + Math.Max(0, newHeight - 1) * Spacing;
+                var bgRect = new Rect(gridStartX, position.y, gridWidthPx, gridHeightPx);
+                EditorGridShapeDrawerHelpers.DrawSprite(bgRect, refSprite);
+            }
 
             for (int y = 0; y < newHeight; y++)
             {
@@ -279,6 +291,45 @@ namespace DopeGrid.Editor
                     shapeProp.GetArrayElementAtIndex(newIndex).boolValue = grid[oldY, oldX];
                 }
             }
+        }
+    }
+
+    internal static class EditorGridShapeDrawerHelpers
+    {
+        public static Sprite GetReferencedSprite(SerializedProperty property, FieldInfo fieldInfo)
+        {
+            var attr = fieldInfo.GetCustomAttribute<EditorGridShapeReferenceImageAttribute>();
+            if (attr == null) return null;
+            var target = property.serializedObject?.targetObject;
+            if (target == null) return null;
+
+            var type = target.GetType();
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+            // Try property first
+            var pi = type.GetProperty(attr.MemberName, flags);
+            if (pi != null && pi.PropertyType == typeof(Sprite))
+            {
+                return pi.GetValue(target) as Sprite;
+            }
+
+            // Then try field
+            var fi = type.GetField(attr.MemberName, flags);
+            if (fi != null && fi.FieldType == typeof(Sprite))
+            {
+                return fi.GetValue(target) as Sprite;
+            }
+
+            return null;
+        }
+
+        public static void DrawSprite(Rect rect, Sprite sprite)
+        {
+            var tex = sprite.texture;
+            if (tex == null) return;
+            var tr = sprite.textureRect;
+            var uv = new Rect(tr.x / tex.width, tr.y / tex.height, tr.width / tex.width, tr.height / tex.height);
+            GUI.DrawTextureWithTexCoords(rect, tex, uv, alphaBlend: true);
         }
     }
 }

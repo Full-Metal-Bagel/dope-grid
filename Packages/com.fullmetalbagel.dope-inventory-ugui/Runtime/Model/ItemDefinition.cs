@@ -1,9 +1,10 @@
+using System;
 using DopeGrid.Native;
 
 namespace DopeGrid.Inventory;
 
-public readonly record struct ItemDefinition(int Id, ImmutableGridShape Shape)
+public readonly record struct ItemDefinition(Guid Id, ImmutableGridShape Shape)
 {
-    public int Id { get; } = Id;
+    public Guid Id { get; } = Id;
     public ImmutableGridShape Shape { get; } = Shape;
 }
