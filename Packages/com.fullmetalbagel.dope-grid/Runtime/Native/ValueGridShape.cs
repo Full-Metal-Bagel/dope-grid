@@ -13,10 +13,9 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
     public int Height { get; }
     public readonly int Size => Width * Height;
     public readonly bool IsEmpty => Width == 0 || Height == 0;
-
+    public bool IsCreated => _values.IsCreated;
     private NativeArray<T> _values;
 
-    public ValueGridShape() : this(0, 0, Allocator.Temp) { }
     public ValueGridShape(int width, int height, Allocator allocator)
     {
         Width = width;

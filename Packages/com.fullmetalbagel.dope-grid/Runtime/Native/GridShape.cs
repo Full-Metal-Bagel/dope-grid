@@ -19,13 +19,7 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
     public readonly int OccupiedSpaceCount => ReadOnlyBits.CountBits(0, Size);
     public readonly int FreeSpaceCount => Size - OccupiedSpaceCount;
     public readonly bool IsEmpty => Width == 0 || Height == 0;
-
-    public GridShape()
-    {
-        _bits = new NativeArray<byte>(0, Allocator.Temp);
-        Width = 0;
-        Height = 0;
-    }
+    public bool IsCreated => _bits.IsCreated;
 
     public GridShape(int width, int height, Allocator allocator)
     {

@@ -17,8 +17,8 @@ public struct Inventory : INativeDisposable
     public int Height => _grid.Height;
     public int ItemCount => _items.Length;
     public bool IsEmpty => _items.Length == 0;
+    public bool IsCreated => _items.IsCreated;
 
-    public Inventory() : this(0, 0, Allocator.Temp) { }
     public Inventory(int width, int height, Allocator allocator)
     {
         _grid = new ValueGridShape<int>(width, height, -1, allocator); // -1 means empty cell
