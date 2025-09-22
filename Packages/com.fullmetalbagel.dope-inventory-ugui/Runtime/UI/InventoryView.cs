@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Pool;
 using UnityEngine.UI;
 
 namespace DopeGrid.Inventory
@@ -14,6 +15,7 @@ namespace DopeGrid.Inventory
 
         private Inventory _inventory;
         private IReadOnlyDictionary<Guid, UIItemDefinition> _definitions = null!;
+        private IInventoryItemViewPool _pool = null!;
 
         private readonly Dictionary<int, Image> _itemViews = new(); // instanceId -> Image
         private RectTransform Rect => (RectTransform)transform;
@@ -29,10 +31,11 @@ namespace DopeGrid.Inventory
 #endif
         }
 
-        public void Initialize(Inventory inventory, IReadOnlyDictionary<Guid, UIItemDefinition> definitions)
+        public void Initialize(Inventory inventory, IReadOnlyDictionary<Guid, UIItemDefinition> definitions, IInventoryItemViewPool? pool = null)
         {
             _inventory = inventory;
             _definitions = definitions;
+            _pool = pool ?? new DefaultInventoryItemViewPool();
 
             Debug.Assert(_inventory.IsCreated, this);
             Rect.sizeDelta = new Vector2(_inventory.Width * _cellSize.x, _inventory.Height * _cellSize.y);
@@ -41,13 +44,21 @@ namespace DopeGrid.Inventory
         public void Update()
         {
             if (!_inventory.IsCreated) return;
-            SyncViews();
+            var seen = HashSetPool<int>.Get();
+            var toRemove = ListPool<int>.Get();
+            try
+            {
+                SyncViews(seen, toRemove);
+            }
+            finally
+            {
+                HashSetPool<int>.Release(seen);
+                ListPool<int>.Release(toRemove);
+            }
         }
 
-        private void SyncViews()
+        private void SyncViews(HashSet<int> seen, List<int> toRemove)
         {
-            var seen = new HashSet<int>();
-
             // Iterate all items from model
             for (int i = 0; i < _inventory.ItemCount; i++)
             {
@@ -80,7 +91,6 @@ namespace DopeGrid.Inventory
             }
 
             // Remove any views not present anymore
-            var toRemove = new List<int>();
             foreach (var kv in _itemViews)
             {
                 if (!seen.Contains(kv.Key))
@@ -89,9 +99,11 @@ namespace DopeGrid.Inventory
 
             foreach (var id in toRemove)
             {
-                var img = _itemViews[id];
-                if (img != null)
-                    Destroy(img.gameObject);
+                var image = _itemViews[id];
+                if (image != null)
+                {
+                    _pool.Release(image);
+                }
                 _itemViews.Remove(id);
             }
         }
@@ -101,16 +113,17 @@ namespace DopeGrid.Inventory
             if (_itemViews.TryGetValue(instanceId, out var existing) && existing != null)
                 return existing;
 
-            // TODO: pool
-            var go = new GameObject($"Item_{instanceId}", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-            go.transform.SetParent(transform, false);
+            var image = _pool.Get();
+#if UNITY_EDITOR
+            image.name = $"Item_{instanceId}";
+#endif
+            image.transform.SetParent(transform, false);
 
-            var rt = (RectTransform)go.transform;
+            var rt = (RectTransform)image.transform;
             EnsureTopLeftAnchors(rt);
 
-            var img = go.GetComponent<Image>();
-            _itemViews[instanceId] = img;
-            return img;
+            _itemViews[instanceId] = image;
+            return image;
         }
 
         private static void EnsureTopLeftAnchors(RectTransform rt)
