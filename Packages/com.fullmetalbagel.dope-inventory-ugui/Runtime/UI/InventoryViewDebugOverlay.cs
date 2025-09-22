@@ -10,8 +10,9 @@ namespace DopeGrid.Inventory
     [RequireComponent(typeof(InventoryView))]
     public class InventoryViewDebugOverlay : MonoBehaviour
     {
-        [SerializeField] private bool _showOverlay = true;
-        [SerializeField] private Color _textColor = Color.red;
+        [SerializeField] private Color _indexColor = Color.red;
+        [SerializeField] private Color _instanceColor = Color.blue;
+        [SerializeField] private LabelMode _labelMode = LabelMode.ItemIndex;
 
         private InventoryView _view = null!;
 
@@ -31,7 +32,8 @@ namespace DopeGrid.Inventory
             if (!inv.IsCreated)
                 return;
 
-            if (_showOverlay)
+            var enabled = _labelMode != LabelMode.None;
+            if (enabled)
             {
                 EnsureRoot();
                 _root!.SetAsLastSibling();
@@ -114,7 +116,7 @@ namespace DopeGrid.Inventory
                         var gridPos = new int2(origin.x + x, origin.y + y);
                         rt.anchoredPosition = new Vector2(gridPos.x * cellSize.x, -(gridPos.y * cellSize.y));
                         t.fontSize = fontSize;
-                        t.text = i.ToString();
+                        t.text = BuildLabel(i, it.InstanceId);
                         t.gameObject.SetActive(true);
                     }
                 }
@@ -184,9 +186,39 @@ namespace DopeGrid.Inventory
             var txt = go.GetComponent<Text>();
             txt.raycastTarget = false;
             txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = _textColor;
+            txt.supportRichText = true;
+            txt.horizontalOverflow = HorizontalWrapMode.Overflow;
+            txt.verticalOverflow = VerticalWrapMode.Overflow;
+            txt.color = Color.white;
             if (s_font != null) txt.font = s_font;
             return txt;
+        }
+
+        public void SetLabelMode(LabelMode mode) => _labelMode = mode;
+        public void ToggleLabelMode() => _labelMode ^= LabelMode.InstanceId; // toggle instance id flag
+
+        private string BuildLabel(int itemIndex, int instanceId)
+        {
+            var showIndex = (_labelMode & LabelMode.ItemIndex) != 0;
+            var showInstance = (_labelMode & LabelMode.InstanceId) != 0;
+            if (showIndex && showInstance) return $"{Colorize(itemIndex.ToString(), _indexColor)}\n{Colorize(instanceId.ToString(), _instanceColor)}";
+            if (showIndex) return Colorize(itemIndex.ToString(), _indexColor);
+            if (showInstance) return Colorize(instanceId.ToString(), _instanceColor);
+            return string.Empty;
+        }
+
+        private static string Colorize(string text, Color color)
+        {
+            var hex = ColorUtility.ToHtmlStringRGBA(color);
+            return $"<color=#{hex}>{text}</color>";
+        }
+
+        [Flags]
+        public enum LabelMode
+        {
+            None = 0,
+            ItemIndex = 1 << 0,
+            InstanceId = 1 << 1,
         }
     }
 }
