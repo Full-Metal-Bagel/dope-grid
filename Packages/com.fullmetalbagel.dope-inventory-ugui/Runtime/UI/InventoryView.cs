@@ -186,19 +186,25 @@ namespace DopeGrid.Inventory
         private sealed class DragController : IDisposable
         {
             private readonly InventoryView _view;
+            private readonly Canvas _canvas;
             private Image _ghost;
             private int _dragItemIndex = -1;
 
             public DragController(InventoryView view)
             {
                 _view = view;
+                _canvas = view.GetComponentInParent<Canvas>();
+                if (_canvas == null) throw new InvalidOperationException("InventoryView must be under a Canvas");
                 _ghost = view._pool.Get();
 #if UNITY_EDITOR
                 _ghost.name = "__ghost__";
 #endif
-                _ghost.transform.SetParent(_view.GetComponentInParent<Canvas>().transform, false);
+                _ghost.transform.SetParent(_canvas.transform, false);
                 var rt = (RectTransform)_ghost.transform;
-                EnsureTopLeftAnchors(rt);
+                // Center pivot/anchors so ghost stays under the pointer
+                rt.anchorMin = new Vector2(0.5f, 0.5f);
+                rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
                 _ghost.preserveAspect = false;
                 _ghost.raycastTarget = false;
                 _ghost.gameObject.SetActive(false);
@@ -241,7 +247,10 @@ namespace DopeGrid.Inventory
                 var grt = (RectTransform)_ghost.transform;
                 grt.sizeDelta = preRotSize;
                 grt.localEulerAngles = new Vector3(0f, 0f, angleZ);
-                grt.anchoredPosition = new Vector2(fromTopLeft.x, -fromTopLeft.y);
+                if (TryGetPointerLocalInCanvas(eventData, out var canvasLocal))
+                {
+                    grt.anchoredPosition = canvasLocal;
+                }
                 _ghost.sprite = sprite;
                 _ghost.raycastTarget = false;
                 _ghost.gameObject.SetActive(true);
@@ -252,9 +261,9 @@ namespace DopeGrid.Inventory
             {
                 if (_dragItemIndex < 0) return;
                 if (_ghost == null) return;
-                if (!TryGetPointerLocalTopLeft(eventData, out var fromTopLeft)) return;
+                if (!TryGetPointerLocalInCanvas(eventData, out var canvasLocal)) return;
                 var grt = (RectTransform)_ghost.transform;
-                grt.anchoredPosition = new Vector2(fromTopLeft.x, -fromTopLeft.y);
+                grt.anchoredPosition = canvasLocal;
             }
 
             public void OnEndDrag(PointerEventData eventData)
@@ -282,6 +291,12 @@ namespace DopeGrid.Inventory
                 var top = (1 - rectT.pivot.y) * size.y;
                 fromTopLeft = new Vector2(local.x - left, top - local.y);
                 return true;
+            }
+
+            private bool TryGetPointerLocalInCanvas(PointerEventData eventData, out Vector2 canvasLocal)
+            {
+                var cam = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.worldCamera;
+                return RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)_canvas.transform, eventData.position, cam, out canvasLocal);
             }
         }
     }
