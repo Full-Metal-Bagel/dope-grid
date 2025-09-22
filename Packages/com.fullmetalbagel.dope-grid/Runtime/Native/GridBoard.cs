@@ -4,7 +4,7 @@ using Unity.Mathematics;
 
 namespace DopeGrid.Native;
 
-public struct GridContainer : IDisposable
+public struct GridBoard : IDisposable
 {
     private GridShape _grid;
     public GridShape.ReadOnly CurrentGrid => _grid;
@@ -21,7 +21,7 @@ public struct GridContainer : IDisposable
     public int Width => _initializedGrid.Width;
     public int Height => _initializedGrid.Height;
 
-    public GridContainer(int width, int height, Allocator allocator = Allocator.Persistent)
+    public GridBoard(int width, int height, Allocator allocator = Allocator.Persistent)
     {
         _grid = new GridShape(width, height, allocator);
         _initializedGrid = _grid.Clone(allocator);
@@ -29,7 +29,7 @@ public struct GridContainer : IDisposable
         _itemPositions = new NativeList<int2>(allocator);
     }
 
-    public GridContainer(GridShape containerShape, Allocator allocator = Allocator.Persistent)
+    public GridBoard(GridShape containerShape, Allocator allocator = Allocator.Persistent)
     {
         if (containerShape.IsEmpty) throw new ArgumentException(nameof(containerShape));
         _grid = containerShape.Clone(allocator);
@@ -104,9 +104,9 @@ public struct GridContainer : IDisposable
         _itemPositions.Dispose();
     }
 
-    public GridContainer Clone(Allocator allocator)
+    public GridBoard Clone(Allocator allocator)
     {
-        var clone = new GridContainer
+        var clone = new GridBoard
         {
             _initializedGrid = InitializedGrid.Clone(allocator),
             _grid = _grid.Clone(allocator),

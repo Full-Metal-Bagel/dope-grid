@@ -4,7 +4,7 @@ using Unity.Mathematics;
 
 namespace DopeGrid.Native;
 
-public static class GridContainerExtension
+public static class GridBoardExtension
 {
     [Pure, MustUseReturnValue]
     public static int2 FindFirstFit(this GridShape container, in GridShape.ReadOnly item)
