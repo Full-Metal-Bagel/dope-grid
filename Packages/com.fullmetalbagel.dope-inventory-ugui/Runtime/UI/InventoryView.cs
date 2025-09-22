@@ -73,7 +73,10 @@ namespace DopeGrid.Inventory
                 var rt = (RectTransform)image.transform;
                 EnsureTopLeftAnchors(rt);
                 rt.sizeDelta = size;
-                rt.anchoredPosition = anchoredPos;
+                var angleZ = GetZRotation(item.Rotation);
+                var offset = GetRotationOffset(size, item.Rotation);
+                rt.anchoredPosition = anchoredPos + offset;
+                rt.localEulerAngles = new Vector3(0f, 0f, angleZ);
             }
 
             // Remove any views not present anymore
@@ -121,6 +124,29 @@ namespace DopeGrid.Inventory
         {
             // Top-left origin: X grows right, Y grows down
             return new Vector2(gridPos.x * _cellSize.x, -(gridPos.y * _cellSize.y));
+        }
+
+        private static float GetZRotation(RotationDegree rotation) => rotation switch
+        {
+            RotationDegree.None => 0f,
+            RotationDegree.Clockwise90 => -90f,
+            RotationDegree.Clockwise180 => -180f,
+            RotationDegree.Clockwise270 => -270f,
+            _ => 0f
+        };
+
+        private static Vector2 GetRotationOffset(Vector2 size, RotationDegree rotation)
+        {
+            var w = size.x;
+            var h = size.y;
+            return rotation switch
+            {
+                RotationDegree.None => Vector2.zero,
+                RotationDegree.Clockwise90 => new Vector2(h, 0f),
+                RotationDegree.Clockwise180 => new Vector2(w, -h),
+                RotationDegree.Clockwise270 => new Vector2(0f, -w),
+                _ => Vector2.zero
+            };
         }
     }
 }
