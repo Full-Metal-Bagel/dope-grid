@@ -26,12 +26,25 @@ public class DraggingItem
 
     public int2 GetGridPosition(InventoryView inventoryView)
     {
-        var localPos = inventoryView.RectTransform.InverseTransformPoint(View.position);
-        localPos.y = -localPos.y; // Convert to top-left origin
+        // Convert from Canvas coordinates (center pivot) to InventoryView coordinates (top-left pivot)
+        var inventoryRect = inventoryView.RectTransform;
+        var localPosInInventory = inventoryRect.InverseTransformPoint(View.position);
 
-        var gridX = Mathf.RoundToInt(localPos.x / inventoryView.CellSize.x);
-        var gridY = Mathf.RoundToInt(localPos.y / inventoryView.CellSize.y);
+        // Account for the dragging ghost having center pivot - convert to top-left corner
+        var itemSize = View.sizeDelta;
+        var topLeftPos = localPosInInventory - new Vector3(itemSize.x * 0.5f, -itemSize.y * 0.5f, 0f);
+
+        // Convert to top-left origin from the inventory view's pivot
+        var rect = inventoryRect.rect;
+        var size = rect.size;
+        var left = -inventoryRect.pivot.x * size.x;
+        var top = (1 - inventoryRect.pivot.y) * size.y;
+        var fromTopLeft = new Vector2(topLeftPos.x - left, top - topLeftPos.y);
+
+        var gridX = Mathf.RoundToInt(fromTopLeft.x / inventoryView.CellSize.x);
+        var gridY = Mathf.RoundToInt(fromTopLeft.y / inventoryView.CellSize.y);
 
         return new int2(gridX, gridY);
     }
+
 }
