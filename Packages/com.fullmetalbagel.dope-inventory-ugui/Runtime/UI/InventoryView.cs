@@ -131,38 +131,45 @@ namespace DopeGrid.Inventory
 
             for (int i = 0; i < _draggingItems.Count; i++)
             {
-                var draggingItem = _draggingItems[i];
-                seen.Add(draggingItem.InstanceId);
-
-                var item = inventory.GetItemByInstance(draggingItem.InstanceId);
-                if (item.IsInvalid)
-                    continue;
+                var item = _draggingItems[i];
+                seen.Add(item.InstanceId);
 
                 if (!TryGetSprite(item.DefinitionId, out var sprite))
                     continue;
 
                 var shape = item.Shape;
-                var canPlace = inventory.CanMoveItem(draggingItem.InstanceId, shape, draggingItem.GetGridPosition(this));
+                var gridPos = item.GetGridPosition(this);
 
                 // Get or create preview view
-                if (!_draggingViews.TryGetValue(draggingItem.InstanceId, out var preview) || preview == null)
+                if (!_draggingViews.TryGetValue(item.InstanceId, out var preview) || preview == null)
                 {
                     preview = _pool.Get();
 #if UNITY_EDITOR
-                    preview.name = $"__preview__{draggingItem.InstanceId}";
+                    preview.name = $"__preview__{item.InstanceId}";
 #endif
                     preview.transform.SetParent(transform, false);
                     var prt = (RectTransform)preview.transform;
                     EnsureTopLeftAnchors(prt);
-                    _draggingViews[draggingItem.InstanceId] = preview;
+                    _draggingViews[item.InstanceId] = preview;
                 }
+
+                // Only show preview if the item is within inventory bounds
+                if (gridPos.x < 0 || gridPos.y < 0 ||
+                    gridPos.x + shape.Width > inventory.Width ||
+                    gridPos.y + shape.Height > inventory.Height)
+                {
+                    preview.gameObject.SetActive(false);
+                    continue;
+                }
+
+                var canPlace = inventory.CanMoveItem(item.InstanceId, shape, gridPos);
 
                 // Mirror transform logic from SyncViews
                 var rotatedSize = new Vector2(shape.Width * _cellSize.x, shape.Height * _cellSize.y);
                 var preRotSize = item.Rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
                     ? new Vector2(rotatedSize.y, rotatedSize.x)
                     : rotatedSize;
-                var anchoredPos = GridToAnchoredPosition(draggingItem.GetGridPosition(this));
+                var anchoredPos = GridToAnchoredPosition(gridPos);
                 var angleZ = GetZRotation(item.Rotation);
                 var offset = GetRotationOffset(preRotSize, item.Rotation);
 

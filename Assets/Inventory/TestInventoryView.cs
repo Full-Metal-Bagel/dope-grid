@@ -17,7 +17,6 @@ public class TestInventoryView : MonoBehaviour
     private Inventory _inventory;
     private readonly Dictionary<Guid, UIItemDefinition> _definitions = new();
     private Items _items;
-    private readonly List<DraggingItem> _draggingItems = new();
 
     private void Start()
     {
@@ -30,7 +29,7 @@ public class TestInventoryView : MonoBehaviour
 
         if (_view != null)
         {
-            _view.Initialize(_inventory, _definitions, _draggingItems);
+            _view.Initialize(_inventory, _definitions, _items.DraggingItems);
         }
     }
 
