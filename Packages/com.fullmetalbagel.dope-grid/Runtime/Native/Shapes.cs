@@ -394,7 +394,7 @@ public static class Shapes
         }
     }
 
-    public static bool IsWithinBounds<T>(this ValueGridShape<T> grid, ImmutableGridShape shape, int2 position)
+    public static bool IsWithinBounds<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, int2 position)
         where T : unmanaged, IEquatable<T>
     {
         return position.x >= 0 && position.y >= 0 &&
@@ -402,26 +402,13 @@ public static class Shapes
                position.y + shape.Height <= grid.Height;
     }
 
-    public static bool CheckShapeCells<T>(this ValueGridShape<T> grid, ImmutableGridShape shape, int2 position, Func<int2, T, bool> cellPredicate)
+    public static bool CheckShapeCells<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, int2 position, Func<int2, T, bool> cellPredicate)
         where T : unmanaged, IEquatable<T>
     {
-        for (int y = 0; y < shape.Height; y++)
-        {
-            for (int x = 0; x < shape.Width; x++)
-            {
-                if (shape.GetCell(x, y))
-                {
-                    var gridPos = new int2(position.x + x, position.y + y);
-                    var cellValue = grid[gridPos];
-                    if (!cellPredicate(gridPos, cellValue))
-                        return false;
-                }
-            }
-        }
-        return true;
+        return grid.CheckShapeCells(shape, position, (pos, value, predicate) => predicate(pos, value), cellPredicate);
     }
 
-    public static bool CheckShapeCells<T, TData>(this ValueGridShape<T> grid, ImmutableGridShape shape, int2 position, Func<int2, T, TData, bool> cellPredicate, TData data)
+    public static bool CheckShapeCells<T, TData>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, int2 position, Func<int2, T, TData, bool> cellPredicate, TData data)
         where T : unmanaged, IEquatable<T>
     {
         for (int y = 0; y < shape.Height; y++)

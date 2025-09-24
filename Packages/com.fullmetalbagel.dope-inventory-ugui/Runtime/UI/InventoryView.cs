@@ -22,8 +22,11 @@ namespace DopeGrid.Inventory
         private RectTransform Rect => (RectTransform)transform;
 
         internal Inventory Inventory => _inventory;
+        public Inventory.ReadOnly ReadOnlyInventory => _inventory;
         internal Vector2 CellSize => _cellSize;
         internal RectTransform RectTransform => Rect;
+
+        public bool IsInitialized => _inventory.IsCreated;
 
         protected override void Awake()
         {

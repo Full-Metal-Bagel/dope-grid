@@ -28,8 +28,7 @@ namespace DopeGrid.Inventory
 
         private void Update()
         {
-            var inv = _view.Inventory;
-            if (!inv.IsCreated)
+            if (!_view.IsInitialized)
                 return;
 
             var enabled = _labelMode != LabelMode.None;
@@ -83,7 +82,7 @@ namespace DopeGrid.Inventory
 
         private void UpdateItemIndices()
         {
-            var inv = _view.Inventory;
+            var inv = _view.ReadOnlyInventory;
             var cellSize = _view.CellSize;
 
             // Count needed labels across all items
@@ -125,7 +124,7 @@ namespace DopeGrid.Inventory
 
         private void UpdateEmptyCells()
         {
-            var inv = _view.Inventory;
+            var inv = _view.ReadOnlyInventory;
             var cellSize = _view.CellSize;
             var width = inv.Width;
             var height = inv.Height;
