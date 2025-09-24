@@ -9,19 +9,23 @@ using UnityEngine.UI;
 namespace DopeGrid.Inventory
 {
     [RequireComponent(typeof(RectTransform))]
-    public partial class InventoryView : UIBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public partial class InventoryView : UIBehaviour
     {
         [SerializeField] private Vector2 _cellSize = new(64f, 64f);
+        [SerializeField] private Color _placeableColor = new(0f, 1f, 0f, 0.35f);
+        [SerializeField] private Color _blockedColor = new(1f, 0f, 0f, 0.35f);
 
         private Inventory _inventory;
         private IReadOnlyDictionary<Guid, UIItemDefinition> _definitions = null!;
         private IInventoryItemViewPool _pool = null!;
 
-        private readonly Dictionary<int, Image> _itemViews = new(); // instanceId -> Image
+        private readonly Dictionary<int/*item instance*/, Image> _itemViews = new();
+        private readonly Dictionary<int/*item instance*/, Image> _draggingViews = new();
         private DragController _dragController = null!;
-        private RectTransform Rect => (RectTransform)transform;
 
-        internal Inventory Inventory => _inventory;
+        private RectTransform Rect => (RectTransform)transform;
+        private List<DraggingItem> _draggingItems = null!;
+
         public Inventory.ReadOnly ReadOnlyInventory => _inventory;
         internal Vector2 CellSize => _cellSize;
         internal RectTransform RectTransform => Rect;
@@ -35,14 +39,14 @@ namespace DopeGrid.Inventory
 #endif
         }
 
-        public void Initialize(Inventory inventory, IReadOnlyDictionary<Guid, UIItemDefinition> definitions, IInventoryItemViewPool? pool = null)
+        public void Initialize(Inventory inventory, IReadOnlyDictionary<Guid, UIItemDefinition> definitions, List<DraggingItem> draggingItems, IInventoryItemViewPool? pool = null)
         {
             _inventory = inventory;
             _definitions = definitions;
+            _draggingItems = draggingItems;
             _pool = pool ?? new DefaultInventoryItemViewPool();
             Debug.Assert(_inventory.IsCreated, this);
             Rect.sizeDelta = new Vector2(_inventory.Width * _cellSize.x, _inventory.Height * _cellSize.y);
-
             _dragController = new DragController(this);
         }
 
@@ -53,7 +57,8 @@ namespace DopeGrid.Inventory
             var toRemove = ListPool<int>.Get();
             try
             {
-                SyncViews(seen, toRemove);
+                SyncViews(seen, toRemove, _inventory.AsReadOnly());
+                UpdateDragPlacementPreview(seen, toRemove, _inventory.AsReadOnly());
             }
             finally
             {
@@ -62,13 +67,15 @@ namespace DopeGrid.Inventory
             }
         }
 
-        private void SyncViews(HashSet<int> seen, List<int> toRemove)
+        private void SyncViews(HashSet<int> seen, List<int> toRemove, Inventory.ReadOnly inventory)
         {
+            seen.Clear();
+            toRemove.Clear();
+
             // Iterate all items from model
-            for (int i = 0; i < _inventory.ItemCount; i++)
+            for (int i = 0; i < inventory.ItemCount; i++)
             {
-                if (!_inventory.TryGetItem(i, out var item))
-                    continue;
+                var item = inventory[i];
 
                 var instanceId = item.InstanceId;
                 seen.Add(instanceId);
@@ -114,6 +121,77 @@ namespace DopeGrid.Inventory
                     _pool.Release(image);
                 }
                 _itemViews.Remove(id);
+            }
+        }
+
+        private void UpdateDragPlacementPreview(HashSet<int> seen, List<int> toRemove, Inventory.ReadOnly inventory)
+        {
+            seen.Clear();
+            toRemove.Clear();
+
+            for (int i = 0; i < _draggingItems.Count; i++)
+            {
+                var draggingItem = _draggingItems[i];
+                seen.Add(draggingItem.InstanceId);
+
+                var item = inventory.GetItemByInstance(draggingItem.InstanceId);
+                if (item.IsInvalid)
+                    continue;
+
+                if (!TryGetSprite(item.DefinitionId, out var sprite))
+                    continue;
+
+                var shape = item.Shape;
+                var canPlace = inventory.CanMoveItem(draggingItem.InstanceId, shape, draggingItem.GetGridPosition(this));
+
+                // Get or create preview view
+                if (!_draggingViews.TryGetValue(draggingItem.InstanceId, out var preview) || preview == null)
+                {
+                    preview = _pool.Get();
+#if UNITY_EDITOR
+                    preview.name = $"__preview__{draggingItem.InstanceId}";
+#endif
+                    preview.transform.SetParent(transform, false);
+                    var prt = (RectTransform)preview.transform;
+                    EnsureTopLeftAnchors(prt);
+                    _draggingViews[draggingItem.InstanceId] = preview;
+                }
+
+                // Mirror transform logic from SyncViews
+                var rotatedSize = new Vector2(shape.Width * _cellSize.x, shape.Height * _cellSize.y);
+                var preRotSize = item.Rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
+                    ? new Vector2(rotatedSize.y, rotatedSize.x)
+                    : rotatedSize;
+                var anchoredPos = GridToAnchoredPosition(draggingItem.GetGridPosition(this));
+                var angleZ = GetZRotation(item.Rotation);
+                var offset = GetRotationOffset(preRotSize, item.Rotation);
+
+                var rt = (RectTransform)preview.transform;
+                rt.sizeDelta = preRotSize;
+                rt.anchoredPosition = anchoredPos + offset;
+                rt.localEulerAngles = new Vector3(0f, 0f, angleZ);
+                rt.SetAsLastSibling();
+
+                preview.sprite = sprite;
+                preview.preserveAspect = false;
+                preview.raycastTarget = false;
+                preview.color = canPlace ? _placeableColor : _blockedColor;
+                preview.gameObject.SetActive(true);
+            }
+
+            // Release previews that are no longer dragged
+            foreach (var kv in _draggingViews)
+            {
+                if (!seen.Contains(kv.Key))
+                    toRemove.Add(kv.Key);
+            }
+
+            for (int i = 0; i < toRemove.Count; i++)
+            {
+                var key = toRemove[i];
+                var img = _draggingViews[key];
+                if (img != null) _pool.Release(img);
+                _draggingViews.Remove(key);
             }
         }
 
@@ -181,9 +259,5 @@ namespace DopeGrid.Inventory
             sprite = null;
             return false;
         }
-
-        public void OnBeginDrag(PointerEventData eventData) => _dragController.OnBeginDrag(eventData);
-        public void OnDrag(PointerEventData eventData) => _dragController.OnDrag(eventData);
-        public void OnEndDrag(PointerEventData eventData) => _dragController.OnEndDrag(eventData);
     }
 }

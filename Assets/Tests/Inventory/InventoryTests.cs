@@ -459,9 +459,9 @@ public class InventoryTests
         inventory.TryPlaceItem(item1);
         inventory.TryPlaceItem(item2);
 
-        Assert.AreEqual(0, inventory.FindItemIndex(100));
-        Assert.AreEqual(1, inventory.FindItemIndex(200));
-        Assert.AreEqual(-1, inventory.FindItemIndex(300));
+        Assert.AreEqual(0, inventory.GetItemIndex(100));
+        Assert.AreEqual(1, inventory.GetItemIndex(200));
+        Assert.AreEqual(-1, inventory.GetItemIndex(300));
 
         inventory.Dispose();
     }
@@ -474,24 +474,9 @@ public class InventoryTests
 
         inventory.TryPlaceItem(item);
 
-        var result = inventory.TryGetItem(0, out var retrievedItem);
-
-        Assert.IsTrue(result);
+        var retrievedItem = inventory[0];
         Assert.AreEqual(100, retrievedItem.InstanceId);
         Assert.AreEqual(new int2(2, 2), retrievedItem.Position);
-
-        inventory.Dispose();
-    }
-
-    [Test]
-    public void TryGetItem_FailsForInvalidIndex()
-    {
-        var inventory = new Inventory(5, 5, Allocator.Temp);
-
-        var result = inventory.TryGetItem(0, out var item);
-
-        Assert.IsFalse(result);
-        Assert.AreEqual(default(InventoryItem), item);
 
         inventory.Dispose();
     }

@@ -1,22 +1,23 @@
 using System;
-using System.Collections.Generic;
-using DopeGrid.Native;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Pool;
 using UnityEngine.UI;
 
 namespace DopeGrid.Inventory
 {
-    public partial class InventoryView
+    public partial class InventoryView : IBeginDragHandler, IDragHandler, IEndDragHandler
     {
+        public void OnBeginDrag(PointerEventData eventData) => _dragController.OnBeginDrag(eventData);
+        public void OnDrag(PointerEventData eventData) => _dragController.OnDrag(eventData);
+        public void OnEndDrag(PointerEventData eventData) => _dragController.OnEndDrag(eventData);
+
         private sealed class DragController : IDisposable
         {
             private readonly InventoryView _view;
             private readonly Canvas _canvas;
             private Image _ghost;
-            private int _dragItemIndex = -1;
+            private DraggingItem? _draggingItem;
 
             public DragController(InventoryView view)
             {
@@ -49,8 +50,8 @@ namespace DopeGrid.Inventory
 
             public void OnBeginDrag(PointerEventData eventData)
             {
-                var inventory = _view.Inventory;
-                if (!inventory.IsCreated) return;
+                if (!_view.IsInitialized) return;
+                var inventory = _view.ReadOnlyInventory;
 
                 if (!TryGetPointerLocalTopLeft(eventData, out var fromTopLeft)) return;
 
@@ -58,12 +59,12 @@ namespace DopeGrid.Inventory
                 var gy = Mathf.FloorToInt(fromTopLeft.y / _view.CellSize.y);
                 if (gx < 0 || gy < 0 || gx >= inventory.Width || gy >= inventory.Height) return;
 
-                var idx = inventory.GetItemAt(new int2(gx, gy));
-                if (idx < 0) return;
-                if (!inventory.TryGetItem(idx, out var item)) return;
+                var item = inventory.GetItemAt(new int2(gx, gy));
+                if (item.IsInvalid) return;
                 if (!_view.TryGetSprite(item.DefinitionId, out var sprite)) return;
 
-                _dragItemIndex = idx;
+                _draggingItem = new DraggingItem(item.InstanceId, -1, item.Definition, _ghost.rectTransform, item.Rotation);
+                _view._draggingItems.Add(_draggingItem);
 
                 var rotatedSize = new Vector2(item.Shape.Width * _view.CellSize.x, item.Shape.Height * _view.CellSize.y);
                 var preRotSize = item.Rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
@@ -87,7 +88,7 @@ namespace DopeGrid.Inventory
 
             public void OnDrag(PointerEventData eventData)
             {
-                if (_dragItemIndex < 0) return;
+                if (_draggingItem == null) return;
                 if (_ghost == null) return;
                 if (!TryGetPointerLocalInCanvas(eventData, out var canvasLocal)) return;
                 var grt = (RectTransform)_ghost.transform;
@@ -96,7 +97,12 @@ namespace DopeGrid.Inventory
 
             public void OnEndDrag(PointerEventData eventData)
             {
-                _dragItemIndex = -1;
+                if (_draggingItem != null)
+                {
+                    _view._draggingItems.Remove(_draggingItem);
+                    _draggingItem = null;
+                }
+
                 if (_ghost != null)
                 {
                     _ghost.gameObject.SetActive(false);
@@ -127,6 +133,5 @@ namespace DopeGrid.Inventory
                 return RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)_canvas.transform, eventData.position, cam, out canvasLocal);
             }
         }
-
     }
 }

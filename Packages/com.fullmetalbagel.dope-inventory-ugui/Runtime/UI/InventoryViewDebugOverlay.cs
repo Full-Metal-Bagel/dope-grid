@@ -82,41 +82,40 @@ namespace DopeGrid.Inventory
 
         private void UpdateItemIndices()
         {
-            var inv = _view.ReadOnlyInventory;
+            var inventory = _view.ReadOnlyInventory;
             var cellSize = _view.CellSize;
 
             // Count needed labels across all items
             var needed = 0;
-            for (int i = 0; i < inv.ItemCount; i++)
+            for (int i = 0; i < inventory.ItemCount; i++)
             {
-                if (!inv.TryGetItem(i, out var it)) continue;
-                needed += it.Shape.OccupiedSpaceCount;
+                needed += inventory[i].Shape.OccupiedSpaceCount;
             }
 
             EnsureTextPool(_itemTexts, needed, _root!);
             DeactivateSurplus(_itemTexts, needed);
 
             // Fill labels
-            var idx = 0;
+            var index = 0;
             var fontSize = Mathf.Max(10, Mathf.RoundToInt(Mathf.Min(cellSize.x, cellSize.y) * 0.5f));
-            for (int i = 0; i < inv.ItemCount; i++)
+            for (int i = 0; i < inventory.ItemCount; i++)
             {
-                if (!inv.TryGetItem(i, out var it)) continue;
-                var shape = it.Shape;
-                var origin = it.Position;
+                var item = inventory[i];
+                var shape = item.Shape;
+                var origin = item.Position;
                 for (int y = 0; y < shape.Height; y++)
                 {
                     for (int x = 0; x < shape.Width; x++)
                     {
                         if (!shape.GetCell(x, y)) continue;
-                        var t = _itemTexts[idx++];
-                        var rt = (RectTransform)t.transform;
+                        var text = _itemTexts[index++];
+                        var rt = (RectTransform)text.transform;
                         rt.sizeDelta = cellSize;
                         var gridPos = new int2(origin.x + x, origin.y + y);
                         rt.anchoredPosition = new Vector2(gridPos.x * cellSize.x, -(gridPos.y * cellSize.y));
-                        t.fontSize = fontSize;
-                        t.text = BuildLabel(i, it.InstanceId);
-                        t.gameObject.SetActive(true);
+                        text.fontSize = fontSize;
+                        text.text = BuildLabel(i, item.InstanceId);
+                        text.gameObject.SetActive(true);
                     }
                 }
             }
@@ -124,10 +123,10 @@ namespace DopeGrid.Inventory
 
         private void UpdateEmptyCells()
         {
-            var inv = _view.ReadOnlyInventory;
+            var inventory = _view.ReadOnlyInventory;
             var cellSize = _view.CellSize;
-            var width = inv.Width;
-            var height = inv.Height;
+            var width = inventory.Width;
+            var height = inventory.Height;
             var needed = math.max(0, width * height);
 
             EnsureTextPool(_emptyTexts, needed, _root!);
@@ -138,15 +137,15 @@ namespace DopeGrid.Inventory
             {
                 var x = i % width;
                 var y = i / width;
-                var val = inv.Grid[x, y];
-                var t = _emptyTexts[i];
-                var rt = (RectTransform)t.transform;
+                var value = inventory.Grid[x, y];
+                var text = _emptyTexts[i];
+                var rt = (RectTransform)text.transform;
                 rt.sizeDelta = cellSize;
                 rt.anchoredPosition = new Vector2(x * cellSize.x, -(y * cellSize.y));
-                t.fontSize = fs;
-                var isEmpty = val == -1;
-                t.text = isEmpty ? "-1" : string.Empty;
-                t.gameObject.SetActive(isEmpty);
+                text.fontSize = fs;
+                var isEmpty = value == -1;
+                text.text = isEmpty ? "-1" : string.Empty;
+                text.gameObject.SetActive(isEmpty);
             }
         }
 
