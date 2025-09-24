@@ -119,10 +119,13 @@ namespace DopeGrid.Inventory
                         {
                             // Cross-inventory move - get item, remove from source, add to target
                             var item = sourceInventory.GetItemByInstanceId(_draggingItem.InstanceId);
-                            if (item.IsValid && sourceInventory.RemoveItem(_draggingItem.InstanceId))
+                            if (item.IsValid)
                             {
                                 var newItem = new InventoryItem(_draggingItem.InstanceId, item.Definition, item.Rotation, targetPos);
-                                targetInventory.TryPlaceItem(newItem);
+                                if (targetInventory.TryPlaceItem(newItem))
+                                {
+                                    sourceInventory.RemoveItem(_draggingItem.InstanceId);
+                                }
                             }
                         }
                     }

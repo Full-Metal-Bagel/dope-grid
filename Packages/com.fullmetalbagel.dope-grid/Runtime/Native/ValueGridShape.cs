@@ -185,12 +185,7 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
         {
             if (Width != other.Width || Height != other.Height)
                 throw new ArgumentException($"Cannot copy to GridShape<{typeof(T).Name}> with different dimensions. Source: {Width}x{Height}, Target: {other.Width}x{other.Height}");
-
-            var otherValues = other.Values;
-            for (int i = 0; i < Values.Length; i++)
-            {
-                otherValues[i] = Values[i];
-            }
+            Values.CopyTo(other.Values);
         }
 
         public GridShape ToGridShape(T trueValue, Allocator allocator)

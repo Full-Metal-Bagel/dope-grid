@@ -260,24 +260,9 @@ public struct Inventory : INativeDisposable
 
         private bool CanPlaceAt(ImmutableGridShape shape, int2 position)
         {
-            // Fast bounds check
-            if (position.x < 0 || position.y < 0 ||
-                position.x + shape.Width > _grid.Width ||
-                position.y + shape.Height > _grid.Height)
+            if (!_grid.IsWithinBounds(shape, position))
                 return false;
-
-            // Ensure all required cells are empty (-1)
-            for (int sy = 0; sy < shape.Height; sy++)
-            {
-                for (int sx = 0; sx < shape.Width; sx++)
-                {
-                    if (!shape.GetCell(sx, sy)) continue;
-                    var gp = new int2(position.x + sx, position.y + sy);
-                    if (_grid[gp] != -1)
-                        return false;
-                }
-            }
-            return true;
+            return _grid.CheckShapeCells(shape, position, (_, value) => value == -1);
         }
     }
 }
