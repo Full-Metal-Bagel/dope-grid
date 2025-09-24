@@ -490,6 +490,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cellSize: {x: 64, y: 64}
+  _placeableColor: {r: 0, g: 1, b: 0, a: 0.35}
+  _blockedColor: {r: 1, g: 0, b: 0, a: 0.35}
 --- !u!114 &738009271
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -658,6 +660,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cellSize: {x: 64, y: 64}
+  _placeableColor: {r: 0, g: 1, b: 0, a: 0.35}
+  _blockedColor: {r: 1, g: 0, b: 0, a: 0.35}
 --- !u!114 &1908836748
 MonoBehaviour:
   m_ObjectHideFlags: 0

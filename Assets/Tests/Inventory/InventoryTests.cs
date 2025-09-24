@@ -209,7 +209,7 @@ public class InventoryTests
         var item = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(2, 2));
 
         inventory.TryPlaceItem(item);
-        var result = inventory.RemoveItem(0);
+        var result = inventory.RemoveItem(1);
 
         Assert.IsTrue(result);
         Assert.AreEqual(0, inventory.ItemCount);
@@ -225,7 +225,7 @@ public class InventoryTests
         var item = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(1, 1));
 
         inventory.TryPlaceItem(item);
-        var result = inventory.RemoveItem(0);
+        var result = inventory.RemoveItem(1);
 
         Assert.IsTrue(result);
         Assert.AreEqual(-1, inventory.Grid[1, 1]);
@@ -248,8 +248,8 @@ public class InventoryTests
         inventory.TryPlaceItem(item2);
         inventory.TryPlaceItem(item3);
 
-        // Remove middle item (index 1)
-        inventory.RemoveItem(1);
+        // Remove middle item (instance 2)
+        inventory.RemoveItem(2);
 
         Assert.AreEqual(2, inventory.ItemCount);
         Assert.AreEqual(0, inventory.Grid[0, 0]); // First item unchanged
@@ -282,7 +282,7 @@ public class InventoryTests
         var item = new InventoryItem(1, _singleCellItem, RotationDegree.None, new int2(0, 0));
 
         inventory.TryPlaceItem(item);
-        var result = inventory.TryMoveItem(0, new int2(3, 3));
+        var result = inventory.TryMoveItem(1, new int2(3, 3));
 
         Assert.IsTrue(result);
         Assert.AreEqual(-1, inventory.Grid[0, 0]); // Old position empty
@@ -299,7 +299,7 @@ public class InventoryTests
         var item = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(0, 0));
 
         inventory.TryPlaceItem(item);
-        var result = inventory.TryMoveItem(0, new int2(2, 2));
+        var result = inventory.TryMoveItem(1, new int2(2, 2));
 
         Assert.IsTrue(result);
 
@@ -328,7 +328,7 @@ public class InventoryTests
         inventory.TryPlaceItem(item1);
         inventory.TryPlaceItem(item2);
 
-        var result = inventory.TryMoveItem(0, new int2(2, 0)); // Try to move to item2's position
+        var result = inventory.TryMoveItem(1, new int2(2, 0)); // Try to move to item2's position
 
         Assert.IsFalse(result);
         Assert.AreEqual(0, inventory.Grid[0, 0]); // Item1 didn't move
@@ -344,7 +344,7 @@ public class InventoryTests
         var item = new InventoryItem(1, _squareItem2x2, RotationDegree.None, new int2(1, 1));
 
         inventory.TryPlaceItem(item);
-        var result = inventory.TryMoveItem(0, new int2(2, 1)); // Partial overlap with self
+        var result = inventory.TryMoveItem(1, new int2(2, 1)); // Partial overlap with self
 
         Assert.IsTrue(result);
         Assert.AreEqual(0, inventory.Grid[2, 1]);
@@ -385,10 +385,12 @@ public class InventoryTests
         inventory.TryPlaceItem(item1);
         inventory.TryPlaceItem(item2);
 
-        Assert.AreEqual(0, inventory.GetItemAt(new int2(0, 0)));
-        Assert.AreEqual(1, inventory.GetItemAt(new int2(2, 2)));
-        Assert.AreEqual(1, inventory.GetItemAt(new int2(3, 3)));
-        Assert.AreEqual(-1, inventory.GetItemAt(new int2(1, 1)));
+        Assert.AreEqual(1, inventory.GetItemAt(new int2(0, 0)).InstanceId);
+        Assert.AreEqual(0, inventory.GetItemIndex(1));
+        Assert.AreEqual(2, inventory.GetItemAt(new int2(2, 2)).InstanceId);
+        Assert.AreEqual(2, inventory.GetItemAt(new int2(3, 3)).InstanceId);
+        Assert.AreEqual(1, inventory.GetItemIndex(2));
+        Assert.AreEqual(-1, inventory.GetItemAt(new int2(1, 1)).InstanceId);
 
         inventory.Dispose();
     }
@@ -398,8 +400,8 @@ public class InventoryTests
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
 
-        Assert.AreEqual(-1, inventory.GetItemAt(new int2(0, 0)));
-        Assert.AreEqual(-1, inventory.GetItemAt(new int2(2, 2)));
+        Assert.AreEqual(-1, inventory.GetItemAt(new int2(0, 0)).InstanceId);
+        Assert.AreEqual(-1, inventory.GetItemAt(new int2(2, 2)).InstanceId);
 
         inventory.Dispose();
     }
@@ -409,9 +411,9 @@ public class InventoryTests
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
 
-        Assert.AreEqual(-1, inventory.GetItemAt(new int2(-1, 0)));
-        Assert.AreEqual(-1, inventory.GetItemAt(new int2(5, 0)));
-        Assert.AreEqual(-1, inventory.GetItemAt(new int2(0, 5)));
+        Assert.AreEqual(-1, inventory.GetItemAt(new int2(-1, 0)).InstanceId);
+        Assert.AreEqual(-1, inventory.GetItemAt(new int2(5, 0)).InstanceId);
+        Assert.AreEqual(-1, inventory.GetItemAt(new int2(0, 5)).InstanceId);
 
         inventory.Dispose();
     }
@@ -773,7 +775,7 @@ public class InventoryTests
         Assert.IsTrue(inventory.TryPlaceItem(tShape));
 
         // Move it to a new position
-        Assert.IsTrue(inventory.TryMoveItem(0, new int2(3, 1)));
+        Assert.IsTrue(inventory.TryMoveItem(1, new int2(3, 1)));
 
         // Verify the shape is at the new position with correct rotation
         Assert.AreEqual(new int2(3, 1), inventory.Items[0].Position);
@@ -818,7 +820,7 @@ public class InventoryTests
         inventory.TryPlaceItem(item2);
 
         // Remove last item
-        inventory.RemoveItem(1);
+        inventory.RemoveItem(2);
 
         Assert.AreEqual(1, inventory.ItemCount);
         Assert.AreEqual(0, inventory.Grid[0, 0]); // First item index unchanged
@@ -844,10 +846,10 @@ public class InventoryTests
         Assert.IsTrue(inventory.TryPlaceItem(item4));
 
         // Move item2
-        Assert.IsTrue(inventory.TryMoveItem(1, new int2(3, 3)));
+        Assert.IsTrue(inventory.TryMoveItem(2, new int2(3, 3)));
 
         // Remove item1
-        Assert.IsTrue(inventory.RemoveItem(0));
+        Assert.IsTrue(inventory.RemoveItem(1));
 
         // item4 should now be at index 0, item2 at index 1, item3 at index 2
         Assert.AreEqual(3, inventory.ItemCount);

@@ -108,7 +108,7 @@ namespace DopeGrid.Inventory
                         var targetInventory = _draggingItem.TargetInventory;
 
                         // Check if it's the same inventory by comparing the underlying native containers
-                        var isSameInventory = sourceInventory.Id == targetInventory.Id;
+                        var isSameInventory = sourceInventory.IsSame(targetInventory);
 
                         if (isSameInventory)
                         {

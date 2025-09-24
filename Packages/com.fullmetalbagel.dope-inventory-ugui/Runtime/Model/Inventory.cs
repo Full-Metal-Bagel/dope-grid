@@ -1,8 +1,8 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
 using DopeGrid.Native;
 using JetBrains.Annotations;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 
@@ -10,8 +10,6 @@ namespace DopeGrid.Inventory;
 
 public struct Inventory : INativeDisposable
 {
-    public Guid Id { get; } = Guid.NewGuid();
-
     private ValueGridShape<int> _grid;
     public ValueGridShape<int> Grid => _grid;
 
@@ -37,6 +35,7 @@ public struct Inventory : INativeDisposable
     [MustDisposeResource]
     public NativeArray<InventoryItem>.Enumerator Enumerator() => _items.GetEnumerator();
 
+    public readonly bool IsSame(in Inventory other) => ((ReadOnly)this).IsSame(other);
     public readonly InventoryItem GetItemAt(int2 position) => ((ReadOnly)this).GetItemAt(position);
     public readonly InventoryItem GetItemByInstanceId(int instanceId) => ((ReadOnly)this).GetItemByInstanceId(instanceId);
     public readonly bool IsPositionOccupied(int2 position) => ((ReadOnly)this).IsPositionOccupied(position);
@@ -188,13 +187,17 @@ public struct Inventory : INativeDisposable
         [MustDisposeResource]
         public NativeArray<InventoryItem>.ReadOnly.Enumerator Enumerator() => _items.GetEnumerator();
 
+        public unsafe bool IsSame(in ReadOnly other)
+        {
+            return _items.GetUnsafeReadOnlyPtr() == other._items.GetUnsafeReadOnlyPtr();
+        }
+
         public InventoryItem GetItemAt(int2 position)
         {
             if (!_grid.Contains(position))
                 return InventoryItem.Invalid;
-
             var itemIndex = _grid[position];
-            return _items[itemIndex];
+            return itemIndex < 0 ? InventoryItem.Invalid : _items[itemIndex];
         }
 
         public bool IsPositionOccupied(int2 position) => GetItemAt(position).IsValid;
