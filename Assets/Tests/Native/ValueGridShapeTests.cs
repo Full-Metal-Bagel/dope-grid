@@ -564,65 +564,6 @@ public class ValueGridShapeTests
 
     #region Transformation Tests
 
-    [Test]
-    public void Map_TransformsAllValues()
-    {
-        var grid = new ValueGridShape<int>(3, 3, Allocator.Temp);
-        for (int i = 0; i < 9; i++)
-        {
-            grid.SetValue(i % 3, i / 3, i);
-        }
-
-        grid.Map(v => v * 2);
-
-        for (int i = 0; i < 9; i++)
-        {
-            Assert.AreEqual(i * 2, grid.GetValue(i % 3, i / 3));
-        }
-
-        grid.Dispose();
-    }
-
-    [Test]
-    public void MapWithPosition_UsesPositionCorrectly()
-    {
-        var grid = new ValueGridShape<int>(3, 3, Allocator.Temp);
-
-        grid.MapWithPosition((x, y, v) => x + y * 10);
-
-        Assert.AreEqual(0, grid[0, 0]);  // 0 + 0*10
-        Assert.AreEqual(1, grid[1, 0]);  // 1 + 0*10
-        Assert.AreEqual(2, grid[2, 0]);  // 2 + 0*10
-        Assert.AreEqual(10, grid[0, 1]); // 0 + 1*10
-        Assert.AreEqual(11, grid[1, 1]); // 1 + 1*10
-        Assert.AreEqual(22, grid[2, 2]); // 2 + 2*10
-
-        grid.Dispose();
-    }
-
-    [Test]
-    public void Select_CreatesNewGridWithTransformedValues()
-    {
-        var intGrid = new ValueGridShape<int>(2, 2, Allocator.Temp);
-        intGrid[0, 0] = 1;
-        intGrid[1, 0] = 2;
-        intGrid[0, 1] = 3;
-        intGrid[1, 1] = 4;
-
-        var floatGrid = intGrid.Select(v => v * 0.5f, Allocator.Temp);
-
-        Assert.AreEqual(intGrid.Width, floatGrid.Width);
-        Assert.AreEqual(intGrid.Height, floatGrid.Height);
-
-        Assert.AreEqual(0.5f, floatGrid[0, 0]);
-        Assert.AreEqual(1.0f, floatGrid[1, 0]);
-        Assert.AreEqual(1.5f, floatGrid[0, 1]);
-        Assert.AreEqual(2.0f, floatGrid[1, 1]);
-
-        intGrid.Dispose();
-        floatGrid.Dispose();
-    }
-
     #endregion
 
     #region Equality Tests
@@ -705,7 +646,7 @@ public class ValueGridShapeTests
     public void Dispose_ReleasesNativeMemory()
     {
         var grid = new ValueGridShape<int>(3, 3, Allocator.Temp);
-        var values = grid.GetValues();
+        var values = grid.Values;
 
         Assert.IsTrue(values.IsCreated);
 
@@ -744,7 +685,12 @@ public class ValueGridShapeTests
         grid[1, 1] = 2.5f;
         Assert.AreEqual(2.5f, grid[1, 1]);
 
-        grid.Map(v => v * 2);
+        var values = grid.Values;
+        for (int index = 0; index < values.Length; index++)
+        {
+            values[index] *= 2;
+        }
+
         Assert.AreEqual(3.0f, grid[0, 0]);
         Assert.AreEqual(5.0f, grid[1, 1]);
 
@@ -806,7 +752,7 @@ public class ValueGridShapeTests
         grid[1, 1] = 20;
         grid[2, 2] = 30;
 
-        var values = grid.GetValues();
+        var values = grid.Values;
 
         Assert.AreEqual(9, values.Length);
         Assert.AreEqual(10, values[0]);

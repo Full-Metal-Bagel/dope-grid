@@ -9,20 +9,26 @@ using UnityEngine.UI;
 namespace DopeGrid.Inventory
 {
     [RequireComponent(typeof(RectTransform))]
-    public class InventoryView : UIBehaviour
+    public partial class InventoryView : UIBehaviour
     {
         [SerializeField] private Vector2 _cellSize = new(64f, 64f);
+        [SerializeField] private Color _placeableColor = new(0f, 1f, 0f, 0.35f);
+        [SerializeField] private Color _blockedColor = new(1f, 0f, 0f, 0.35f);
 
         private Inventory _inventory;
-        private IReadOnlyDictionary<Guid, UIItemDefinition> _definitions = null!;
-        private IInventoryItemViewPool _pool = null!;
+        private SharedInventoryData _sharedInventoryData = null!;
 
-        private readonly Dictionary<int, Image> _itemViews = new(); // instanceId -> Image
+        private readonly Dictionary<int/*item instance*/, Image> _itemViews = new();
+        private readonly Dictionary<int/*item instance*/, Image> _draggingViews = new();
+        private DragController _dragController = null!;
+
         private RectTransform Rect => (RectTransform)transform;
 
-        internal Inventory Inventory => _inventory;
+        public Inventory.ReadOnly ReadOnlyInventory => _inventory;
         internal Vector2 CellSize => _cellSize;
         internal RectTransform RectTransform => Rect;
+
+        public bool IsInitialized => _inventory.IsCreated;
 
         protected override void Awake()
         {
@@ -31,14 +37,13 @@ namespace DopeGrid.Inventory
 #endif
         }
 
-        public void Initialize(Inventory inventory, IReadOnlyDictionary<Guid, UIItemDefinition> definitions, IInventoryItemViewPool? pool = null)
+        public void Initialize(Inventory inventory, SharedInventoryData sharedInventoryData)
         {
             _inventory = inventory;
-            _definitions = definitions;
-            _pool = pool ?? new DefaultInventoryItemViewPool();
-
+            _sharedInventoryData = sharedInventoryData;
             Debug.Assert(_inventory.IsCreated, this);
             Rect.sizeDelta = new Vector2(_inventory.Width * _cellSize.x, _inventory.Height * _cellSize.y);
+            _dragController = new DragController(this);
         }
 
         public void Update()
@@ -48,7 +53,8 @@ namespace DopeGrid.Inventory
             var toRemove = ListPool<int>.Get();
             try
             {
-                SyncViews(seen, toRemove);
+                SyncViews(seen, toRemove, _inventory.AsReadOnly());
+                UpdateDragPlacementPreview(seen, toRemove, _inventory.AsReadOnly());
             }
             finally
             {
@@ -57,23 +63,26 @@ namespace DopeGrid.Inventory
             }
         }
 
-        private void SyncViews(HashSet<int> seen, List<int> toRemove)
+        private void SyncViews(HashSet<int> seen, List<int> toRemove, Inventory.ReadOnly inventory)
         {
+            seen.Clear();
+            toRemove.Clear();
+
             // Iterate all items from model
-            for (int i = 0; i < _inventory.ItemCount; i++)
+            for (int i = 0; i < inventory.ItemCount; i++)
             {
-                if (!_inventory.TryGetItem(i, out var item))
-                    continue;
+                var item = inventory[i];
 
                 var instanceId = item.InstanceId;
                 seen.Add(instanceId);
 
                 // Lookup UI definition by Guid
-                if (!_definitions.TryGetValue(item.DefinitionId, out var itemUI) || itemUI == null)
+                if (!_sharedInventoryData.Definitions.TryGetValue(item.DefinitionId, out var itemUI) || itemUI == null)
                     continue; // No UI—skip rendering
 
                 var image = GetOrCreateItemView(instanceId);
                 image.sprite = itemUI.Image;
+                image.raycastTarget = false;
                 image.preserveAspect = false;
 
                 // Compute target AABB (rotated shape) and pre-rotation rect size
@@ -105,9 +114,90 @@ namespace DopeGrid.Inventory
                 var image = _itemViews[id];
                 if (image != null)
                 {
-                    _pool.Release(image);
+                    _sharedInventoryData.Pool.Release(image);
                 }
                 _itemViews.Remove(id);
+            }
+        }
+
+        private void UpdateDragPlacementPreview(HashSet<int> seen, List<int> toRemove, Inventory.ReadOnly inventory)
+        {
+            seen.Clear();
+            toRemove.Clear();
+
+            for (int i = 0; i < _sharedInventoryData.DraggingItems.Count; i++)
+            {
+                var item = _sharedInventoryData.DraggingItems[i];
+                seen.Add(item.InstanceId);
+
+                if (!TryGetSprite(item.DefinitionId, out var sprite))
+                    continue;
+
+                var shape = item.Shape;
+                var gridPos = item.GetGridPosition(this);
+
+                // Get or create preview view
+                if (!_draggingViews.TryGetValue(item.InstanceId, out var preview) || preview == null)
+                {
+                    preview = _sharedInventoryData.Pool.Get();
+#if UNITY_EDITOR
+                    preview.name = $"__preview__{item.InstanceId}";
+#endif
+                    preview.transform.SetParent(transform, false);
+                    var prt = (RectTransform)preview.transform;
+                    EnsureTopLeftAnchors(prt);
+                    _draggingViews[item.InstanceId] = preview;
+                }
+
+                // Only show preview if the item is within inventory bounds
+                if (gridPos.x < 0 || gridPos.y < 0 ||
+                    gridPos.x + shape.Width > inventory.Width ||
+                    gridPos.y + shape.Height > inventory.Height)
+                {
+                    preview.gameObject.SetActive(false);
+                    continue;
+                }
+
+                var canPlace = inventory.CanMoveItem(item.InstanceId, shape, gridPos);
+                item.TargetInventory = _inventory;
+                item.TargetPosition = gridPos;
+                item.LastFrame = Time.frameCount;
+
+                // Mirror transform logic from SyncViews
+                var rotatedSize = new Vector2(shape.Width * _cellSize.x, shape.Height * _cellSize.y);
+                var preRotSize = item.Rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
+                    ? new Vector2(rotatedSize.y, rotatedSize.x)
+                    : rotatedSize;
+                var anchoredPos = GridToAnchoredPosition(gridPos);
+                var angleZ = GetZRotation(item.Rotation);
+                var offset = GetRotationOffset(preRotSize, item.Rotation);
+
+                var rt = (RectTransform)preview.transform;
+                rt.sizeDelta = preRotSize;
+                rt.anchoredPosition = anchoredPos + offset;
+                rt.localEulerAngles = new Vector3(0f, 0f, angleZ);
+                rt.SetAsLastSibling();
+
+                preview.sprite = sprite;
+                preview.preserveAspect = false;
+                preview.raycastTarget = false;
+                preview.color = canPlace ? _placeableColor : _blockedColor;
+                preview.gameObject.SetActive(true);
+            }
+
+            // Release previews that are no longer dragged
+            foreach (var kv in _draggingViews)
+            {
+                if (!seen.Contains(kv.Key))
+                    toRemove.Add(kv.Key);
+            }
+
+            for (int i = 0; i < toRemove.Count; i++)
+            {
+                var key = toRemove[i];
+                var img = _draggingViews[key];
+                if (img != null) _sharedInventoryData.Pool.Release(img);
+                _draggingViews.Remove(key);
             }
         }
 
@@ -116,11 +206,13 @@ namespace DopeGrid.Inventory
             if (_itemViews.TryGetValue(instanceId, out var existing) && existing != null)
                 return existing;
 
-            var image = _pool.Get();
+            var image = _sharedInventoryData.Pool.Get();
 #if UNITY_EDITOR
             image.name = $"Item_{instanceId}";
 #endif
             image.transform.SetParent(transform, false);
+            image.gameObject.SetActive(true);
+            image.color = Color.white;
 
             var rt = (RectTransform)image.transform;
             EnsureTopLeftAnchors(rt);
@@ -163,6 +255,17 @@ namespace DopeGrid.Inventory
                 RotationDegree.Clockwise270 => new Vector2(0f, -w),
                 _ => Vector2.zero
             };
+        }
+
+        private bool TryGetSprite(Guid definitionId, out Sprite? sprite)
+        {
+            if (_sharedInventoryData.Definitions.TryGetValue(definitionId, out var ui) && ui != null && ui.Image != null)
+            {
+                sprite = ui.Image;
+                return true;
+            }
+            sprite = null;
+            return false;
         }
     }
 }
