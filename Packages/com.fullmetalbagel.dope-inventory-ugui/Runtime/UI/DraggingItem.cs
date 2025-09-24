@@ -14,6 +14,11 @@ public class DraggingItem
     public RectTransform View { get; }
     public RotationDegree Rotation { get; set; }
 
+    public Inventory SourceInventory { get; set; } = default;
+    public Inventory TargetInventory { get; set; } = default;
+    public int2 TargetPosition { get; set; } = default;
+    public int LastFrame { get; set; } = 0;
+
     public DraggingItem(int instanceId, ItemDefinition definition, RectTransform view, RotationDegree rotation = RotationDegree.None)
     {
         InstanceId = instanceId;

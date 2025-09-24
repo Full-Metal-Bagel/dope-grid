@@ -159,6 +159,9 @@ namespace DopeGrid.Inventory
                 }
 
                 var canPlace = inventory.CanMoveItem(item.InstanceId, shape, gridPos);
+                item.TargetInventory = _inventory;
+                item.TargetPosition = gridPos;
+                item.LastFrame = Time.frameCount;
 
                 // Mirror transform logic from SyncViews
                 var rotatedSize = new Vector2(shape.Width * _cellSize.x, shape.Height * _cellSize.y);
@@ -208,6 +211,8 @@ namespace DopeGrid.Inventory
             image.name = $"Item_{instanceId}";
 #endif
             image.transform.SetParent(transform, false);
+            image.gameObject.SetActive(true);
+            image.color = Color.white;
 
             var rt = (RectTransform)image.transform;
             EnsureTopLeftAnchors(rt);

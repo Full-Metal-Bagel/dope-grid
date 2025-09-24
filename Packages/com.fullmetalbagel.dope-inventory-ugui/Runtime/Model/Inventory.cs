@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
 using DopeGrid.Native;
 using JetBrains.Annotations;
@@ -9,6 +10,8 @@ namespace DopeGrid.Inventory;
 
 public struct Inventory : INativeDisposable
 {
+    public Guid Id { get; } = Guid.NewGuid();
+
     private ValueGridShape<int> _grid;
     public ValueGridShape<int> Grid => _grid;
 
@@ -35,6 +38,7 @@ public struct Inventory : INativeDisposable
     public NativeArray<InventoryItem>.Enumerator Enumerator() => _items.GetEnumerator();
 
     public readonly InventoryItem GetItemAt(int2 position) => ((ReadOnly)this).GetItemAt(position);
+    public readonly InventoryItem GetItemByInstanceId(int instanceId) => ((ReadOnly)this).GetItemByInstanceId(instanceId);
     public readonly bool IsPositionOccupied(int2 position) => ((ReadOnly)this).IsPositionOccupied(position);
     public readonly bool CanPlaceItemAt(in InventoryItem inventoryItem, int2 position) => ((ReadOnly)this).CanPlaceItemAt(inventoryItem, position);
     public readonly bool CanPlaceItemAt(ImmutableGridShape shape, int2 position) => ((ReadOnly)this).CanPlaceItemAt(shape, position);
@@ -226,7 +230,7 @@ public struct Inventory : INativeDisposable
             return _itemMap.TryGetValue(instanceId, out var itemIndex) ? itemIndex : -1;
         }
 
-        public InventoryItem GetItemByInstance(int instanceId)
+        public InventoryItem GetItemByInstanceId(int instanceId)
         {
             var index = GetItemIndex(instanceId);
             return index >= 0 ? _items[index] : InventoryItem.Invalid;

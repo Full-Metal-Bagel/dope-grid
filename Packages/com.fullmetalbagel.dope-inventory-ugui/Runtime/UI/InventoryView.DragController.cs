@@ -64,6 +64,7 @@ namespace DopeGrid.Inventory
                 if (!_view.TryGetSprite(item.DefinitionId, out var sprite)) return;
 
                 _draggingItem = new DraggingItem(item.InstanceId, item.Definition, _ghost.rectTransform, item.Rotation);
+                _draggingItem.SourceInventory = _view._inventory;
                 _view._sharedInventoryData.DraggingItems.Add(_draggingItem);
 
                 var rotatedSize = new Vector2(item.Shape.Width * _view.CellSize.x, item.Shape.Height * _view.CellSize.y);
@@ -95,10 +96,37 @@ namespace DopeGrid.Inventory
                 grt.anchoredPosition = canvasLocal;
             }
 
-            public void OnEndDrag(PointerEventData eventData)
+            public void OnEndDrag(PointerEventData _)
             {
                 if (_draggingItem != null)
                 {
+                    // Check if we have a valid target position from the most recent frame
+                    if (Time.frameCount - _draggingItem.LastFrame <= 1 && _draggingItem.TargetInventory.IsCreated)
+                    {
+                        var targetPos = _draggingItem.TargetPosition;
+                        var sourceInventory = _draggingItem.SourceInventory;
+                        var targetInventory = _draggingItem.TargetInventory;
+
+                        // Check if it's the same inventory by comparing the underlying native containers
+                        var isSameInventory = sourceInventory.Id == targetInventory.Id;
+
+                        if (isSameInventory)
+                        {
+                            // Same inventory - just move the item
+                            sourceInventory.TryMoveItem(_draggingItem.InstanceId, targetPos);
+                        }
+                        else
+                        {
+                            // Cross-inventory move - get item, remove from source, add to target
+                            var item = sourceInventory.GetItemByInstanceId(_draggingItem.InstanceId);
+                            if (item.IsValid && sourceInventory.RemoveItem(_draggingItem.InstanceId))
+                            {
+                                var newItem = new InventoryItem(_draggingItem.InstanceId, item.Definition, item.Rotation, targetPos);
+                                targetInventory.TryPlaceItem(newItem);
+                            }
+                        }
+                    }
+
                     _view._sharedInventoryData.DraggingItems.Remove(_draggingItem);
                     _draggingItem = null;
                 }
