@@ -31,8 +31,9 @@ public class DraggingItem
         var localPosInInventory = inventoryRect.InverseTransformPoint(View.position);
 
         // Account for the dragging ghost having center pivot - convert to top-left corner
-        var itemSize = View.sizeDelta;
-        var topLeftPos = localPosInInventory - new Vector3(itemSize.x * 0.5f, -itemSize.y * 0.5f, 0f);
+        // The ghost position represents the center of the rotated item, but we need the top-left of the grid shape
+        var rotatedSize = new Vector2(Shape.Width * inventoryView.CellSize.x, Shape.Height * inventoryView.CellSize.y);
+        var topLeftPos = localPosInInventory - new Vector3(rotatedSize.x * 0.5f, -rotatedSize.y * 0.5f, 0f);
 
         // Convert to top-left origin from the inventory view's pivot
         var rect = inventoryRect.rect;
