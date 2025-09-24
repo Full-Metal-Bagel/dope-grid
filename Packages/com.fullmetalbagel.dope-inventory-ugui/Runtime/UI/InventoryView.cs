@@ -16,15 +16,13 @@ namespace DopeGrid.Inventory
         [SerializeField] private Color _blockedColor = new(1f, 0f, 0f, 0.35f);
 
         private Inventory _inventory;
-        private IReadOnlyDictionary<Guid, UIItemDefinition> _definitions = null!;
-        private IInventoryItemViewPool _pool = null!;
+        private SharedInventoryData _sharedInventoryData = null!;
 
         private readonly Dictionary<int/*item instance*/, Image> _itemViews = new();
         private readonly Dictionary<int/*item instance*/, Image> _draggingViews = new();
         private DragController _dragController = null!;
 
         private RectTransform Rect => (RectTransform)transform;
-        private List<DraggingItem> _draggingItems = null!;
 
         public Inventory.ReadOnly ReadOnlyInventory => _inventory;
         internal Vector2 CellSize => _cellSize;
@@ -39,12 +37,10 @@ namespace DopeGrid.Inventory
 #endif
         }
 
-        public void Initialize(Inventory inventory, IReadOnlyDictionary<Guid, UIItemDefinition> definitions, List<DraggingItem> draggingItems, IInventoryItemViewPool? pool = null)
+        public void Initialize(Inventory inventory, SharedInventoryData sharedInventoryData)
         {
             _inventory = inventory;
-            _definitions = definitions;
-            _draggingItems = draggingItems;
-            _pool = pool ?? new DefaultInventoryItemViewPool();
+            _sharedInventoryData = sharedInventoryData;
             Debug.Assert(_inventory.IsCreated, this);
             Rect.sizeDelta = new Vector2(_inventory.Width * _cellSize.x, _inventory.Height * _cellSize.y);
             _dragController = new DragController(this);
@@ -81,7 +77,7 @@ namespace DopeGrid.Inventory
                 seen.Add(instanceId);
 
                 // Lookup UI definition by Guid
-                if (!_definitions.TryGetValue(item.DefinitionId, out var itemUI) || itemUI == null)
+                if (!_sharedInventoryData.Definitions.TryGetValue(item.DefinitionId, out var itemUI) || itemUI == null)
                     continue; // No UI—skip rendering
 
                 var image = GetOrCreateItemView(instanceId);
@@ -118,7 +114,7 @@ namespace DopeGrid.Inventory
                 var image = _itemViews[id];
                 if (image != null)
                 {
-                    _pool.Release(image);
+                    _sharedInventoryData.Pool.Release(image);
                 }
                 _itemViews.Remove(id);
             }
@@ -129,9 +125,9 @@ namespace DopeGrid.Inventory
             seen.Clear();
             toRemove.Clear();
 
-            for (int i = 0; i < _draggingItems.Count; i++)
+            for (int i = 0; i < _sharedInventoryData.DraggingItems.Count; i++)
             {
-                var item = _draggingItems[i];
+                var item = _sharedInventoryData.DraggingItems[i];
                 seen.Add(item.InstanceId);
 
                 if (!TryGetSprite(item.DefinitionId, out var sprite))
@@ -143,7 +139,7 @@ namespace DopeGrid.Inventory
                 // Get or create preview view
                 if (!_draggingViews.TryGetValue(item.InstanceId, out var preview) || preview == null)
                 {
-                    preview = _pool.Get();
+                    preview = _sharedInventoryData.Pool.Get();
 #if UNITY_EDITOR
                     preview.name = $"__preview__{item.InstanceId}";
 #endif
@@ -197,7 +193,7 @@ namespace DopeGrid.Inventory
             {
                 var key = toRemove[i];
                 var img = _draggingViews[key];
-                if (img != null) _pool.Release(img);
+                if (img != null) _sharedInventoryData.Pool.Release(img);
                 _draggingViews.Remove(key);
             }
         }
@@ -207,7 +203,7 @@ namespace DopeGrid.Inventory
             if (_itemViews.TryGetValue(instanceId, out var existing) && existing != null)
                 return existing;
 
-            var image = _pool.Get();
+            var image = _sharedInventoryData.Pool.Get();
 #if UNITY_EDITOR
             image.name = $"Item_{instanceId}";
 #endif
@@ -258,7 +254,7 @@ namespace DopeGrid.Inventory
 
         private bool TryGetSprite(Guid definitionId, out Sprite? sprite)
         {
-            if (_definitions.TryGetValue(definitionId, out var ui) && ui != null && ui.Image != null)
+            if (_sharedInventoryData.Definitions.TryGetValue(definitionId, out var ui) && ui != null && ui.Image != null)
             {
                 sprite = ui.Image;
                 return true;

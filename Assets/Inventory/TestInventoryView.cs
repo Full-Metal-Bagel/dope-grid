@@ -15,7 +15,6 @@ public class TestInventoryView : MonoBehaviour
     [SerializeField] private UIItemDefinition[] _uiItems = Array.Empty<UIItemDefinition>();
 
     private Inventory _inventory;
-    private readonly Dictionary<Guid, UIItemDefinition> _definitions = new();
     private Items _items;
 
     private void Start()
@@ -29,18 +28,17 @@ public class TestInventoryView : MonoBehaviour
 
         if (_view != null)
         {
-            _view.Initialize(_inventory, _definitions, _items.DraggingItems);
+            _view.Initialize(_inventory, _items.SharedInventoryData);
         }
     }
 
     private void BuildDefinitionsMap()
     {
-        _definitions.Clear();
         foreach (var ui in _uiItems)
         {
             if (ui == null) continue;
             if (!Guid.TryParse(ui.Id, out var guid)) continue;
-            _definitions[guid] = ui;
+            _items.SharedInventoryData.Definitions[guid] = ui;
         }
     }
 

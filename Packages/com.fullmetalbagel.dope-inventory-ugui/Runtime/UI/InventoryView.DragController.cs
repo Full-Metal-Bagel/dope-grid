@@ -24,7 +24,7 @@ namespace DopeGrid.Inventory
                 _view = view;
                 _canvas = view.GetComponentInParent<Canvas>();
                 if (_canvas == null) throw new InvalidOperationException("InventoryView must be under a Canvas");
-                _ghost = view._pool.Get();
+                _ghost = view._sharedInventoryData.Pool.Get();
 #if UNITY_EDITOR
                 _ghost.name = "__ghost__";
 #endif
@@ -43,7 +43,7 @@ namespace DopeGrid.Inventory
             {
                 if (_ghost != null)
                 {
-                    _view._pool.Release(_ghost);
+                    _view._sharedInventoryData.Pool.Release(_ghost);
                     _ghost = null!;
                 }
             }
@@ -63,8 +63,8 @@ namespace DopeGrid.Inventory
                 if (item.IsInvalid) return;
                 if (!_view.TryGetSprite(item.DefinitionId, out var sprite)) return;
 
-                _draggingItem = new DraggingItem(item.InstanceId, -1, item.Definition, _ghost.rectTransform, item.Rotation);
-                _view._draggingItems.Add(_draggingItem);
+                _draggingItem = new DraggingItem(item.InstanceId, item.Definition, _ghost.rectTransform, item.Rotation);
+                _view._sharedInventoryData.DraggingItems.Add(_draggingItem);
 
                 var rotatedSize = new Vector2(item.Shape.Width * _view.CellSize.x, item.Shape.Height * _view.CellSize.y);
                 var preRotSize = item.Rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
@@ -99,7 +99,7 @@ namespace DopeGrid.Inventory
             {
                 if (_draggingItem != null)
                 {
-                    _view._draggingItems.Remove(_draggingItem);
+                    _view._sharedInventoryData.DraggingItems.Remove(_draggingItem);
                     _draggingItem = null;
                 }
 
