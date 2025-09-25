@@ -6,7 +6,6 @@ namespace DopeGrid.Inventory
     public class InventoryViewLegacyInput : MonoBehaviour
     {
         private InventoryView _inventoryView = null!;
-        private bool _rKeyWasPressed;
 
         private void Awake()
         {
@@ -20,27 +19,29 @@ namespace DopeGrid.Inventory
 
         private void HandleRotationInput()
         {
-            // Handle R key with state tracking to avoid multiple rotations per press
-            var rKeyPressed = Input.GetKey(KeyCode.R);
-            if (rKeyPressed && !_rKeyWasPressed)
-            {
-                var currentRotation = _inventoryView.GetDraggingItemRotation();
-                var newRotation = currentRotation.GetNextClockwiseRotation();
-                _inventoryView.SetDraggingItemRotation(newRotation);
-            }
-            _rKeyWasPressed = rKeyPressed;
+            var currentRotation = _inventoryView.GetDraggingItemRotation();
+            RotationDegree newRotation = currentRotation;
 
-            // Handle scroll wheel input
-            if (Input.mouseScrollDelta.y > 0.1f) // Add threshold to avoid micro-scrolls
+            // Prioritize R key, then scroll wheel. Only one rotation per frame.
+            if (Input.GetKeyDown(KeyCode.R))
             {
-                var currentRotation = _inventoryView.GetDraggingItemRotation();
-                var newRotation = currentRotation.GetNextClockwiseRotation();
-                _inventoryView.SetDraggingItemRotation(newRotation);
+                newRotation = currentRotation.GetNextClockwiseRotation();
             }
-            else if (Input.mouseScrollDelta.y < -0.1f)
+            else
             {
-                var currentRotation = _inventoryView.GetDraggingItemRotation();
-                var newRotation = currentRotation.GetPreviousClockwiseRotation();
+                var scrollDelta = Input.mouseScrollDelta.y;
+                if (scrollDelta > 0.1f) // Add threshold to avoid micro-scrolls
+                {
+                    newRotation = currentRotation.GetNextClockwiseRotation();
+                }
+                else if (scrollDelta < -0.1f)
+                {
+                    newRotation = currentRotation.GetPreviousClockwiseRotation();
+                }
+            }
+
+            if (newRotation != currentRotation)
+            {
                 _inventoryView.SetDraggingItemRotation(newRotation);
             }
         }

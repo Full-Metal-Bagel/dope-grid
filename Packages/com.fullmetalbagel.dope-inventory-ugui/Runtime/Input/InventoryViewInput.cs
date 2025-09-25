@@ -13,7 +13,6 @@ namespace DopeGrid.Inventory
         [SerializeField] private InputActionReference _scrollAction = null!;
 
         private InventoryView _inventoryView = null!;
-        private bool _rotateWasPressed;
 
         private void Awake()
         {
@@ -53,36 +52,30 @@ namespace DopeGrid.Inventory
 
         private void HandleRotationInput()
         {
-            // Handle rotate action with state tracking to avoid multiple rotations per press
-            if (_rotateAction != null)
-            {
-                var rotatePressed = _rotateAction.action.IsPressed();
-                if (rotatePressed && !_rotateWasPressed)
-                {
-                    var currentRotation = _inventoryView.GetDraggingItemRotation();
-                    var newRotation = currentRotation.GetNextClockwiseRotation();
-                    _inventoryView.SetDraggingItemRotation(newRotation);
-                }
-                _rotateWasPressed = rotatePressed;
-            }
+            var currentRotation = _inventoryView.GetDraggingItemRotation();
+            RotationDegree newRotation = currentRotation;
 
-            // Handle scroll action
-            if (_scrollAction != null)
+            // Prioritize rotate action, then scroll action. Only one rotation per frame.
+            if (_rotateAction != null && _rotateAction.action.WasPressedThisFrame())
+            {
+                newRotation = currentRotation.GetNextClockwiseRotation();
+            }
+            else if (_scrollAction != null)
             {
                 var scrollValue = _scrollAction.action.ReadValue<Vector2>();
-
                 if (scrollValue.y > 0.1f) // Scroll up - clockwise
                 {
-                    var currentRotation = _inventoryView.GetDraggingItemRotation();
-                    var newRotation = currentRotation.GetNextClockwiseRotation();
-                    _inventoryView.SetDraggingItemRotation(newRotation);
+                    newRotation = currentRotation.GetNextClockwiseRotation();
                 }
                 else if (scrollValue.y < -0.1f) // Scroll down - counter-clockwise
                 {
-                    var currentRotation = _inventoryView.GetDraggingItemRotation();
-                    var newRotation = currentRotation.GetPreviousClockwiseRotation();
-                    _inventoryView.SetDraggingItemRotation(newRotation);
+                    newRotation = currentRotation.GetPreviousClockwiseRotation();
                 }
+            }
+
+            if (newRotation != currentRotation)
+            {
+                _inventoryView.SetDraggingItemRotation(newRotation);
             }
         }
     }
