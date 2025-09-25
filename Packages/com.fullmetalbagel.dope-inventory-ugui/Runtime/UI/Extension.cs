@@ -1,10 +1,13 @@
+using JetBrains.Annotations;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace DopeGrid.Inventory;
 
 public static class Extension
 {
+    [Pure, MustUseReturnValue]
     public static int2 GetGridPosition(this InventoryView inventoryView, int2 shapeSize, Vector2 worldPosition)
     {
         // Convert from Canvas coordinates (center pivot) to InventoryView coordinates (top-left pivot)
@@ -27,5 +30,29 @@ public static class Extension
         var gridY = Mathf.RoundToInt(fromTopLeft.y / inventoryView.CellSize.y);
 
         return new int2(gridX, gridY);
+    }
+
+    [Pure]
+    public static bool TryGetPointerLocalTopLeft(this RectTransform rectTransform, PointerEventData eventData, out Vector2 fromTopLeft)
+    {
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, eventData.position, eventData.pressEventCamera, out var local))
+        {
+            fromTopLeft = default;
+            return false;
+        }
+
+        var rect = rectTransform.rect;
+        var size = rect.size;
+        var left = -rectTransform.pivot.x * size.x;
+        var top = (1 - rectTransform.pivot.y) * size.y;
+        fromTopLeft = new Vector2(local.x - left, top - local.y);
+        return true;
+    }
+
+    [Pure]
+    public static bool TryGetPointerLocalInCanvas(this Canvas canvas, PointerEventData eventData, out Vector2 canvasLocal)
+    {
+        var cam = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+        return RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)canvas.transform, eventData.position, cam, out canvasLocal);
     }
 }

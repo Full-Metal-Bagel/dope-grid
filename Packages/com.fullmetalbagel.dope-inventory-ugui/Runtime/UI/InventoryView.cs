@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace DopeGrid.Inventory
 {
     [RequireComponent(typeof(RectTransform))]
-    public partial class InventoryView : UIBehaviour
+    public class InventoryView : UIBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         [SerializeField] private Vector2 _cellSize = new(64f, 64f);
         [SerializeField] private Color _placeableColor = new(0f, 1f, 0f, 0.35f);
@@ -20,7 +20,7 @@ namespace DopeGrid.Inventory
 
         private readonly Dictionary<int/*item instance*/, Image> _itemViews = new();
         private readonly Dictionary<int/*item instance*/, Image> _draggingViews = new();
-        private DragController _dragController = null!;
+        private InventoryViewDragController _dragController = null!;
 
         private RectTransform Rect => (RectTransform)transform;
 
@@ -43,7 +43,7 @@ namespace DopeGrid.Inventory
             _sharedInventoryData = sharedInventoryData;
             Debug.Assert(_inventory.IsCreated, this);
             Rect.sizeDelta = new Vector2(_inventory.Width * _cellSize.x, _inventory.Height * _cellSize.y);
-            _dragController = new DragController(this);
+            _dragController = new InventoryViewDragController(_sharedInventoryData, RectTransform, inventory, CellSize);
         }
 
         public void Update()
@@ -96,8 +96,8 @@ namespace DopeGrid.Inventory
                 var rt = (RectTransform)image.transform;
                 EnsureTopLeftAnchors(rt);
                 rt.sizeDelta = preRotSize;
-                var angleZ = GetZRotation(item.Rotation);
-                var offset = GetRotationOffset(preRotSize, item.Rotation);
+                var angleZ = item.Rotation.GetZRotation();
+                var offset = item.Rotation.GetRotationOffset(preRotSize);
                 rt.anchoredPosition = anchoredPos + offset;
                 rt.localEulerAngles = new Vector3(0f, 0f, angleZ);
             }
@@ -130,8 +130,8 @@ namespace DopeGrid.Inventory
                 var item = _sharedInventoryData.DraggingItems[i];
                 seen.Add(item.InstanceId);
 
-                if (!TryGetSprite(item.DefinitionId, out var sprite))
-                    continue;
+                var sprite = _sharedInventoryData.TryGetSprite(item.DefinitionId);
+                if (!sprite) continue;
 
                 var shape = item.Shape;
                 var gridPos = item.GetGridPosition(this);
@@ -169,8 +169,8 @@ namespace DopeGrid.Inventory
                     ? new Vector2(rotatedSize.y, rotatedSize.x)
                     : rotatedSize;
                 var anchoredPos = GridToAnchoredPosition(gridPos);
-                var angleZ = GetZRotation(item.Rotation);
-                var offset = GetRotationOffset(preRotSize, item.Rotation);
+                var angleZ = item.Rotation.GetZRotation();
+                var offset = item.Rotation.GetRotationOffset(preRotSize);
 
                 var rt = (RectTransform)preview.transform;
                 rt.sizeDelta = preRotSize;
@@ -234,38 +234,22 @@ namespace DopeGrid.Inventory
             return new Vector2(gridPos.x * _cellSize.x, -(gridPos.y * _cellSize.y));
         }
 
-        private static float GetZRotation(RotationDegree rotation) => rotation switch
+        public void OnBeginDrag(PointerEventData eventData)
         {
-            RotationDegree.None => 0f,
-            RotationDegree.Clockwise90 => -90f,
-            RotationDegree.Clockwise180 => -180f,
-            RotationDegree.Clockwise270 => -270f,
-            _ => 0f
-        };
-
-        private static Vector2 GetRotationOffset(Vector2 size, RotationDegree rotation)
-        {
-            var w = size.x;
-            var h = size.y;
-            return rotation switch
-            {
-                RotationDegree.None => Vector2.zero,
-                RotationDegree.Clockwise90 => new Vector2(h, 0f),
-                RotationDegree.Clockwise180 => new Vector2(w, -h),
-                RotationDegree.Clockwise270 => new Vector2(0f, -w),
-                _ => Vector2.zero
-            };
+            if (!IsInitialized) return;
+            _dragController.OnBeginDrag(eventData);
         }
 
-        private bool TryGetSprite(Guid definitionId, out Sprite? sprite)
+        public void OnDrag(PointerEventData eventData)
         {
-            if (_sharedInventoryData.Definitions.TryGetValue(definitionId, out var ui) && ui != null && ui.Image != null)
-            {
-                sprite = ui.Image;
-                return true;
-            }
-            sprite = null;
-            return false;
+            if (!IsInitialized) return;
+            _dragController.OnDrag(eventData);
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            if (!IsInitialized) return;
+            _dragController.OnEndDrag(eventData);
         }
     }
 }
