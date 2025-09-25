@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using DopeGrid;
 using DopeGrid.Native;
 using JetBrains.Annotations;
 using Unity.Collections;
@@ -108,28 +107,9 @@ public struct Inventory : INativeDisposable
 
     public bool TryMoveItem(int instanceId, int2 newPosition)
     {
-        var itemIndex = GetItemIndex(instanceId);
-        if (itemIndex < 0 || itemIndex >= _items.Length)
-            return false;
-
-        var item = _items[itemIndex];
-        var shape = item.Shape;
-
-        // First check if new position is valid (excluding current item's cells)
-        if (!CanMoveItem(instanceId, shape, newPosition))
-            return false;
-
-        // Remove from current position
-        RemoveItemFromGrid(shape, item.Position);
-
-        // Place at new position
-        PlaceItemOnGrid(shape, newPosition, itemIndex);
-
-        // Update item's position
-        var updatedItem = new InventoryItem(item.InstanceId, item.Definition, item.Rotation, newPosition);
-        _items[itemIndex] = updatedItem;
-
-        return true;
+        var item = GetItemByInstanceId(instanceId);
+        if (item.IsInvalid) return false;
+        return TryMoveItem(instanceId, newPosition, item.Rotation);
     }
 
     public bool TryMoveItem(int instanceId, int2 newPosition, RotationDegree newRotation)
