@@ -103,14 +103,8 @@ internal sealed class InventoryViewDragController : IDisposable
 
                 if (isSameInventory)
                 {
-                    // Same inventory - move the item with updated rotation
-                    var item = sourceInventory.GetItemByInstanceId(_draggingItem.InstanceId);
-                    if (item.IsValid && sourceInventory.CanMoveItem(_draggingItem.InstanceId, _draggingItem.Shape, targetPos))
-                    {
-                        var updatedItem = new InventoryItem(_draggingItem.InstanceId, item.Definition, _draggingItem.Rotation, targetPos);
-                        sourceInventory.RemoveItem(_draggingItem.InstanceId);
-                        sourceInventory.TryPlaceItem(updatedItem);
-                    }
+                    // Same inventory - move the item with updated rotation using atomic operation
+                    sourceInventory.TryMoveItem(_draggingItem.InstanceId, targetPos, _draggingItem.Rotation);
                 }
                 else
                 {
