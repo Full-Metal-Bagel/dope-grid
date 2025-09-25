@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace DopeGrid.Inventory;
 
-public sealed class InventoryDragPreviewController : IDisposable
+public sealed class InventoryViewDragPreviewController : IDisposable
 {
     private readonly SharedInventoryData _sharedInventoryData;
     private readonly RectTransform _view;
@@ -16,7 +16,7 @@ public sealed class InventoryDragPreviewController : IDisposable
     private readonly Color _blockedColor;
     private readonly Dictionary<int, Image> _draggingViews = new();
 
-    public InventoryDragPreviewController(SharedInventoryData sharedInventoryData, RectTransform view, Vector2 cellSize, Color placeableColor, Color blockedColor)
+    public InventoryViewDragPreviewController(SharedInventoryData sharedInventoryData, RectTransform view, Vector2 cellSize, Color placeableColor, Color blockedColor)
     {
         _sharedInventoryData = sharedInventoryData;
         _view = view;

@@ -19,7 +19,7 @@ namespace DopeGrid.Inventory
         private SharedInventoryData _sharedInventoryData = null!;
 
         private InventoryViewSyncer _viewSyncer = null!;
-        private InventoryDragPreviewController _dragPreviewController = null!;
+        private InventoryViewDragPreviewController _viewDragPreviewController = null!;
         private InventoryViewDragController _dragController = null!;
 
         public Inventory.ReadOnly ReadOnlyInventory => _inventory;
@@ -43,7 +43,7 @@ namespace DopeGrid.Inventory
             rectTransform.sizeDelta = new Vector2(_inventory.Width * _cellSize.x, _inventory.Height * _cellSize.y);
 
             _viewSyncer = new InventoryViewSyncer(_sharedInventoryData, transform, _cellSize);
-            _dragPreviewController = new InventoryDragPreviewController(_sharedInventoryData, rectTransform, _cellSize, _placeableColor, _blockedColor);
+            _viewDragPreviewController = new InventoryViewDragPreviewController(_sharedInventoryData, rectTransform, _cellSize, _placeableColor, _blockedColor);
             _dragController = new InventoryViewDragController(_sharedInventoryData, rectTransform, inventory, CellSize);
         }
 
@@ -53,14 +53,14 @@ namespace DopeGrid.Inventory
 
             var readOnlyInventory = _inventory.AsReadOnly();
             _viewSyncer.SyncViews(readOnlyInventory);
-            _dragPreviewController.UpdateDragPlacementPreview(_inventory);
+            _viewDragPreviewController.UpdateDragPlacementPreview(_inventory);
         }
 
         protected override void OnDestroy()
         {
             base.OnDestroy();
             _viewSyncer?.Dispose();
-            _dragPreviewController?.Dispose();
+            _viewDragPreviewController?.Dispose();
             _dragController?.Dispose();
         }
 
