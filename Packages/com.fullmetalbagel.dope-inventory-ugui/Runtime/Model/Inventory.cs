@@ -108,24 +108,38 @@ public struct Inventory : INativeDisposable
     public bool TryMoveItem(int instanceId, int2 newPosition)
     {
         var itemIndex = GetItemIndex(instanceId);
-        if (itemIndex < 0 || itemIndex >= _items.Length)
-            return false;
+        if (itemIndex < 0 || itemIndex >= _items.Length) return false;
 
         var item = _items[itemIndex];
-        var shape = item.Shape;
+        return TryMoveItemInternal(itemIndex, item, newPosition, item.Rotation);
+    }
 
-        // First check if new position is valid (excluding current item's cells)
-        if (!CanMoveItem(instanceId, shape, newPosition))
+    public bool TryMoveItem(int instanceId, int2 newPosition, RotationDegree newRotation)
+    {
+        var itemIndex = GetItemIndex(instanceId);
+        if (itemIndex < 0 || itemIndex >= _items.Length) return false;
+
+        var item = _items[itemIndex];
+        return TryMoveItemInternal(itemIndex, item, newPosition, newRotation);
+    }
+
+    private bool TryMoveItemInternal(int itemIndex, in InventoryItem item, int2 newPosition, RotationDegree newRotation)
+    {
+        var oldShape = item.Shape;
+        var newShape = item.Definition.Shape.GetRotatedShape(newRotation);
+
+        // First check if new position is valid with new rotation (excluding current item's cells)
+        if (!CanMoveItem(item.InstanceId, newShape, newPosition))
             return false;
 
         // Remove from current position
-        RemoveItemFromGrid(shape, item.Position);
+        RemoveItemFromGrid(oldShape, item.Position);
 
-        // Place at new position
-        PlaceItemOnGrid(shape, newPosition, itemIndex);
+        // Place at new position with new rotation
+        PlaceItemOnGrid(newShape, newPosition, itemIndex);
 
-        // Update item's position
-        var updatedItem = new InventoryItem(item.InstanceId, item.Definition, item.Rotation, newPosition);
+        // Update item with new position and rotation
+        var updatedItem = new InventoryItem(item.InstanceId, item.Definition, newRotation, newPosition);
         _items[itemIndex] = updatedItem;
 
         return true;
