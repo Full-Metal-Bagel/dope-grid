@@ -27,8 +27,8 @@ public class DraggingItem
         Rotation = rotation;
     }
 
-    public int2 GetGridPosition(InventoryView inventoryView)
+    public int2 GetGridPosition(RectTransform transform, float2 cellSize)
     {
-        return inventoryView.GetGridPosition(Shape.Bound, View.position);
+        return transform.GetGridPosition(cellSize, Shape.Bound, View.position);
     }
 }

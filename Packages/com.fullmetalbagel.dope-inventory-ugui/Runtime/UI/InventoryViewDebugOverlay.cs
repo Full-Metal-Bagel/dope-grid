@@ -36,7 +36,7 @@ namespace DopeGrid.Inventory
             {
                 EnsureRoot();
                 _root!.SetAsLastSibling();
-                _root.sizeDelta = _view.RectTransform.sizeDelta;
+                _root.sizeDelta = ((RectTransform)_view.transform).sizeDelta;
                 EnsureFont();
 
                 UpdateEmptyCells();
