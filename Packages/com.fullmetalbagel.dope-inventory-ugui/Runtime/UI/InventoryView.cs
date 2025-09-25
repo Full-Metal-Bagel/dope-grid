@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Pool;
-using UnityEngine.UI;
 
 namespace DopeGrid.Inventory
 {
@@ -23,8 +18,7 @@ namespace DopeGrid.Inventory
         private InventoryViewDragController _dragController = null!;
 
         public Inventory.ReadOnly ReadOnlyInventory => _inventory;
-        internal Vector2 CellSize => _cellSize;
-
+        public Vector2 CellSize => _cellSize;
         public bool IsInitialized => _inventory.IsCreated;
 
         protected override void Awake()
@@ -47,7 +41,17 @@ namespace DopeGrid.Inventory
             _dragController = new InventoryViewDragController(_sharedInventoryData, rectTransform, inventory, CellSize);
         }
 
-        public void Update()
+        public void SetDraggingItemRotation(RotationDegree rotation)
+        {
+            _dragController.SetRotation(rotation);
+        }
+
+        public RotationDegree GetDraggingItemRotation()
+        {
+            return _dragController.GetRotation();
+        }
+
+        private void Update()
         {
             if (!_inventory.IsCreated) return;
 
@@ -64,19 +68,19 @@ namespace DopeGrid.Inventory
             _dragController?.Dispose();
         }
 
-        public void OnBeginDrag(PointerEventData eventData)
+        void IBeginDragHandler.OnBeginDrag(PointerEventData eventData)
         {
             if (!IsInitialized) return;
             _dragController.OnBeginDrag(eventData);
         }
 
-        public void OnDrag(PointerEventData eventData)
+        void IDragHandler.OnDrag(PointerEventData eventData)
         {
             if (!IsInitialized) return;
             _dragController.OnDrag(eventData);
         }
 
-        public void OnEndDrag(PointerEventData eventData)
+        void IEndDragHandler.OnEndDrag(PointerEventData eventData)
         {
             if (!IsInitialized) return;
             _dragController.OnEndDrag(eventData);

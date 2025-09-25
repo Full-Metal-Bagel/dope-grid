@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace DopeGrid.Inventory;
 
-public sealed class InventoryViewSyncer : IDisposable
+internal sealed class InventoryViewSyncer : IDisposable
 {
     private readonly SharedInventoryData _sharedInventoryData;
     private readonly Transform _parent;

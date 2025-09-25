@@ -63,4 +63,19 @@ public static class RotationDegreeExtensions
             _ => Vector2.zero
         };
     }
+
+    [Pure, MustUseReturnValue]
+    public static Vector2 CalculateRotatedSize(this RotationDegree rotation, Vector2 size)
+    {
+        return rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
+            ? new Vector2(size.y, size.x)
+            : size;
+    }
+
+    public static void ApplyToRectTransform(this RotationDegree rotation, RectTransform transform, Vector2 size)
+    {
+        var angleZ = rotation.GetZRotation();
+        transform.sizeDelta = rotation.CalculateRotatedSize(size);
+        transform.localEulerAngles = new Vector3(0f, 0f, angleZ);
+    }
 }
