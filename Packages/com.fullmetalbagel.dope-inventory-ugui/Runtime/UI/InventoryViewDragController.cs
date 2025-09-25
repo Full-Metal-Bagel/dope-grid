@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace DopeGrid.Inventory;
 
-public sealed class InventoryViewDragController : IDisposable
+internal sealed class InventoryViewDragController : IDisposable
 {
     private readonly SharedInventoryData _sharedInventoryData;
     private readonly Canvas _canvas;
@@ -65,24 +65,16 @@ public sealed class InventoryViewDragController : IDisposable
         _draggingItem.SourceInventory = _inventory;
         _sharedInventoryData.DraggingItems.Add(_draggingItem);
 
-        var rotatedSize = new Vector2(item.Shape.Width * _cellSize.x, item.Shape.Height * _cellSize.y);
-        var preRotSize = item.Rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
-            ? new Vector2(rotatedSize.y, rotatedSize.x)
-            : rotatedSize;
-        var angleZ = item.Rotation.GetZRotation();
-
         if (_ghost == null) return;
-        var grt = (RectTransform)_ghost.transform;
-        grt.sizeDelta = preRotSize;
-        grt.localEulerAngles = new Vector3(0f, 0f, angleZ);
+        UpdateDraggingItemRotation();
         if (_canvas.TryGetPointerLocalInCanvas(eventData, out var canvasLocal))
         {
-            grt.anchoredPosition = canvasLocal;
+            ((RectTransform)_ghost.transform).anchoredPosition = canvasLocal;
         }
         _ghost.sprite = sprite;
         _ghost.raycastTarget = false;
         _ghost.gameObject.SetActive(true);
-        grt.SetAsLastSibling();
+        _ghost.transform.SetAsLastSibling();
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -111,8 +103,14 @@ public sealed class InventoryViewDragController : IDisposable
 
                 if (isSameInventory)
                 {
-                    // Same inventory - just move the item
-                    sourceInventory.TryMoveItem(_draggingItem.InstanceId, targetPos);
+                    // Same inventory - move the item with updated rotation
+                    var item = sourceInventory.GetItemByInstanceId(_draggingItem.InstanceId);
+                    if (item.IsValid && sourceInventory.CanMoveItem(_draggingItem.InstanceId, _draggingItem.Shape, targetPos))
+                    {
+                        var updatedItem = new InventoryItem(_draggingItem.InstanceId, item.Definition, _draggingItem.Rotation, targetPos);
+                        sourceInventory.RemoveItem(_draggingItem.InstanceId);
+                        sourceInventory.TryPlaceItem(updatedItem);
+                    }
                 }
                 else
                 {
@@ -120,7 +118,7 @@ public sealed class InventoryViewDragController : IDisposable
                     var item = sourceInventory.GetItemByInstanceId(_draggingItem.InstanceId);
                     if (item.IsValid)
                     {
-                        var newItem = new InventoryItem(_draggingItem.InstanceId, item.Definition, item.Rotation, targetPos);
+                        var newItem = new InventoryItem(_draggingItem.InstanceId, item.Definition, _draggingItem.Rotation, targetPos);
                         if (targetInventory.TryPlaceItem(newItem))
                         {
                             sourceInventory.RemoveItem(_draggingItem.InstanceId);
@@ -137,5 +135,24 @@ public sealed class InventoryViewDragController : IDisposable
         {
             _ghost.gameObject.SetActive(false);
         }
+    }
+
+    public RotationDegree GetRotation()
+    {
+        return _draggingItem?.Rotation ?? RotationDegree.None;
+    }
+
+    public void SetRotation(RotationDegree rotation)
+    {
+        if (_draggingItem == null) return;
+
+        _draggingItem.Rotation = rotation;
+        UpdateDraggingItemRotation();
+    }
+
+    private void UpdateDraggingItemRotation()
+    {
+        if (_draggingItem == null) return;
+        _draggingItem.Rotation.ApplyToRectTransform(_draggingItem.View, (float2)_cellSize * _draggingItem.Shape.Bound);
     }
 }

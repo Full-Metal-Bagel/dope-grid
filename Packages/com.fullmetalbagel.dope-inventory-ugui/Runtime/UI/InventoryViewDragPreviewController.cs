@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace DopeGrid.Inventory;
 
-public sealed class InventoryViewDragPreviewController : IDisposable
+internal sealed class InventoryViewDragPreviewController : IDisposable
 {
     private readonly SharedInventoryData _sharedInventoryData;
     private readonly RectTransform _view;
