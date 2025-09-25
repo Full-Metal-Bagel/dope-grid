@@ -19,7 +19,7 @@ public class DefaultInventoryItemViewPool : IInventoryItemViewPool
         actionOnRelease: image =>
         {
             image.gameObject.SetActive(false);
-            image.transform.SetParent(s_root!.Value.transform);
+            image.transform.SetParent(s_root!.Value);
 
             // Reset image properties to default state
             image.sprite = null;
