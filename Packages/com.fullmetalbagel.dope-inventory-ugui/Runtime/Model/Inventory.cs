@@ -107,23 +107,29 @@ public struct Inventory : INativeDisposable
 
     public bool TryMoveItem(int instanceId, int2 newPosition)
     {
-        var item = GetItemByInstanceId(instanceId);
-        if (item.IsInvalid) return false;
-        return TryMoveItem(instanceId, newPosition, item.Rotation);
+        var itemIndex = GetItemIndex(instanceId);
+        if (itemIndex < 0 || itemIndex >= _items.Length) return false;
+
+        var item = _items[itemIndex];
+        return TryMoveItemInternal(itemIndex, item, newPosition, item.Rotation);
     }
 
     public bool TryMoveItem(int instanceId, int2 newPosition, RotationDegree newRotation)
     {
         var itemIndex = GetItemIndex(instanceId);
-        if (itemIndex < 0 || itemIndex >= _items.Length)
-            return false;
+        if (itemIndex < 0 || itemIndex >= _items.Length) return false;
 
         var item = _items[itemIndex];
+        return TryMoveItemInternal(itemIndex, item, newPosition, newRotation);
+    }
+
+    private bool TryMoveItemInternal(int itemIndex, in InventoryItem item, int2 newPosition, RotationDegree newRotation)
+    {
         var oldShape = item.Shape;
         var newShape = item.Definition.Shape.GetRotatedShape(newRotation);
 
         // First check if new position is valid with new rotation (excluding current item's cells)
-        if (!CanMoveItem(instanceId, newShape, newPosition))
+        if (!CanMoveItem(item.InstanceId, newShape, newPosition))
             return false;
 
         // Remove from current position
