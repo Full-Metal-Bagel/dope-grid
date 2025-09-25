@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace DopeGrid.Inventory;
 
@@ -16,5 +17,10 @@ public class SharedInventoryData
     public SharedInventoryData(IInventoryItemViewPool pool)
     {
         Pool = pool;
+    }
+
+    public Sprite? TryGetSprite(Guid definitionId)
+    {
+        return Definitions.TryGetValue(definitionId, out var ui) && ui != null && ui.Image != null ? ui.Image : null;
     }
 }

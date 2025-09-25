@@ -1,3 +1,6 @@
+using JetBrains.Annotations;
+using UnityEngine;
+
 namespace DopeGrid;
 
 public enum RotationDegree
@@ -6,4 +9,58 @@ public enum RotationDegree
     Clockwise90 = 1,
     Clockwise180 = 2,
     Clockwise270 = 3
+}
+
+public static class RotationDegreeExtensions
+{
+    [Pure, MustUseReturnValue]
+    public static RotationDegree GetNextClockwiseRotation(this RotationDegree current)
+    {
+        return current switch
+        {
+            RotationDegree.None => RotationDegree.Clockwise90,
+            RotationDegree.Clockwise90 => RotationDegree.Clockwise180,
+            RotationDegree.Clockwise180 => RotationDegree.Clockwise270,
+            RotationDegree.Clockwise270 => RotationDegree.None,
+            _ => RotationDegree.None
+        };
+    }
+
+    [Pure, MustUseReturnValue]
+    public static RotationDegree GetPreviousClockwiseRotation(this RotationDegree current)
+    {
+        return current switch
+        {
+            RotationDegree.None => RotationDegree.Clockwise270,
+            RotationDegree.Clockwise90 => RotationDegree.None,
+            RotationDegree.Clockwise180 => RotationDegree.Clockwise90,
+            RotationDegree.Clockwise270 => RotationDegree.Clockwise180,
+            _ => RotationDegree.None
+        };
+    }
+
+    [Pure, MustUseReturnValue]
+    public static float GetZRotation(this RotationDegree rotation) => rotation switch
+    {
+        RotationDegree.None => 0f,
+        RotationDegree.Clockwise90 => -90f,
+        RotationDegree.Clockwise180 => -180f,
+        RotationDegree.Clockwise270 => -270f,
+        _ => 0f
+    };
+
+    [Pure, MustUseReturnValue]
+    public static Vector2 GetRotationOffset(this RotationDegree rotation, Vector2 size)
+    {
+        var w = size.x;
+        var h = size.y;
+        return rotation switch
+        {
+            RotationDegree.None => Vector2.zero,
+            RotationDegree.Clockwise90 => new Vector2(h, 0f),
+            RotationDegree.Clockwise180 => new Vector2(w, -h),
+            RotationDegree.Clockwise270 => new Vector2(0f, -w),
+            _ => Vector2.zero
+        };
+    }
 }

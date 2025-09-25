@@ -46,7 +46,7 @@ public struct Inventory : INativeDisposable
     public readonly bool ContainsItem(int instanceId) => ((ReadOnly)this).ContainsItem(instanceId);
     public readonly int GetItemIndex(int instanceId) => ((ReadOnly)this).GetItemIndex(instanceId);
     public readonly bool TryFindFirstFitPosition(ImmutableGridShape shape, out int2 position) => ((ReadOnly)this).TryFindFirstFitPosition(shape, out position);
-    private readonly bool CanMoveItem(int instanceId, ImmutableGridShape shape, int2 newPosition) => ((ReadOnly)this).CanMoveItem(instanceId, shape, newPosition);
+    public readonly bool CanMoveItem(int instanceId, ImmutableGridShape shape, int2 newPosition) => ((ReadOnly)this).CanMoveItem(instanceId, shape, newPosition);
 
     public void Clear()
     {
