@@ -6,7 +6,6 @@ namespace DopeGrid.Inventory
     [RequireComponent(typeof(RectTransform))]
     public class InventoryView : UIBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
-        [SerializeField] private Vector2Int _gridSize = new(8, 4);
         [SerializeField] private Color _placeableColor = new(0f, 1f, 0f, 0.35f);
         [SerializeField] private Color _blockedColor = new(1f, 0f, 0f, 0.35f);
 
@@ -22,7 +21,6 @@ namespace DopeGrid.Inventory
 
         public Inventory.ReadOnly ReadOnlyInventory => _inventory;
         public Vector2 CellSize => _cellSize;
-        public Vector2Int GridSize => _gridSize;
         public bool IsInitialized => _inventory.IsCreated;
 
         protected override void Awake()
@@ -34,30 +32,18 @@ namespace DopeGrid.Inventory
 
         public void Initialize(Inventory inventory, SharedInventoryData sharedInventoryData)
         {
+            Debug.Assert(inventory.IsCreated, this);
+            if (inventory.IsEmpty)
+            {
+                Debug.LogError($"Inventory must be initialized with a size greater than zero. The provided inventory is {_inventory.Width}x{_inventory.Height}. Halting initialization.", this);
+                return;
+            }
+
             _inventory = inventory;
             _sharedInventoryData = sharedInventoryData;
-            Debug.Assert(_inventory.IsCreated, this);
 
             var rectTransform = (RectTransform)transform;
-            var configuredWidth = Mathf.Max(1, _gridSize.x);
-            var configuredHeight = Mathf.Max(1, _gridSize.y);
-
-            if (_inventory.Width > 0 && _inventory.Height > 0)
-            {
-                if (_inventory.Width != configuredWidth || _inventory.Height != configuredHeight)
-                {
-                    Debug.LogWarning($"Inventory size {_inventory.Width}x{_inventory.Height} differs from configured grid size {configuredWidth}x{configuredHeight}. Using inventory size instead.", this);
-                    configuredWidth = _inventory.Width;
-                    configuredHeight = _inventory.Height;
-                    _gridSize = new Vector2Int(configuredWidth, configuredHeight);
-                }
-            }
-            else
-            {
-                _gridSize = new Vector2Int(configuredWidth, configuredHeight);
-            }
-
-            _cellSize = ResolveCellSize(rectTransform, configuredWidth, configuredHeight);
+            _cellSize = ResolveCellSize(rectTransform, _inventory.Width, _inventory.Height);
             rectTransform.sizeDelta = new Vector2(_inventory.Width * _cellSize.x, _inventory.Height * _cellSize.y);
 
             _viewSyncer = new InventoryViewSyncer(_sharedInventoryData, transform, _cellSize);
