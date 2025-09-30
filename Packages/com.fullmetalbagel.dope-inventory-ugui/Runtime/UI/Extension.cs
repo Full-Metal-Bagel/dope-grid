@@ -8,14 +8,14 @@ namespace DopeGrid.Inventory;
 public static class Extension
 {
     [Pure, MustUseReturnValue]
-    public static int2 GetGridPosition(this RectTransform transform, float2 cellSize, int2 shapeSize, Vector2 worldPosition)
+    public static GridPosition GetGridPosition(this RectTransform transform, float2 cellSize, int shapeWidth, int shapeHeight, Vector2 worldPosition)
     {
         // Convert from Canvas coordinates (center pivot) to InventoryView coordinates (top-left pivot)
         var localPosInInventory = transform.InverseTransformPoint(worldPosition);
 
         // Account for the dragging ghost having center pivot - convert to top-left corner
         // The ghost position represents the center of the rotated item, but we need the top-left of the grid shape
-        var rotatedSize = new Vector2(shapeSize.x * cellSize.x, shapeSize.y * cellSize.y);
+        var rotatedSize = new Vector2(shapeWidth * cellSize.x, shapeHeight * cellSize.y);
         var topLeftPos = localPosInInventory - new Vector3(rotatedSize.x * 0.5f, -rotatedSize.y * 0.5f, 0f);
 
         // Convert to top-left origin from the inventory view's pivot

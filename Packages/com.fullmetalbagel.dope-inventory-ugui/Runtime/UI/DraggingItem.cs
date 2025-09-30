@@ -29,6 +29,7 @@ public class DraggingItem
 
     public int2 GetGridPosition(RectTransform transform, float2 cellSize)
     {
-        return transform.GetGridPosition(cellSize, Shape.Bound, View.position);
+        var (width, height) = Shape.Bound;
+        return transform.GetGridPosition(cellSize, width, height, View.position);
     }
 }
