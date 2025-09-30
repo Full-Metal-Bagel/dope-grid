@@ -30,12 +30,21 @@ public class StandardGridBoardTests
     [Test]
     public void Constructor_WithShape_ClonesShape()
     {
-        using var containerShape = Shapes.Square(5);
+        // Create a 5x5 container with some cells marked as obstacles
+        using var containerShape = new GridShape(5, 5);
+        containerShape.SetCell((0, 0), true); // Mark one cell as occupied/obstacle
+        containerShape.SetCell((4, 4), true); // Mark another cell as occupied/obstacle
+
         using var board = new GridBoard(containerShape);
 
         Assert.AreEqual(5, board.Width);
         Assert.AreEqual(5, board.Height);
-        Assert.AreEqual(25, board.FreeSpace);
+        Assert.AreEqual(23, board.FreeSpace); // 25 - 2 occupied cells
+
+        // Verify the occupied cells are preserved
+        Assert.IsTrue(board.IsCellOccupied((0, 0)));
+        Assert.IsTrue(board.IsCellOccupied((4, 4)));
+        Assert.IsFalse(board.IsCellOccupied((2, 2)));
     }
 
     [Test]

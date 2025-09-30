@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DopeGrid.Standard;
 
-public sealed class GridBoard : IDisposable
+public struct GridBoard : IDisposable
 {
     private GridShape _grid;
     public GridShape.ReadOnly CurrentGrid => _grid;
@@ -11,19 +11,25 @@ public sealed class GridBoard : IDisposable
     private GridShape _initializedGrid;
     public GridShape.ReadOnly InitializedGrid => _initializedGrid;
 
-    private readonly List<ImmutableGridShape> _items = new();
+    private readonly List<ImmutableGridShape> _items;
     public IReadOnlyList<ImmutableGridShape> Items => _items;
 
-    private readonly List<(int x, int y)> _itemPositions = new();
+    private readonly List<(int x, int y)> _itemPositions;
     public IReadOnlyList<(int x, int y)> ItemPositions => _itemPositions;
 
     public int Width => _initializedGrid.Width;
     public int Height => _initializedGrid.Height;
 
+    public int ItemCount => _items.Count;
+    public int FreeSpace => _grid.FreeSpaceCount;
+    public bool IsCreated => _grid.IsCreated;
+
     public GridBoard(int width, int height)
     {
         _grid = new GridShape(width, height);
         _initializedGrid = _grid.Clone();
+        _items = new();
+        _itemPositions = new();
     }
 
     public GridBoard(GridShape containerShape)
@@ -31,10 +37,9 @@ public sealed class GridBoard : IDisposable
         if (containerShape.IsEmpty) throw new ArgumentException(nameof(containerShape));
         _grid = containerShape.Clone();
         _initializedGrid = _grid.Clone();
+        _items = new();
+        _itemPositions = new();
     }
-
-    public int ItemCount => _items.Count;
-    public int FreeSpace => _grid.FreeSpaceCount;
 
     public bool IsCellOccupied((int x, int y) pos)
     {
