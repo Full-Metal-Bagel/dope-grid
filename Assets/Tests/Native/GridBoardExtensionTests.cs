@@ -1,3 +1,4 @@
+using DopeGrid;
 using DopeGrid.Native;
 using NUnit.Framework;
 using Unity.Collections;
@@ -20,8 +21,8 @@ public class GridBoardExtensionTests
 
         var position = inventory.FindFirstFit(item);
 
-        Assert.AreEqual(2, position.x);
-        Assert.AreEqual(0, position.y);
+        Assert.AreEqual(2, position.X);
+        Assert.AreEqual(0, position.Y);
 
         inventory.Dispose();
         item.Dispose();
@@ -40,8 +41,8 @@ public class GridBoardExtensionTests
 
         var position = inventory.FindFirstFit(item);
 
-        Assert.AreEqual(-1, position.x);
-        Assert.AreEqual(-1, position.y);
+        Assert.AreEqual(-1, position.X);
+        Assert.AreEqual(-1, position.Y);
 
         inventory.Dispose();
         item.Dispose();
@@ -120,7 +121,7 @@ public class GridBoardExtensionTests
         var inventory = new GridShape(10, 10, Allocator.Temp);
 
         var items = new NativeArray<GridShape>(3, Allocator.Temp);
-        var positions = new NativeArray<int2>(3, Allocator.Temp);
+        var positions = new NativeArray<GridPosition>(3, Allocator.Temp);
 
         for (var i = 0; i < 3; i++)
         {

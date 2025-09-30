@@ -1,6 +1,5 @@
 using System;
 using Unity.Collections;
-using Unity.Mathematics;
 
 namespace DopeGrid.Native;
 
@@ -46,11 +45,6 @@ public struct GridBoard : IDisposable
         return _grid.GetCell(pos);
     }
 
-    public bool IsCellOccupied(int2 pos)
-    {
-        return _grid.GetCell(pos);
-    }
-
     public bool TryAddItem(ImmutableGridShape item)
     {
         var pos = _grid.FindFirstFit(item);
@@ -74,29 +68,11 @@ public struct GridBoard : IDisposable
         return false;
     }
 
-    public bool TryAddItemAt(ImmutableGridShape shape, int2 pos)
-    {
-        if (_grid.CanPlaceItem(shape, pos))
-        {
-            AddItemAt(shape, pos);
-            return true;
-        }
-
-        return false;
-    }
-
     private void AddItemAt(ImmutableGridShape shape, GridPosition pos)
     {
         _grid.PlaceItem(shape, pos);
         _items.Add(shape);
         _itemPositions.Add(pos);
-    }
-
-    private void AddItemAt(ImmutableGridShape shape, int2 pos)
-    {
-        _grid.PlaceItem(shape, pos);
-        _items.Add(shape);
-        _itemPositions.Add((GridPosition)pos);
     }
 
     public void RemoveItem(int index)

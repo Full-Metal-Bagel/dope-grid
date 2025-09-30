@@ -1,6 +1,5 @@
 using JetBrains.Annotations;
 using Unity.Collections;
-using Unity.Mathematics;
 
 namespace DopeGrid.Native;
 
@@ -24,26 +23,6 @@ public static class GridBoardExtension
                 return new GridPosition(x, y);
 
         return new GridPosition(-1, -1);
-    }
-
-    [Pure, MustUseReturnValue]
-    public static int2 FindFirstFitInt2(this GridShape container, in GridShape.ReadOnly item)
-    {
-        return container.AsReadOnly().FindFirstFitInt2(item);
-    }
-
-    [Pure, MustUseReturnValue]
-    public static int2 FindFirstFitInt2(this in GridShape.ReadOnly container, in GridShape.ReadOnly item)
-    {
-        var maxY = container.Height - item.Height + 1;
-        var maxX = container.Width - item.Width + 1;
-
-        for (var y = 0; y < maxY; y++)
-        for (var x = 0; x < maxX; x++)
-            if (container.CanPlaceItem(item, new int2(x, y)))
-                return new int2(x, y);
-
-        return new int2(-1, -1);
     }
 
     public static int PlaceMultipleShapes(
