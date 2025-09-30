@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace DopeGrid.Inventory
@@ -6,12 +6,15 @@ namespace DopeGrid.Inventory
     [RequireComponent(typeof(RectTransform))]
     public class InventoryView : UIBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
-        [SerializeField] private Vector2 _cellSize = new(64f, 64f);
+        [SerializeField] private Vector2Int _gridSize = new(8, 4);
         [SerializeField] private Color _placeableColor = new(0f, 1f, 0f, 0.35f);
         [SerializeField] private Color _blockedColor = new(1f, 0f, 0f, 0.35f);
 
+        private static readonly Vector2 s_defaultCellSize = new(64f, 64f);
+
         private Inventory _inventory;
         private SharedInventoryData _sharedInventoryData = null!;
+        private Vector2 _cellSize = s_defaultCellSize;
 
         private InventoryViewSyncer _viewSyncer = null!;
         private InventoryViewDragPreviewController _viewDragPreviewController = null!;
@@ -19,6 +22,7 @@ namespace DopeGrid.Inventory
 
         public Inventory.ReadOnly ReadOnlyInventory => _inventory;
         public Vector2 CellSize => _cellSize;
+        public Vector2Int GridSize => _gridSize;
         public bool IsInitialized => _inventory.IsCreated;
 
         protected override void Awake()
@@ -33,12 +37,53 @@ namespace DopeGrid.Inventory
             _inventory = inventory;
             _sharedInventoryData = sharedInventoryData;
             Debug.Assert(_inventory.IsCreated, this);
+
             var rectTransform = (RectTransform)transform;
+            var configuredWidth = Mathf.Max(1, _gridSize.x);
+            var configuredHeight = Mathf.Max(1, _gridSize.y);
+
+            if (_inventory.Width > 0 && _inventory.Height > 0)
+            {
+                if (_inventory.Width != configuredWidth || _inventory.Height != configuredHeight)
+                {
+                    Debug.LogWarning($"Inventory size {_inventory.Width}x{_inventory.Height} differs from configured grid size {configuredWidth}x{configuredHeight}. Using inventory size instead.", this);
+                    configuredWidth = _inventory.Width;
+                    configuredHeight = _inventory.Height;
+                    _gridSize = new Vector2Int(configuredWidth, configuredHeight);
+                }
+            }
+            else
+            {
+                _gridSize = new Vector2Int(configuredWidth, configuredHeight);
+            }
+
+            _cellSize = ResolveCellSize(rectTransform, configuredWidth, configuredHeight);
             rectTransform.sizeDelta = new Vector2(_inventory.Width * _cellSize.x, _inventory.Height * _cellSize.y);
 
             _viewSyncer = new InventoryViewSyncer(_sharedInventoryData, transform, _cellSize);
             _viewDragPreviewController = new InventoryViewDragPreviewController(_sharedInventoryData, rectTransform, _cellSize, _placeableColor, _blockedColor);
             _dragController = new InventoryViewDragController(_sharedInventoryData, rectTransform, inventory, CellSize);
+        }
+
+        private static Vector2 ResolveCellSize(RectTransform rectTransform, int gridWidth, int gridHeight)
+        {
+            gridWidth = Mathf.Max(1, gridWidth);
+            gridHeight = Mathf.Max(1, gridHeight);
+
+            var rect = rectTransform.rect;
+            var width = rect.width;
+            var height = rect.height;
+
+            if (width <= 0f) width = rectTransform.sizeDelta.x;
+            if (height <= 0f) height = rectTransform.sizeDelta.y;
+
+            if (width <= 0f) width = gridWidth * s_defaultCellSize.x;
+            if (height <= 0f) height = gridHeight * s_defaultCellSize.y;
+
+            width = Mathf.Abs(width);
+            height = Mathf.Abs(height);
+
+            return new Vector2(width / gridWidth, height / gridHeight);
         }
 
         public void SetDraggingItemRotation(RotationDegree rotation)
