@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
@@ -70,33 +69,24 @@ internal class ImmutableGridShapeRepository
     [Pure, MustUseReturnValue]
     public (int width, int height) GetBound(int id)
     {
-        lock (_lock)
-        {
-            return _bounds[id];
-        }
+        return _bounds[id];
     }
 
     [Pure, MustUseReturnValue]
     public ReadOnlySpanBitArray GetPattern(int id)
     {
-        lock (_lock)
-        {
-            var pattern = _patterns[id];
-            var bound = _bounds[id];
-            var bitLength = bound.width * bound.height;
-            return new ReadOnlySpanBitArray(pattern.AsSpan(), bitLength);
-        }
+        var pattern = _patterns[id];
+        var bound = _bounds[id];
+        var bitLength = bound.width * bound.height;
+        return new ReadOnlySpanBitArray(pattern.AsSpan(), bitLength);
     }
 
     [Pure, MustUseReturnValue]
     public GridShape.ReadOnly GetReadOnlyShape(int id)
     {
-        lock (_lock)
-        {
-            var bound = _bounds[id];
-            var pattern = GetPattern(id);
-            return new GridShape.ReadOnly(bound, pattern);
-        }
+        var bound = _bounds[id];
+        var pattern = GetPattern(id);
+        return new GridShape.ReadOnly(bound, pattern);
     }
 
     [Pure, MustUseReturnValue]
@@ -108,9 +98,7 @@ internal class ImmutableGridShapeRepository
             if (bound.width != shape.Width || bound.height != shape.Height)
                 continue;
 
-            var patternBytes = _patterns[i];
-            var bitLength = bound.width * bound.height;
-            var pattern = new ReadOnlySpanBitArray(patternBytes.AsSpan(), bitLength);
+            var pattern= GetPattern(i);
             if (pattern.SequenceEqual(shape.Bits))
                 return i;
         }
@@ -143,34 +131,28 @@ internal class ImmutableGridShapeRepository
 
     public int GetOrCreateRotated90(int id)
     {
-        lock (_lock)
+        var rotatedId = _rotate90Indices[id];
+        if (rotatedId < 0)
         {
-            var rotatedId = _rotate90Indices[id];
-            if (rotatedId < 0)
-            {
-                var shape = GetReadOnlyShape(id);
-                using var rotatedShape = shape.Rotate(RotationDegree.Clockwise90);
-                rotatedId = GetOrCreateShape(rotatedShape);
-                _rotate90Indices[id] = rotatedId;
-            }
-            return rotatedId;
+            var shape = GetReadOnlyShape(id);
+            using var rotatedShape = shape.Rotate(RotationDegree.Clockwise90);
+            rotatedId = GetOrCreateShape(rotatedShape);
+            _rotate90Indices[id] = rotatedId;
         }
+        return rotatedId;
     }
 
     public int GetOrCreateFlipped(int id)
     {
-        lock (_lock)
+        var flippedId = _flipIndices[id];
+        if (flippedId < 0)
         {
-            var flippedId = _flipIndices[id];
-            if (flippedId < 0)
-            {
-                var shape = GetReadOnlyShape(id);
-                using var flippedShape = shape.Flip(FlipAxis.Horizontal);
-                flippedId = GetOrCreateShape(flippedShape);
-                _flipIndices[id] = flippedId;
-                _flipIndices[flippedId] = id;
-            }
-            return flippedId;
+            var shape = GetReadOnlyShape(id);
+            using var flippedShape = shape.Flip(FlipAxis.Horizontal);
+            flippedId = GetOrCreateShape(flippedShape);
+            _flipIndices[id] = flippedId;
+            _flipIndices[flippedId] = id;
         }
+        return flippedId;
     }
 }

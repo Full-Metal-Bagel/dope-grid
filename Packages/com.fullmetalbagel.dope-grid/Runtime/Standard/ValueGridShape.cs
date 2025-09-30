@@ -1,41 +1,45 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace DopeGrid.Standard;
 
-public class ValueGridShape<T> : IEquatable<ValueGridShape<T>> where T : IEquatable<T>
+public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable where T : unmanaged, IEquatable<T>
 {
     public int Width { get; }
     public int Height { get; }
     public int Size => Width * Height;
     public bool IsEmpty => Width == 0 || Height == 0;
-    private T[] _values;
-    public T[] Values => _values;
+    public bool IsCreated => _values != null;
+    private T[]? _values;
+
+    internal Span<T> Values => _values!.AsSpan(0, Size);
 
     public ValueGridShape(int width, int height)
     {
         Width = width;
         Height = height;
-        _values = new T[width * height];
+        _values = ArrayPool<T>.Shared.Rent(width * height);
+        Array.Clear(_values, 0, width * height);
     }
 
     public ValueGridShape(int width, int height, T defaultValue)
     {
         Width = width;
         Height = height;
-        _values = new T[width * height];
-        Fill(defaultValue);
+        _values = ArrayPool<T>.Shared.Rent(width * height);
+        Array.Fill(_values, defaultValue, 0, width * height);
     }
 
     public int GetIndex((int x, int y) pos) => GetIndex(pos.x, pos.y);
     public int GetIndex(int x, int y) => y * Width + x;
 
     public T GetValue((int x, int y) pos) => GetValue(pos.x, pos.y);
-    public T GetValue(int x, int y) => _values[GetIndex(x, y)];
+    public T GetValue(int x, int y) => Values[GetIndex(x, y)];
 
     public void SetValue((int x, int y) pos, T value) => SetValue(pos.x, pos.y, value);
-    public void SetValue(int x, int y, T value) => _values[GetIndex(x, y)] = value;
+    public void SetValue(int x, int y, T value) => Values[GetIndex(x, y)] = value;
 
     public T this[int x, int y]
     {
@@ -51,7 +55,7 @@ public class ValueGridShape<T> : IEquatable<ValueGridShape<T>> where T : IEquata
 
     public void Fill(T value)
     {
-        Array.Fill(_values, value);
+        Values.Fill(value);
     }
 
     public void FillRect(int x, int y, int width, int height, T value)
@@ -108,23 +112,32 @@ public class ValueGridShape<T> : IEquatable<ValueGridShape<T>> where T : IEquata
     public bool Any(Func<T, bool> predicate) => AsReadOnly().Any(predicate);
     public bool All(Func<T, bool> predicate) => AsReadOnly().All(predicate);
 
-    public bool Equals(ValueGridShape<T>? other)
+    public void Dispose()
     {
-        if (other == null || Width != other.Width || Height != other.Height)
+        if (_values != null)
+        {
+            ArrayPool<T>.Shared.Return(_values);
+            _values = null;
+        }
+    }
+
+    public bool Equals(ValueGridShape<T> other)
+    {
+        if (Width != other.Width || Height != other.Height)
             return false;
 
-        return _values.AsSpan().SequenceEqual(other._values.AsSpan());
+        return Values.SequenceEqual(other.Values);
     }
 
     public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on ValueGridShape is not supported.");
     [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
     public override bool Equals(object? obj) => throw new NotSupportedException("Equals(object) on ValueGridShape is not supported.");
 
-    public static bool operator ==(ValueGridShape<T>? left, ValueGridShape<T>? right) => left?.Equals(right) ?? right is null;
-    public static bool operator !=(ValueGridShape<T>? left, ValueGridShape<T>? right) => !(left == right);
+    public static bool operator ==(ValueGridShape<T> left, ValueGridShape<T> right) => left.Equals(right);
+    public static bool operator !=(ValueGridShape<T> left, ValueGridShape<T> right) => !(left == right);
 
     public static implicit operator ReadOnly(ValueGridShape<T> value) => value.AsReadOnly();
-    public ReadOnly AsReadOnly() => new(Width, Height, _values);
+    public ReadOnly AsReadOnly() => new(Width, Height, Values);
 
     [SuppressMessage("Design", "CA1716:Identifiers should not match keywords")]
     public readonly ref struct ReadOnly
@@ -165,7 +178,7 @@ public class ValueGridShape<T> : IEquatable<ValueGridShape<T>> where T : IEquata
         {
             if (Width != other.Width || Height != other.Height)
                 throw new ArgumentException($"Cannot copy to ValueGridShape<{typeof(T).Name}> with different dimensions. Source: {Width}x{Height}, Target: {other.Width}x{other.Height}");
-            _values.CopyTo(other._values.AsSpan());
+            _values.CopyTo(other.Values);
         }
 
         public GridShape ToGridShape(T trueValue)
