@@ -31,13 +31,13 @@ public struct GridShape : IEquatable<GridShape>, IDisposable
         Array.Clear(_bits, 0, _byteCount);
     }
 
-    public int GetIndex((int x, int y) pos) => GetIndex(pos.x, pos.y);
+    public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
     public int GetIndex(int x, int y) => y * Width + x;
 
-    public bool GetCell((int x, int y) pos) => GetCell(pos.x, pos.y);
+    public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
     public bool GetCell(int x, int y) => ReadOnlyBits.Get(GetIndex(x, y));
 
-    public void SetCell((int x, int y) pos, bool value) => SetCell(pos.x, pos.y, value);
+    public void SetCell(GridPosition pos, bool value) => SetCell(pos.X, pos.Y, value);
     public void SetCell(int x, int y, bool value) => Bits.Set(GetIndex(x, y), value);
 
     public bool this[int x, int y]
@@ -46,7 +46,7 @@ public struct GridShape : IEquatable<GridShape>, IDisposable
         set => SetCell(x, y, value);
     }
 
-    public bool this[(int x, int y) pos]
+    public bool this[GridPosition pos]
     {
         get => GetCell(pos);
         set => SetCell(pos, value);
@@ -75,9 +75,9 @@ public struct GridShape : IEquatable<GridShape>, IDisposable
         return this;
     }
 
-    public GridShape FillRect((int x, int y) pos, (int width, int height) size, bool value = true)
+    public GridShape FillRect(GridPosition pos, (int width, int height) size, bool value = true)
     {
-        return FillRect(pos.x, pos.y, size.width, size.height, value);
+        return FillRect(pos.X, pos.Y, size.width, size.height, value);
     }
 
     public void Clear()
@@ -138,10 +138,10 @@ public struct GridShape : IEquatable<GridShape>, IDisposable
         {
         }
 
-        public int GetIndex((int x, int y) pos) => GetIndex(pos.x, pos.y);
+        public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
         public int GetIndex(int x, int y) => y * Width + x;
 
-        public bool GetCell((int x, int y) pos) => GetCell(pos.x, pos.y);
+        public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
         public bool GetCell(int x, int y) => Bits.Get(GetIndex(x, y));
 
         public GridShape Clone()

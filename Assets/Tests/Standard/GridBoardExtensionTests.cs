@@ -1,3 +1,4 @@
+using DopeGrid;
 using DopeGrid.Standard;
 using NUnit.Framework;
 
@@ -24,7 +25,7 @@ public class StandardGridBoardExtensionTests
         var pos = container.FindFirstFit(item.AsReadOnly());
 
         Assert.AreNotEqual((0, 0), pos);
-        Assert.IsTrue(pos.x >= 0 && pos.y >= 0);
+        Assert.IsTrue(pos.X >= 0 && pos.Y >= 0);
     }
 
     [Test]
@@ -160,7 +161,7 @@ public class StandardGridBoardExtensionTests
             Shapes.Line(3)
         };
 
-        var positions = new (int, int)[items.Length];
+        var positions = new GridPosition[items.Length];
         var placed = container.PlaceMultipleShapes(items, positions);
 
         Assert.AreEqual(3, placed);
@@ -168,8 +169,8 @@ public class StandardGridBoardExtensionTests
         // Verify all items were placed
         for (int i = 0; i < placed; i++)
         {
-            Assert.IsTrue(positions[i].Item1 >= 0);
-            Assert.IsTrue(positions[i].Item2 >= 0);
+            Assert.IsTrue(positions[i].X >= 0);
+            Assert.IsTrue(positions[i].Y >= 0);
         }
 
         foreach (var item in items)
@@ -189,7 +190,7 @@ public class StandardGridBoardExtensionTests
             Shapes.Single()  // Won't fit after first item
         };
 
-        var positions = new (int, int)[items.Length];
+        var positions = new GridPosition[items.Length];
         var placed = container.PlaceMultipleShapes(items, positions);
 
         Assert.AreEqual(1, placed);

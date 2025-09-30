@@ -28,9 +28,11 @@ public readonly record struct ImmutableGridShape(int Id)
     public ImmutableGridShape Rotate90(Allocator allocator = Allocator.Temp) => new(Shapes.GetOrCreateRotated90(Id, allocator));
     public ImmutableGridShape Flip(Allocator allocator = Allocator.Temp) => new(Shapes.GetOrCreateFlipped(Id, allocator));
 
+    public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
     public int GetIndex(int2 pos) => GetIndex(pos.x, pos.y);
     public int GetIndex(int x, int y) => y * Width + x;
 
+    public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
     public bool GetCell(int2 pos) => GetCell(pos.x, pos.y);
     public bool GetCell(int x, int y) => Pattern.Get(GetIndex(x, y));
 

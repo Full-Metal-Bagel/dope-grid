@@ -29,12 +29,15 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
         _bits = new NativeArray<byte>(SpanBitArrayUtility.ByteCount(bitLength), allocator, NativeArrayOptions.ClearMemory);
     }
 
+    public readonly int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
     public readonly int GetIndex(int2 pos) => GetIndex(pos.x, pos.y);
     public readonly int GetIndex(int x, int y) => y * Width + x;
 
+    public readonly bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
     public readonly bool GetCell(int2 pos) => GetCell(pos.x, pos.y);
     public readonly bool GetCell(int x, int y) => ReadOnlyBits.Get(GetIndex(x, y));
 
+    public void SetCell(GridPosition pos, bool value) => SetCell(pos.X, pos.Y, value);
     public void SetCell(int2 pos, bool value) => SetCell(pos.x, pos.y, value);
     public void SetCell(int x, int y, bool value) => Bits.Set(GetIndex(x, y), value);
 
@@ -42,6 +45,12 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
     {
         readonly get => GetCell(x, y);
         set => SetCell(x, y, value);
+    }
+
+    public bool this[GridPosition pos]
+    {
+        readonly get => GetCell(pos);
+        set => SetCell(pos, value);
     }
 
     public bool this[int2 pos]
@@ -71,6 +80,11 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
             }
         }
         return this;
+    }
+
+    public GridShape FillRect(GridPosition pos, int2 size, bool value = true)
+    {
+        return FillRect(pos.X, pos.Y, size.x, size.y, value);
     }
 
     public GridShape FillRect(int2 pos, int2 size, bool value = true)
@@ -137,9 +151,11 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
         {
         }
 
+        public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
         public int GetIndex(int2 pos) => GetIndex(pos.x, pos.y);
         public int GetIndex(int x, int y) => y * Width + x;
 
+        public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
         public bool GetCell(int2 pos) => GetCell(pos.x, pos.y);
         public bool GetCell(int x, int y) => Bits.Get(GetIndex(x, y));
 

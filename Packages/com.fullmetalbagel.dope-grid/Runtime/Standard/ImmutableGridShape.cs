@@ -22,10 +22,10 @@ public readonly record struct ImmutableGridShape(int Id)
     public ImmutableGridShape Rotate90() => new(Shapes.GetOrCreateRotated90(Id));
     public ImmutableGridShape Flip() => new(Shapes.GetOrCreateFlipped(Id));
 
-    public int GetIndex((int x, int y) pos) => GetIndex(pos.x, pos.y);
+    public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
     public int GetIndex(int x, int y) => y * Width + x;
 
-    public bool GetCell((int x, int y) pos) => GetCell(pos.x, pos.y);
+    public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
     public bool GetCell(int x, int y) => Pattern.Get(GetIndex(x, y));
 
     public static implicit operator GridShape.ReadOnly(ImmutableGridShape shape) => shape.ToReadOnlyGridShape();

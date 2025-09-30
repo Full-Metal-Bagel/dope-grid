@@ -32,13 +32,13 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable whe
         Array.Fill(_values, defaultValue, 0, width * height);
     }
 
-    public int GetIndex((int x, int y) pos) => GetIndex(pos.x, pos.y);
+    public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
     public int GetIndex(int x, int y) => y * Width + x;
 
-    public T GetValue((int x, int y) pos) => GetValue(pos.x, pos.y);
+    public T GetValue(GridPosition pos) => GetValue(pos.X, pos.Y);
     public T GetValue(int x, int y) => Values[GetIndex(x, y)];
 
-    public void SetValue((int x, int y) pos, T value) => SetValue(pos.x, pos.y, value);
+    public void SetValue(GridPosition pos, T value) => SetValue(pos.X, pos.Y, value);
     public void SetValue(int x, int y, T value) => Values[GetIndex(x, y)] = value;
 
     public T this[int x, int y]
@@ -47,7 +47,7 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable whe
         set => SetValue(x, y, value);
     }
 
-    public T this[(int x, int y) pos]
+    public T this[GridPosition pos]
     {
         get => GetValue(pos);
         set => SetValue(pos, value);
@@ -74,9 +74,9 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable whe
         }
     }
 
-    public void FillRect((int x, int y) pos, (int width, int height) size, T value)
+    public void FillRect(GridPosition pos, (int width, int height) size, T value)
     {
-        FillRect(pos.x, pos.y, size.width, size.height, value);
+        FillRect(pos.X, pos.Y, size.width, size.height, value);
     }
 
     public void Clear()
@@ -84,7 +84,7 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable whe
         Fill(default!);
     }
 
-    public bool Contains((int x, int y) pos) => Contains(pos.x, pos.y);
+    public bool Contains(GridPosition pos) => Contains(pos.X, pos.Y);
     public bool Contains(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
 
     public ValueGridShape<T> Clone() => AsReadOnly().Clone();
@@ -155,16 +155,16 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable whe
             _values = values;
         }
 
-        public int GetIndex((int x, int y) pos) => GetIndex(pos.x, pos.y);
+        public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
         public int GetIndex(int x, int y) => y * Width + x;
 
-        public T GetValue((int x, int y) pos) => GetValue(pos.x, pos.y);
+        public T GetValue(GridPosition pos) => GetValue(pos.X, pos.Y);
         public T GetValue(int x, int y) => _values[GetIndex(x, y)];
 
         public T this[int x, int y] => GetValue(x, y);
-        public T this[(int x, int y) pos] => GetValue(pos);
+        public T this[GridPosition pos] => GetValue(pos);
 
-        public bool Contains((int x, int y) pos) => Contains(pos.x, pos.y);
+        public bool Contains(GridPosition pos) => Contains(pos.X, pos.Y);
         public bool Contains(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
 
         public ValueGridShape<T> Clone()

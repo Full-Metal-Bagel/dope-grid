@@ -15,8 +15,8 @@ public struct GridBoard : IDisposable
     private NativeList<ImmutableGridShape> _items;
     public NativeArray<ImmutableGridShape>.ReadOnly Items => _items.AsReadOnly();
 
-    private NativeList<int2> _itemPositions; // top-left position
-    public NativeArray<int2>.ReadOnly ItemPositions => _itemPositions.AsReadOnly();
+    private NativeList<GridPosition> _itemPositions; // top-left position
+    public NativeArray<GridPosition>.ReadOnly ItemPositions => _itemPositions.AsReadOnly();
 
     public int Width => _initializedGrid.Width;
     public int Height => _initializedGrid.Height;
@@ -26,7 +26,7 @@ public struct GridBoard : IDisposable
         _grid = new GridShape(width, height, allocator);
         _initializedGrid = _grid.Clone(allocator);
         _items = new NativeList<ImmutableGridShape>(allocator);
-        _itemPositions = new NativeList<int2>(allocator);
+        _itemPositions = new NativeList<GridPosition>(allocator);
     }
 
     public GridBoard(GridShape containerShape, Allocator allocator = Allocator.Persistent)
@@ -35,11 +35,16 @@ public struct GridBoard : IDisposable
         _grid = containerShape.Clone(allocator);
         _initializedGrid = _grid.Clone(allocator);
         _items = new NativeList<ImmutableGridShape>(allocator);
-        _itemPositions = new NativeList<int2>(allocator);
+        _itemPositions = new NativeList<GridPosition>(allocator);
     }
 
     public int ItemCount => _items.Length;
     public int FreeSpace => _grid.FreeSpaceCount;
+
+    public bool IsCellOccupied(GridPosition pos)
+    {
+        return _grid.GetCell(pos);
+    }
 
     public bool IsCellOccupied(int2 pos)
     {
@@ -49,9 +54,20 @@ public struct GridBoard : IDisposable
     public bool TryAddItem(ImmutableGridShape item)
     {
         var pos = _grid.FindFirstFit(item);
-        if (pos.x >= 0)
+        if (pos.X >= 0)
         {
             AddItemAt(item, pos);
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool TryAddItemAt(ImmutableGridShape shape, GridPosition pos)
+    {
+        if (_grid.CanPlaceItem(shape, pos))
+        {
+            AddItemAt(shape, pos);
             return true;
         }
 
@@ -69,11 +85,18 @@ public struct GridBoard : IDisposable
         return false;
     }
 
-    private void AddItemAt(ImmutableGridShape shape, int2 pos)
+    private void AddItemAt(ImmutableGridShape shape, GridPosition pos)
     {
         _grid.PlaceItem(shape, pos);
         _items.Add(shape);
         _itemPositions.Add(pos);
+    }
+
+    private void AddItemAt(ImmutableGridShape shape, int2 pos)
+    {
+        _grid.PlaceItem(shape, pos);
+        _items.Add(shape);
+        _itemPositions.Add((GridPosition)pos);
     }
 
     public void RemoveItem(int index)
@@ -111,7 +134,7 @@ public struct GridBoard : IDisposable
             _initializedGrid = InitializedGrid.Clone(allocator),
             _grid = _grid.Clone(allocator),
             _items = new NativeList<ImmutableGridShape>(_items.Capacity, allocator),
-            _itemPositions = new NativeList<int2>(_itemPositions.Capacity, allocator)
+            _itemPositions = new NativeList<GridPosition>(_itemPositions.Capacity, allocator)
         };
         clone._items.CopyFrom(_items);
         clone._itemPositions.CopyFrom(_itemPositions);

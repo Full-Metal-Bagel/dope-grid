@@ -14,8 +14,8 @@ public struct GridBoard : IDisposable
     private readonly List<ImmutableGridShape> _items;
     public IReadOnlyList<ImmutableGridShape> Items => _items;
 
-    private readonly List<(int x, int y)> _itemPositions;
-    public IReadOnlyList<(int x, int y)> ItemPositions => _itemPositions;
+    private readonly List<GridPosition> _itemPositions;
+    public IReadOnlyList<GridPosition> ItemPositions => _itemPositions;
 
     public int Width => _initializedGrid.Width;
     public int Height => _initializedGrid.Height;
@@ -41,7 +41,7 @@ public struct GridBoard : IDisposable
         _itemPositions = new();
     }
 
-    public bool IsCellOccupied((int x, int y) pos)
+    public bool IsCellOccupied(GridPosition pos)
     {
         return _grid.GetCell(pos);
     }
@@ -49,7 +49,7 @@ public struct GridBoard : IDisposable
     public bool TryAddItem(ImmutableGridShape item)
     {
         var pos = _grid.FindFirstFit(item);
-        if (pos.x >= 0)
+        if (pos.X >= 0)
         {
             AddItemAt(item, pos);
             return true;
@@ -58,7 +58,7 @@ public struct GridBoard : IDisposable
         return false;
     }
 
-    public bool TryAddItemAt(ImmutableGridShape shape, (int x, int y) pos)
+    public bool TryAddItemAt(ImmutableGridShape shape, GridPosition pos)
     {
         if (_grid.CanPlaceItem(shape, pos))
         {
@@ -69,7 +69,7 @@ public struct GridBoard : IDisposable
         return false;
     }
 
-    private void AddItemAt(ImmutableGridShape shape, (int x, int y) pos)
+    private void AddItemAt(ImmutableGridShape shape, GridPosition pos)
     {
         _grid.PlaceItem(shape, pos);
         _items.Add(shape);

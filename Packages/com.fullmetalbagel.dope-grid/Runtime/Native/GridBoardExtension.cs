@@ -7,13 +7,33 @@ namespace DopeGrid.Native;
 public static class GridBoardExtension
 {
     [Pure, MustUseReturnValue]
-    public static int2 FindFirstFit(this GridShape container, in GridShape.ReadOnly item)
+    public static GridPosition FindFirstFit(this GridShape container, in GridShape.ReadOnly item)
     {
         return container.AsReadOnly().FindFirstFit(item);
     }
 
     [Pure, MustUseReturnValue]
-    public static int2 FindFirstFit(this in GridShape.ReadOnly container, in GridShape.ReadOnly item)
+    public static GridPosition FindFirstFit(this in GridShape.ReadOnly container, in GridShape.ReadOnly item)
+    {
+        var maxY = container.Height - item.Height + 1;
+        var maxX = container.Width - item.Width + 1;
+
+        for (var y = 0; y < maxY; y++)
+        for (var x = 0; x < maxX; x++)
+            if (container.CanPlaceItem(item, new GridPosition(x, y)))
+                return new GridPosition(x, y);
+
+        return new GridPosition(-1, -1);
+    }
+
+    [Pure, MustUseReturnValue]
+    public static int2 FindFirstFitInt2(this GridShape container, in GridShape.ReadOnly item)
+    {
+        return container.AsReadOnly().FindFirstFitInt2(item);
+    }
+
+    [Pure, MustUseReturnValue]
+    public static int2 FindFirstFitInt2(this in GridShape.ReadOnly container, in GridShape.ReadOnly item)
     {
         var maxY = container.Height - item.Height + 1;
         var maxX = container.Width - item.Width + 1;
@@ -29,7 +49,7 @@ public static class GridBoardExtension
     public static int PlaceMultipleShapes(
         this GridShape container,
         NativeArray<GridShape> items,
-        NativeArray<int2> outPositions)
+        NativeArray<GridPosition> outPositions)
     {
         var placed = 0;
 
@@ -37,7 +57,7 @@ public static class GridBoardExtension
         for (var i = 0; i < items.Length; i++)
         {
             var pos = readonlyContainer.FindFirstFit(items[i]);
-            if (pos.x >= 0)
+            if (pos.X >= 0)
             {
                 container.PlaceItem(items[i], pos);
                 outPositions[placed] = pos;
@@ -46,6 +66,35 @@ public static class GridBoardExtension
         }
 
         return placed;
+    }
+
+    [Pure, MustUseReturnValue]
+    public static bool CanPlaceItem(this GridShape container, in GridShape.ReadOnly item, GridPosition pos)
+    {
+        return container.AsReadOnly().CanPlaceItem(item, pos);
+    }
+
+    [Pure, MustUseReturnValue]
+    public static bool CanPlaceItem(this in GridShape.ReadOnly container, in GridShape.ReadOnly item, GridPosition pos)
+    {
+        // Bounds check
+        if (pos.X < 0 || pos.Y < 0 || pos.X + item.Width > container.Width || pos.Y + item.Height > container.Height)
+            return false;
+
+        // Check each bit of the shape against the grid
+        for (var sy = 0; sy < item.Height; sy++)
+        for (var sx = 0; sx < item.Width; sx++)
+        {
+            var shapePos = new GridPosition(sx, sy);
+            if (item.GetCell(shapePos))
+            {
+                var gridPos = new GridPosition(pos.X + sx, pos.Y + sy);
+                if (container.GetCell(gridPos))
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     [Pure, MustUseReturnValue]
@@ -77,6 +126,20 @@ public static class GridBoardExtension
         return true;
     }
 
+    public static void PlaceItem(this GridShape container, in GridShape.ReadOnly item, GridPosition pos)
+    {
+        for (var sy = 0; sy < item.Height; sy++)
+        for (var sx = 0; sx < item.Width; sx++)
+        {
+            var shapePos = new GridPosition(sx, sy);
+            if (item.GetCell(shapePos))
+            {
+                var gridPos = new GridPosition(pos.X + sx, pos.Y + sy);
+                container.SetCell(gridPos, true);
+            }
+        }
+    }
+
     public static void PlaceItem(this GridShape container, in GridShape.ReadOnly item, int2 pos)
     {
         for (var sy = 0; sy < item.Height; sy++)
@@ -87,6 +150,20 @@ public static class GridBoardExtension
             {
                 var gridPos = new int2(pos.x + sx, pos.y + sy);
                 container.SetCell(gridPos, true);
+            }
+        }
+    }
+
+    public static void RemoveItem(this GridShape container, in GridShape.ReadOnly item, GridPosition pos)
+    {
+        for (var sy = 0; sy < item.Height; sy++)
+        for (var sx = 0; sx < item.Width; sx++)
+        {
+            var shapePos = new GridPosition(sx, sy);
+            if (item.GetCell(shapePos))
+            {
+                var gridPos = new GridPosition(pos.X + sx, pos.Y + sy);
+                container.SetCell(gridPos, false);
             }
         }
     }
