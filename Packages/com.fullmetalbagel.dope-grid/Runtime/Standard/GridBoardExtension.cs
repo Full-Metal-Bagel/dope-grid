@@ -1,7 +1,6 @@
 using JetBrains.Annotations;
-using Unity.Collections;
 
-namespace DopeGrid.Native;
+namespace DopeGrid.Standard;
 
 public static class GridBoardExtension
 {
@@ -27,8 +26,8 @@ public static class GridBoardExtension
 
     public static int PlaceMultipleShapes(
         this GridShape container,
-        NativeArray<GridShape> items,
-        NativeArray<GridPosition> outPositions)
+        GridShape[] items,
+        GridPosition[] outPositions)
     {
         var placed = 0;
 

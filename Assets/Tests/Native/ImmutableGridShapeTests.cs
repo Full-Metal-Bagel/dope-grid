@@ -12,7 +12,7 @@ public class ImmutableGridShapeTests
         var empty = ImmutableGridShape.Empty;
 
         Assert.AreEqual(0, empty.Id);
-        Assert.AreEqual(int2.zero, empty.Bound);
+        Assert.AreEqual((0, 0), empty.Bound);
         Assert.AreEqual(0, empty.Width);
         Assert.AreEqual(0, empty.Height);
     }

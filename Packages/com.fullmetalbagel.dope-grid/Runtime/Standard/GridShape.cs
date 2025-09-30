@@ -1,51 +1,54 @@
 using System;
+using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
-using Unity.Collections;
-using Unity.Jobs;
 
-namespace DopeGrid.Native;
+namespace DopeGrid.Standard;
 
-public struct GridShape : IEquatable<GridShape>, INativeDisposable
+public struct GridShape : IEquatable<GridShape>, IDisposable
 {
     public int Width { get; }
     public int Height { get; }
-    public readonly int Size => Width * Height;
+    public int Size => Width * Height;
 
-    public readonly ReadOnlySpanBitArray ReadOnlyBits => new(_bits.AsReadOnlySpan(), Size);
-    internal SpanBitArray Bits => new(_bits.AsSpan(), Size);
-    private NativeArray<byte> _bits;
+    public ReadOnlySpanBitArray ReadOnlyBits => new(_bits!.AsSpan(0, _byteCount), Size);
+    internal SpanBitArray Bits => new(_bits!.AsSpan(0, _byteCount), Size);
+    private byte[]? _bits;
+    private readonly int _byteCount;
 
-    public readonly int OccupiedSpaceCount => ReadOnlyBits.CountBits(0, Size);
-    public readonly int FreeSpaceCount => Size - OccupiedSpaceCount;
-    public readonly bool IsEmpty => Width == 0 || Height == 0;
-    public bool IsCreated => _bits.IsCreated;
+    public int OccupiedSpaceCount => ReadOnlyBits.CountBits(0, Size);
+    public int FreeSpaceCount => Size - OccupiedSpaceCount;
+    public bool IsEmpty => Width == 0 || Height == 0;
+    public bool IsCreated => _bits != null;
 
-    public GridShape(int width, int height, Allocator allocator)
+    public GridShape(int width, int height)
     {
         Width = width;
         Height = height;
         var bitLength = width * height;
-        _bits = new NativeArray<byte>(SpanBitArrayUtility.ByteCount(bitLength), allocator, NativeArrayOptions.ClearMemory);
+        _byteCount = SpanBitArrayUtility.ByteCount(bitLength);
+
+        _bits = ArrayPool<byte>.Shared.Rent(_byteCount);
+        Array.Clear(_bits, 0, _byteCount);
     }
 
-    public readonly int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-    public readonly int GetIndex(int x, int y) => y * Width + x;
+    public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
+    public int GetIndex(int x, int y) => y * Width + x;
 
-    public readonly bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
-    public readonly bool GetCell(int x, int y) => ReadOnlyBits.Get(GetIndex(x, y));
+    public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
+    public bool GetCell(int x, int y) => ReadOnlyBits.Get(GetIndex(x, y));
 
     public void SetCell(GridPosition pos, bool value) => SetCell(pos.X, pos.Y, value);
     public void SetCell(int x, int y, bool value) => Bits.Set(GetIndex(x, y), value);
 
     public bool this[int x, int y]
     {
-        readonly get => GetCell(x, y);
+        get => GetCell(x, y);
         set => SetCell(x, y, value);
     }
 
     public bool this[GridPosition pos]
     {
-        readonly get => GetCell(pos);
+        get => GetCell(pos);
         set => SetCell(pos, value);
     }
 
@@ -72,29 +75,28 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
         return this;
     }
 
-    public GridShape FillRect(GridPosition pos, int width, int height, bool value = true)
+    public GridShape FillRect(GridPosition pos, (int width, int height) size, bool value = true)
     {
-        return FillRect(pos.X, pos.Y, width, height, value);
+        return FillRect(pos.X, pos.Y, size.width, size.height, value);
     }
 
     public void Clear()
     {
-        _bits.AsSpan().Clear();
+        Array.Clear(_bits, 0, _byteCount);
     }
 
     public void Dispose()
     {
-        _bits.Dispose();
+        if (_bits != null)
+        {
+            ArrayPool<byte>.Shared.Return(_bits);
+            _bits = null;
+        }
     }
 
-    public JobHandle Dispose(JobHandle inputDeps)
+    public GridShape Clone()
     {
-        return _bits.Dispose(inputDeps);
-    }
-
-    public readonly GridShape Clone(Allocator allocator)
-    {
-        return AsReadOnly().Clone(allocator);
+        return AsReadOnly().Clone();
     }
 
     public void CopyTo(GridShape other)
@@ -103,20 +105,21 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
     }
 
     public static implicit operator ReadOnly(GridShape shape) => shape.AsReadOnly();
-    public readonly ReadOnly AsReadOnly() => new(Width, Height, ReadOnlyBits);
+    public ReadOnly AsReadOnly() => new(Width, Height, ReadOnlyBits);
 
     public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on GridShape and GridShape.ReadOnly is not supported.");
     [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
     public override bool Equals(object? obj) => throw new NotSupportedException("Equals(object) on GridShape and GridShape.ReadOnly is not supported.");
-    public readonly bool Equals(GridShape other) => AsReadOnly().Equals(other.AsReadOnly());
+    public bool Equals(GridShape other) => AsReadOnly().Equals(other.AsReadOnly());
     public static bool operator ==(GridShape left, GridShape right) => left.Equals(right);
-    public static bool operator !=(GridShape left, GridShape right) => !left.Equals(right);
+    public static bool operator !=(GridShape left, GridShape right) => !(left == right);
 
     [SuppressMessage("Design", "CA1716:Identifiers should not match keywords")]
     public readonly ref struct ReadOnly
     {
         public int Width { get; }
         public int Height { get; }
+        public (int width, int height) Bound => (Width, Height);
         public ReadOnlySpanBitArray Bits { get; }
 
         public int Size => Width * Height;
@@ -130,15 +133,20 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
             Bits = bits;
         }
 
+        internal ReadOnly((int width, int height) bound, ReadOnlySpanBitArray bits)
+            : this(bound.width, bound.height, bits)
+        {
+        }
+
         public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
         public int GetIndex(int x, int y) => y * Width + x;
 
         public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
         public bool GetCell(int x, int y) => Bits.Get(GetIndex(x, y));
 
-        public GridShape Clone(Allocator allocator)
+        public GridShape Clone()
         {
-            var clone = new GridShape(Width, Height, allocator);
+            var clone = new GridShape(Width, Height);
             CopyTo(clone);
             return clone;
         }
@@ -146,7 +154,7 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
         public void CopyTo(GridShape other)
         {
             if (Width != other.Width || Height != other.Height)
-                throw new ArgumentException($"Cannot copy to GridShape2D with different dimensions. Source: {Width}x{Height}, Target: {other.Width}x{other.Height}");
+                throw new ArgumentException($"Cannot copy to GridShape with different dimensions. Source: {Width}x{Height}, Target: {other.Width}x{other.Height}");
 
             Bits.CopyTo(other.Bits);
         }

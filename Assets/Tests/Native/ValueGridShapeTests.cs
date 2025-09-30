@@ -212,7 +212,7 @@ public class ValueGridShapeTests
     {
         var grid = new ValueGridShape<int>(4, 4, Allocator.Temp);
 
-        grid.FillRect(new int2(1, 1), new int2(2, 2), 55);
+        grid.FillRect(1, 1, 2, 2, 55);
 
         Assert.AreEqual(55, grid[1, 1]);
         Assert.AreEqual(55, grid[2, 1]);

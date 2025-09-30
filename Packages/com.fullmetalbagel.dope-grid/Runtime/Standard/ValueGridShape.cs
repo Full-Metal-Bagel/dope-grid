@@ -1,63 +1,61 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Unity.Collections;
-using Unity.Jobs;
 
-namespace DopeGrid.Native;
+namespace DopeGrid.Standard;
 
-public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposable where T : unmanaged, IEquatable<T>
+public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable where T : IEquatable<T>
 {
     public int Width { get; }
     public int Height { get; }
-    public readonly int Size => Width * Height;
-    public readonly bool IsEmpty => Width == 0 || Height == 0;
-    public bool IsCreated => _values.IsCreated;
-    private NativeArray<T> _values;
-    public NativeArray<T> Values => _values;
+    public int Size => Width * Height;
+    public bool IsEmpty => Width == 0 || Height == 0;
+    public bool IsCreated => _values != null;
+    private T[]? _values;
 
-    public ValueGridShape(int width, int height, Allocator allocator)
+    internal Span<T> Values => _values!.AsSpan(0, Size);
+
+    public ValueGridShape(int width, int height)
     {
         Width = width;
         Height = height;
-        _values = new NativeArray<T>(width * height, allocator, NativeArrayOptions.ClearMemory);
+        _values = ArrayPool<T>.Shared.Rent(width * height);
+        Array.Clear(_values, 0, width * height);
     }
 
-    public ValueGridShape(int width, int height, T defaultValue, Allocator allocator)
+    public ValueGridShape(int width, int height, T defaultValue)
     {
         Width = width;
         Height = height;
-        _values = new NativeArray<T>(width * height, allocator, NativeArrayOptions.UninitializedMemory);
-        Fill(defaultValue);
+        _values = ArrayPool<T>.Shared.Rent(width * height);
+        Array.Fill(_values, defaultValue, 0, width * height);
     }
 
-    public readonly int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-    public readonly int GetIndex(int x, int y) => y * Width + x;
+    public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
+    public int GetIndex(int x, int y) => y * Width + x;
 
-    public readonly T GetValue(GridPosition pos) => GetValue(pos.X, pos.Y);
-    public readonly T GetValue(int x, int y) => _values[GetIndex(x, y)];
+    public T GetValue(GridPosition pos) => GetValue(pos.X, pos.Y);
+    public T GetValue(int x, int y) => Values[GetIndex(x, y)];
 
     public void SetValue(GridPosition pos, T value) => SetValue(pos.X, pos.Y, value);
-    public void SetValue(int x, int y, T value) => _values[GetIndex(x, y)] = value;
+    public void SetValue(int x, int y, T value) => Values[GetIndex(x, y)] = value;
 
     public T this[int x, int y]
     {
-        readonly get => GetValue(x, y);
+        get => GetValue(x, y);
         set => SetValue(x, y, value);
     }
 
     public T this[GridPosition pos]
     {
-        readonly get => GetValue(pos);
+        get => GetValue(pos);
         set => SetValue(pos, value);
     }
 
     public void Fill(T value)
     {
-        for (int i = 0; i < _values.Length; i++)
-        {
-            _values[i] = value;
-        }
+        Values.Fill(value);
     }
 
     public void FillRect(int x, int y, int width, int height, T value)
@@ -76,24 +74,24 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
         }
     }
 
-    public void FillRect(GridPosition pos, int width, int height, T value)
+    public void FillRect(GridPosition pos, (int width, int height) size, T value)
     {
-        FillRect(pos.X, pos.Y, width, height, value);
+        FillRect(pos.X, pos.Y, size.width, size.height, value);
     }
 
     public void Clear()
     {
-        Fill(default);
+        Fill(default!);
     }
 
-    public readonly bool Contains(GridPosition pos) => Contains(pos.X, pos.Y);
-    public readonly bool Contains(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
+    public bool Contains(GridPosition pos) => Contains(pos.X, pos.Y);
+    public bool Contains(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
 
-    public readonly ValueGridShape<T> Clone(Allocator allocator) => ((ReadOnly)this).Clone(allocator);
-    public readonly void CopyTo(ValueGridShape<T> other) => ((ReadOnly)this).CopyTo(other);
+    public ValueGridShape<T> Clone() => AsReadOnly().Clone();
+    public void CopyTo(ValueGridShape<T> other) => AsReadOnly().CopyTo(other);
 
-    public readonly GridShape ToGridShape(T trueValue, Allocator allocator) => ((ReadOnly)this).ToGridShape(trueValue, allocator);
-    public readonly GridShape ToGridShape(Func<T, bool> predicate, Allocator allocator) => ((ReadOnly)this).ToGridShape(predicate, allocator);
+    public GridShape ToGridShape(T trueValue) => AsReadOnly().ToGridShape(trueValue);
+    public GridShape ToGridShape(Func<T, bool> predicate) => AsReadOnly().ToGridShape(predicate);
 
     public void FromGridShape(GridShape shape, T trueValue, T falseValue)
     {
@@ -109,41 +107,37 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
         }
     }
 
-    public readonly int CountValue(T value) => ((ReadOnly)this).CountValue(value);
-    public readonly int CountWhere(Func<T, bool> predicate) => ((ReadOnly)this).CountWhere(predicate);
-    public readonly bool Any(Func<T, bool> predicate) => ((ReadOnly)this).Any(predicate);
-    public readonly bool All(Func<T, bool> predicate) => ((ReadOnly)this).All(predicate);
+    public int CountValue(T value) => AsReadOnly().CountValue(value);
+    public int CountWhere(Func<T, bool> predicate) => AsReadOnly().CountWhere(predicate);
+    public bool Any(Func<T, bool> predicate) => AsReadOnly().Any(predicate);
+    public bool All(Func<T, bool> predicate) => AsReadOnly().All(predicate);
 
     public void Dispose()
     {
-        if (_values.IsCreated)
-            _values.Dispose();
+        if (_values != null)
+        {
+            ArrayPool<T>.Shared.Return(_values);
+            _values = null;
+        }
     }
 
-    public JobHandle Dispose(JobHandle inputDeps)
-    {
-        if (_values.IsCreated)
-            return _values.Dispose(inputDeps);
-        return inputDeps;
-    }
-
-    public readonly bool Equals(ValueGridShape<T> other)
+    public bool Equals(ValueGridShape<T> other)
     {
         if (Width != other.Width || Height != other.Height)
             return false;
 
-        return _values.ArraysEqual(other._values);
+        return Values.SequenceEqual(other.Values);
     }
 
-    public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on GridShape and GridShape.ReadOnly is not supported.");
+    public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on ValueGridShape is not supported.");
     [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
-    public override bool Equals(object? obj) => throw new NotSupportedException("Equals(object) on GridShape and GridShape.ReadOnly is not supported.");
+    public override bool Equals(object? obj) => throw new NotSupportedException("Equals(object) on ValueGridShape is not supported.");
 
     public static bool operator ==(ValueGridShape<T> left, ValueGridShape<T> right) => left.Equals(right);
-    public static bool operator !=(ValueGridShape<T> left, ValueGridShape<T> right) => !left.Equals(right);
+    public static bool operator !=(ValueGridShape<T> left, ValueGridShape<T> right) => !(left == right);
 
     public static implicit operator ReadOnly(ValueGridShape<T> value) => value.AsReadOnly();
-    public ReadOnly AsReadOnly() => new(Width, Height, _values.AsReadOnly());
+    public ReadOnly AsReadOnly() => new(Width, Height, Values);
 
     [SuppressMessage("Design", "CA1716:Identifiers should not match keywords")]
     public readonly ref struct ReadOnly
@@ -152,20 +146,20 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
         public int Height { get; }
         public int Size => Width * Height;
         public bool IsEmpty => Width == 0 || Height == 0;
-        public readonly NativeArray<T>.ReadOnly Values;
+        private readonly ReadOnlySpan<T> _values;
 
-        internal ReadOnly(int width, int height, NativeArray<T>.ReadOnly values)
+        internal ReadOnly(int width, int height, ReadOnlySpan<T> values)
         {
             Width = width;
             Height = height;
-            Values = values;
+            _values = values;
         }
 
         public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
         public int GetIndex(int x, int y) => y * Width + x;
 
         public T GetValue(GridPosition pos) => GetValue(pos.X, pos.Y);
-        public T GetValue(int x, int y) => Values[GetIndex(x, y)];
+        public T GetValue(int x, int y) => _values[GetIndex(x, y)];
 
         public T this[int x, int y] => GetValue(x, y);
         public T this[GridPosition pos] => GetValue(pos);
@@ -173,9 +167,9 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
         public bool Contains(GridPosition pos) => Contains(pos.X, pos.Y);
         public bool Contains(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
 
-        public ValueGridShape<T> Clone(Allocator allocator)
+        public ValueGridShape<T> Clone()
         {
-            var clone = new ValueGridShape<T>(Width, Height, allocator);
+            var clone = new ValueGridShape<T>(Width, Height);
             CopyTo(clone);
             return clone;
         }
@@ -183,23 +177,23 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
         public void CopyTo(ValueGridShape<T> other)
         {
             if (Width != other.Width || Height != other.Height)
-                throw new ArgumentException($"Cannot copy to GridShape<{typeof(T).Name}> with different dimensions. Source: {Width}x{Height}, Target: {other.Width}x{other.Height}");
-            Values.CopyTo(other.Values);
+                throw new ArgumentException($"Cannot copy to ValueGridShape<{typeof(T).Name}> with different dimensions. Source: {Width}x{Height}, Target: {other.Width}x{other.Height}");
+            _values.CopyTo(other.Values);
         }
 
-        public GridShape ToGridShape(T trueValue, Allocator allocator)
+        public GridShape ToGridShape(T trueValue)
         {
-            return ToGridShape((value, @true) => EqualityComparer<T>.Default.Equals(value, @true), allocator, trueValue);
+            return ToGridShape((value, @true) => EqualityComparer<T>.Default.Equals(value, @true), trueValue);
         }
 
-        public GridShape ToGridShape(Func<T, bool> predicate, Allocator allocator)
+        public GridShape ToGridShape(Func<T, bool> predicate)
         {
-            return ToGridShape((value, p) => p(value), allocator, predicate);
+            return ToGridShape((value, p) => p(value), predicate);
         }
 
-        public GridShape ToGridShape<TCaptureData>(Func<T, TCaptureData, bool> predicate, Allocator allocator, TCaptureData data)
+        public GridShape ToGridShape<TCaptureData>(Func<T, TCaptureData, bool> predicate, TCaptureData data)
         {
-            var shape = new GridShape(Width, Height, allocator);
+            var shape = new GridShape(Width, Height);
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
@@ -223,9 +217,9 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
         public int Count<TCaptureData>(Func<T, TCaptureData, bool> predicate, TCaptureData data)
         {
             int count = 0;
-            for (int i = 0; i < Values.Length; i++)
+            for (int i = 0; i < _values.Length; i++)
             {
-                if (predicate(Values[i], data))
+                if (predicate(_values[i], data))
                     count++;
             }
             return count;
@@ -238,7 +232,7 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
 
         public bool Any<TCaptureData>(Func<T, TCaptureData, bool> predicate, TCaptureData data)
         {
-            foreach (var t in Values)
+            foreach (var t in _values)
             {
                 if (predicate(t, data))
                     return true;
@@ -253,7 +247,7 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
 
         public bool All<TCaptureData>(Func<T, TCaptureData, bool> predicate, TCaptureData data)
         {
-            foreach (var t in Values)
+            foreach (var t in _values)
             {
                 if (!predicate(t, data))
                     return false;
@@ -266,12 +260,12 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
             if (Width != other.Width || Height != other.Height)
                 return false;
 
-            return Values.ArraysEqual(other.Values);
+            return _values.SequenceEqual(other._values);
         }
 
-        public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on GridShape and GridShape.ReadOnly is not supported.");
+        public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on ValueGridShape.ReadOnly is not supported.");
         [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
-        public override bool Equals(object? obj) => throw new NotSupportedException("Equals(object) on GridShape and GridShape.ReadOnly is not supported.");
+        public override bool Equals(object? obj) => throw new NotSupportedException("Equals(object) on ValueGridShape.ReadOnly is not supported.");
 
         public static bool operator ==(ReadOnly left, ReadOnly right) => left.Equals(right);
         public static bool operator !=(ReadOnly left, ReadOnly right) => !left.Equals(right);
