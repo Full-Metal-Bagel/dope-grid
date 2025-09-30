@@ -2,11 +2,7 @@ using System;
 using JetBrains.Annotations;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using Unity.Mathematics;
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace DopeGrid.Native;
 
@@ -16,9 +12,9 @@ public readonly record struct ImmutableGridShape(int Id)
     public static ImmutableGridShape Empty => new(0);
 
     public int Id { get; } = Id;
-    public int2 Bound => Shapes.Bounds[Id];
-    public int Width => Bound.x;
-    public int Height => Bound.y;
+    public (int width, int height) Bound => Shapes.Bounds[Id];
+    public int Width => Bound.width;
+    public int Height => Bound.height;
     public int Size => Width * Height;
     public ReadOnlySpanBitArray Pattern => Shapes.GetPattern(Id);
     public int OccupiedSpaceCount => Pattern.CountBits(0, Size);
@@ -29,11 +25,9 @@ public readonly record struct ImmutableGridShape(int Id)
     public ImmutableGridShape Flip(Allocator allocator = Allocator.Temp) => new(Shapes.GetOrCreateFlipped(Id, allocator));
 
     public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-    public int GetIndex(int2 pos) => GetIndex(pos.x, pos.y);
     public int GetIndex(int x, int y) => y * Width + x;
 
     public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
-    public bool GetCell(int2 pos) => GetCell(pos.x, pos.y);
     public bool GetCell(int x, int y) => Pattern.Get(GetIndex(x, y));
 
     public static implicit operator GridShape.ReadOnly(ImmutableGridShape shape) => shape.ToReadOnlyGridShape();
@@ -57,18 +51,18 @@ public static class ImmutableGridShape2DList
 
 #if UNITY_EDITOR
         // Register cleanup for editor
-        EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-        EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+        UnityEditor.EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+        UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 
-        AssemblyReloadEvents.beforeAssemblyReload -= Cleanup;
-        AssemblyReloadEvents.beforeAssemblyReload += Cleanup;
+        UnityEditor.AssemblyReloadEvents.beforeAssemblyReload -= Cleanup;
+        UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += Cleanup;
 #endif
     }
 
 #if UNITY_EDITOR
-    private static void OnPlayModeStateChanged(PlayModeStateChange state)
+    private static void OnPlayModeStateChanged(UnityEditor.PlayModeStateChange state)
     {
-        if (state is PlayModeStateChange.EnteredEditMode or PlayModeStateChange.ExitingEditMode)
+        if (state is UnityEditor.PlayModeStateChange.EnteredEditMode or UnityEditor.PlayModeStateChange.ExitingEditMode)
         {
             Cleanup();
         }
@@ -103,8 +97,8 @@ public static class ImmutableGridShape2DList
         private NativeList<int> _patternBegins;
         public NativeArray<int>.ReadOnly PatternBegins => _patternBegins.AsReadOnly();
 
-        private NativeList<int2> _bounds;
-        public NativeArray<int2>.ReadOnly Bounds => _bounds.AsReadOnly();
+        private NativeList<(int width, int height)> _bounds;
+        public NativeArray<(int width, int height)>.ReadOnly Bounds => _bounds.AsReadOnly();
 
         private NativeList<int> _rotate90Indices; // the shape index after rotate 90 in clockwise
         public NativeArray<int>.ReadOnly Rotate90Indices => _rotate90Indices.AsReadOnly();
@@ -123,7 +117,7 @@ public static class ImmutableGridShape2DList
             _flipIndices = new(128, allocator);
 
             _patternBegins.Add(0);
-            _bounds.Add(int2.zero);
+            _bounds.Add((0, 0));
             _rotate90Indices.Add(0);
             _flipIndices.Add(0);
         }
@@ -133,7 +127,7 @@ public static class ImmutableGridShape2DList
         {
             var bound = _bounds[id];
             var pattern = GetPattern(id);
-            return new GridShape.ReadOnly(bound, pattern);
+            return new GridShape.ReadOnly(bound.width, bound.height, pattern);
         }
 
         [Pure, MustUseReturnValue]
@@ -142,7 +136,7 @@ public static class ImmutableGridShape2DList
             var begin = _patternBegins[id];
             var size = _bounds[id];
             var ptr = UnsafeUtility.AddressOf(ref _patterns.ElementAt(begin));
-            var bitLength = size.x * size.y;
+            var bitLength = size.width * size.height;
             var span = new Span<byte>(ptr, SpanBitArrayUtility.ByteCount(bitLength));
             return new SpanBitArray(span, bitLength);
         }
@@ -153,7 +147,7 @@ public static class ImmutableGridShape2DList
             for (var i = 0; i < _bounds.Length; i++)
             {
                 var bound = _bounds[i];
-                if (bound.x != shape.Width || bound.y != shape.Height)
+                if (bound.width != shape.Width || bound.height != shape.Height)
                     continue;
 
                 var pattern = GetPattern(i);
@@ -173,7 +167,7 @@ public static class ImmutableGridShape2DList
                 id = _bounds.Length;
 
                 // Add bounds first so GetPattern can access it
-                _bounds.Add(new int2(shape.Width, shape.Height));
+                _bounds.Add((shape.Width, shape.Height));
 
                 // Store pattern
                 var patternBegin = _patterns.Length;

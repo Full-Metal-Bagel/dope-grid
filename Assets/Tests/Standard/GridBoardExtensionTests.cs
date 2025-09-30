@@ -12,7 +12,7 @@ public class StandardGridBoardExtensionTests
 
         var pos = container.FindFirstFit(item.AsReadOnly());
 
-        Assert.AreEqual((0, 0), pos);
+        Assert.AreEqual(GridPosition.Zero, pos);
     }
 
     [Test]
@@ -37,7 +37,7 @@ public class StandardGridBoardExtensionTests
         using var item = Shapes.Single();
         var pos = container.FindFirstFit(item.AsReadOnly());
 
-        Assert.AreEqual((-1, -1), pos);
+        Assert.AreEqual(new GridPosition(-1, -1), pos);
     }
 
     [Test]
@@ -48,7 +48,7 @@ public class StandardGridBoardExtensionTests
 
         var pos = container.FindFirstFit(item.AsReadOnly());
 
-        Assert.AreEqual((-1, -1), pos);
+        Assert.AreEqual(new GridPosition(-1, -1), pos);
     }
 
     [Test]

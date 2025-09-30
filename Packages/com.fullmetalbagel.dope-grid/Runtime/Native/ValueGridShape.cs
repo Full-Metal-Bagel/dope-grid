@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Unity.Collections;
 using Unity.Jobs;
-using Unity.Mathematics;
 
 namespace DopeGrid.Native;
 
@@ -33,15 +32,12 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
     }
 
     public readonly int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-    public readonly int GetIndex(int2 pos) => GetIndex(pos.x, pos.y);
     public readonly int GetIndex(int x, int y) => y * Width + x;
 
     public readonly T GetValue(GridPosition pos) => GetValue(pos.X, pos.Y);
-    public readonly T GetValue(int2 pos) => GetValue(pos.x, pos.y);
     public readonly T GetValue(int x, int y) => _values[GetIndex(x, y)];
 
     public void SetValue(GridPosition pos, T value) => SetValue(pos.X, pos.Y, value);
-    public void SetValue(int2 pos, T value) => SetValue(pos.x, pos.y, value);
     public void SetValue(int x, int y, T value) => _values[GetIndex(x, y)] = value;
 
     public T this[int x, int y]
@@ -51,12 +47,6 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
     }
 
     public T this[GridPosition pos]
-    {
-        readonly get => GetValue(pos);
-        set => SetValue(pos, value);
-    }
-
-    public T this[int2 pos]
     {
         readonly get => GetValue(pos);
         set => SetValue(pos, value);
@@ -86,14 +76,9 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
         }
     }
 
-    public void FillRect(GridPosition pos, int2 size, T value)
+    public void FillRect(GridPosition pos, int width, int height, T value)
     {
-        FillRect(pos.X, pos.Y, size.x, size.y, value);
-    }
-
-    public void FillRect(int2 pos, int2 size, T value)
-    {
-        FillRect(pos.x, pos.y, size.x, size.y, value);
+        FillRect(pos.X, pos.Y, width, height, value);
     }
 
     public void Clear()
@@ -102,7 +87,6 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
     }
 
     public readonly bool Contains(GridPosition pos) => Contains(pos.X, pos.Y);
-    public readonly bool Contains(int2 pos) => Contains(pos.x, pos.y);
     public readonly bool Contains(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
 
     public readonly ValueGridShape<T> Clone(Allocator allocator) => ((ReadOnly)this).Clone(allocator);
@@ -178,19 +162,15 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
         }
 
         public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-        public int GetIndex(int2 pos) => GetIndex(pos.x, pos.y);
         public int GetIndex(int x, int y) => y * Width + x;
 
         public T GetValue(GridPosition pos) => GetValue(pos.X, pos.Y);
-        public T GetValue(int2 pos) => GetValue(pos.x, pos.y);
         public T GetValue(int x, int y) => Values[GetIndex(x, y)];
 
         public T this[int x, int y] => GetValue(x, y);
         public T this[GridPosition pos] => GetValue(pos);
-        public T this[int2 pos] => GetValue(pos);
 
         public bool Contains(GridPosition pos) => Contains(pos.X, pos.Y);
-        public bool Contains(int2 pos) => Contains(pos.x, pos.y);
         public bool Contains(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
 
         public ValueGridShape<T> Clone(Allocator allocator)

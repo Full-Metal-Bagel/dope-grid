@@ -2,6 +2,7 @@ namespace DopeGrid;
 
 public readonly record struct GridPosition(int X, int Y)
 {
+    public static readonly GridPosition Zero = new(0, 0);
     public int X { get; } = X;
     public int Y { get; } = Y;
 

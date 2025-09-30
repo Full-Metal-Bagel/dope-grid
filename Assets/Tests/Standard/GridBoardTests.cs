@@ -175,8 +175,8 @@ public class StandardGridBoardTests
         _gridBoard.TryAddItemAt(item2, (5, 6));
 
         Assert.AreEqual(2, _gridBoard.ItemPositions.Count);
-        Assert.AreEqual((1, 2), _gridBoard.ItemPositions[0]);
-        Assert.AreEqual((5, 6), _gridBoard.ItemPositions[1]);
+        Assert.AreEqual(new GridPosition(1, 2), _gridBoard.ItemPositions[0]);
+        Assert.AreEqual(new GridPosition(5, 6), _gridBoard.ItemPositions[1]);
     }
 
     [Test]
@@ -187,7 +187,7 @@ public class StandardGridBoardTests
         _gridBoard.TryAddItem(item);
         var pos = _gridBoard.ItemPositions[0];
 
-        Assert.AreEqual((0, 0), pos); // Should place at top-left first
+        Assert.AreEqual(GridPosition.Zero, pos); // Should place at top-left first
     }
 
     [Test]

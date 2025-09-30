@@ -13,7 +13,7 @@ public static class Shapes
     public static GridShape Single(Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape(1, 1, allocator);
-        shape.SetCell(new int2(0, 0), true);
+        shape.SetCell(0, 0, true);
         return shape;
     }
 
@@ -22,7 +22,7 @@ public static class Shapes
     {
         var shape = new GridShape(length, 1, allocator);
         for (var i = 0; i < length; i++)
-            shape.SetCell(new int2(i, 0), true);
+            shape.SetCell(i, 0, true);
         return shape;
     }
 
@@ -32,7 +32,7 @@ public static class Shapes
         var shape = new GridShape(size, size, allocator);
         for (var y = 0; y < size; y++)
         for (var x = 0; x < size; x++)
-            shape.SetCell(new int2(x, y), true);
+            shape.SetCell(x, y, true);
         return shape;
     }
 
@@ -40,9 +40,9 @@ public static class Shapes
     public static GridShape LShape(Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape(2, 2, allocator);
-        shape.SetCell(new int2(0, 0), true);
-        shape.SetCell(new int2(0, 1), true);
-        shape.SetCell(new int2(1, 1), true);
+        shape.SetCell(0, 0, true);
+        shape.SetCell(0, 1, true);
+        shape.SetCell(1, 1, true);
         return shape;
     }
 
@@ -50,10 +50,10 @@ public static class Shapes
     public static GridShape TShape(Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape(3, 2, allocator);
-        shape.SetCell(new int2(0, 0), true);
-        shape.SetCell(new int2(1, 0), true);
-        shape.SetCell(new int2(2, 0), true);
-        shape.SetCell(new int2(1, 1), true);
+        shape.SetCell(0, 0, true);
+        shape.SetCell(1, 0, true);
+        shape.SetCell(2, 0, true);
+        shape.SetCell(1, 1, true);
         return shape;
     }
 
@@ -61,11 +61,11 @@ public static class Shapes
     public static GridShape Cross(Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape(3, 3, allocator);
-        shape.SetCell(new int2(1, 0), true);
-        shape.SetCell(new int2(0, 1), true);
-        shape.SetCell(new int2(1, 1), true);
-        shape.SetCell(new int2(2, 1), true);
-        shape.SetCell(new int2(1, 2), true);
+        shape.SetCell(1, 0, true);
+        shape.SetCell(0, 1, true);
+        shape.SetCell(1, 1, true);
+        shape.SetCell(2, 1, true);
+        shape.SetCell(1, 2, true);
         return shape;
     }
 
@@ -122,19 +122,20 @@ public static class Shapes
     public static GridShape Rotate(this in GridShape.ReadOnly shape, RotationDegree degree, Allocator allocator)
     {
         var dimensions = shape.GetRotatedDimensions(degree);
-        var rotated = new GridShape(dimensions.x, dimensions.y, allocator);
+        var rotated = new GridShape(dimensions.width, dimensions.height, allocator);
         shape.RotateBits(degree, rotated.Bits);
         return rotated;
     }
 
     [Pure, MustUseReturnValue]
-    public static int2 GetRotatedDimensions(this in GridShape.ReadOnly shape, RotationDegree degree)
+    public static (int width, int height) GetRotatedDimensions(this in GridShape.ReadOnly shape, RotationDegree degree)
     {
         return degree switch
         {
-            RotationDegree.Clockwise90 => shape.Bound.yx,
-            RotationDegree.Clockwise180 => shape.Bound,
-            RotationDegree.Clockwise270 => shape.Bound.yx,
+            RotationDegree.None => (shape.Width, shape.Height),
+            RotationDegree.Clockwise90 => (shape.Height, shape.Width),
+            RotationDegree.Clockwise180 => (shape.Width, shape.Height),
+            RotationDegree.Clockwise270 => (shape.Height, shape.Width),
             _ => throw new NotImplementedException()
         };
     }
@@ -149,27 +150,27 @@ public static class Shapes
         {
             for (var x = 0; x < width; x++)
             {
-                if (!shape.GetCell(new int2(x, y))) continue;
+                if (!shape.GetCell(x, y)) continue;
 
-                int2 rotatedPos = degree switch
+                (int rotatedX, int rotatedY) = degree switch
                 {
                     RotationDegree.Clockwise90 =>
                         // (x,y) -> (height-1-y, x)
-                        new int2(height - 1 - y, x),
+                        (height - 1 - y, x),
                     RotationDegree.Clockwise180 =>
                         // (x,y) -> (width-1-x, height-1-y)
-                        new int2(width - 1 - x, height - 1 - y),
+                        (width - 1 - x, height - 1 - y),
                     RotationDegree.Clockwise270 =>
                         // (x,y) -> (y, width-1-x)
-                        new int2(y, width - 1 - x),
+                        (y, width - 1 - x),
                     _ => throw new ArgumentException($"Invalid rotation degree: {degree}")
                 };
 
-                var index = rotatedPos.y * newBound.x + rotatedPos.x;
+                var index = rotatedY * newBound.width + rotatedX;
                 output.Set(index, true);
             }
         }
-        return new GridShape.ReadOnly(newBound, output.AsReadOnly());
+        return new GridShape.ReadOnly(newBound.width, newBound.height, output.AsReadOnly());
     }
 
     [Pure, MustUseReturnValue]
@@ -202,14 +203,14 @@ public static class Shapes
                 var sourceIndex = rowStart + x;
                 if (!bits.Get(sourceIndex)) continue;
 
-                var flippedPos = axis switch
+                var (flippedX, flippedY) = axis switch
                 {
-                    FlipAxis.Horizontal => new int2(width - 1 - x, y),
-                    FlipAxis.Vertical => new int2(x, height - 1 - y),
+                    FlipAxis.Horizontal => (width - 1 - x, y),
+                    FlipAxis.Vertical => (x, height - 1 - y),
                     _ => throw new ArgumentException($"Invalid flip axis: {axis}")
                 };
 
-                var destIndex = flippedPos.y * width + flippedPos.x;
+                var destIndex = flippedY * width + flippedX;
                 output.Set(destIndex, true);
             }
         }
@@ -371,14 +372,14 @@ public static class Shapes
         };
     }
 
-    public static void FillShape<T>(this ValueGridShape<T> grid, ImmutableGridShape shape, int2 pos, T value)
+    public static void FillShape<T>(this ValueGridShape<T> grid, ImmutableGridShape shape, GridPosition pos, T value)
         where T : unmanaged, IEquatable<T>
     {
         // Check bounds to prevent out of range access
-        var maxX = math.min(shape.Width, grid.Width - pos.x);
-        var maxY = math.min(shape.Height, grid.Height - pos.y);
-        var startX = math.max(0, -pos.x);
-        var startY = math.max(0, -pos.y);
+        var maxX = math.min(shape.Width, grid.Width - pos.X);
+        var maxY = math.min(shape.Height, grid.Height - pos.Y);
+        var startX = math.max(0, -pos.X);
+        var startY = math.max(0, -pos.Y);
 
         // Fill only the cells where the shape has true values
         for (int y = startY; y < maxY; y++)
@@ -387,28 +388,27 @@ public static class Shapes
             {
                 if (shape.GetCell(x, y))
                 {
-                    var gridPos = new int2(pos.x + x, pos.y + y);
-                    grid.SetValue(gridPos, value);
+                    grid.SetValue(pos.X + x, pos.Y + y, value);
                 }
             }
         }
     }
 
-    public static bool IsWithinBounds<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, int2 position)
+    public static bool IsWithinBounds<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, GridPosition position)
         where T : unmanaged, IEquatable<T>
     {
-        return position.x >= 0 && position.y >= 0 &&
-               position.x + shape.Width <= grid.Width &&
-               position.y + shape.Height <= grid.Height;
+        return position is { X: >= 0, Y: >= 0 } &&
+               position.X + shape.Width <= grid.Width &&
+               position.Y + shape.Height <= grid.Height;
     }
 
-    public static bool CheckShapeCells<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, int2 position, Func<int2, T, bool> cellPredicate)
+    public static bool CheckShapeCells<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, GridPosition position, Func<GridPosition, T, bool> cellPredicate)
         where T : unmanaged, IEquatable<T>
     {
         return grid.CheckShapeCells(shape, position, (pos, value, predicate) => predicate(pos, value), cellPredicate);
     }
 
-    public static bool CheckShapeCells<T, TData>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, int2 position, Func<int2, T, TData, bool> cellPredicate, TData data)
+    public static bool CheckShapeCells<T, TData>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, GridPosition position, Func<GridPosition, T, TData, bool> cellPredicate, TData data)
         where T : unmanaged, IEquatable<T>
     {
         for (int y = 0; y < shape.Height; y++)
@@ -417,7 +417,7 @@ public static class Shapes
             {
                 if (shape.GetCell(x, y))
                 {
-                    var gridPos = new int2(position.x + x, position.y + y);
+                    var gridPos = new GridPosition(position.X + x, position.Y + y);
                     var cellValue = grid[gridPos];
                     if (!cellPredicate(gridPos, cellValue, data))
                         return false;
