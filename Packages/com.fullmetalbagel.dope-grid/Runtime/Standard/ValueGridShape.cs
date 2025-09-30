@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DopeGrid.Standard;
 
-public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable where T : unmanaged, IEquatable<T>
+public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable where T : IEquatable<T>
 {
     public int Width { get; }
     public int Height { get; }

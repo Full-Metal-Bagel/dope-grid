@@ -7,7 +7,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void Constructor_CreatesEmptyGrid()
     {
-        using using var grid = new ValueGridShape<int>(3, 4);
+        using var grid = new ValueGridShape<int>(3, 4);
 
         Assert.AreEqual(3, grid.Width);
         Assert.AreEqual(4, grid.Height);
@@ -44,7 +44,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void Indexer_WorksCorrectly()
     {
-        using var grid = new ValueGridShape<int>(3, 3);
+        var grid = new ValueGridShape<int>(3, 3);
 
         grid[1, 1] = 5;
         grid[(2, 2)] = 10;
@@ -52,6 +52,8 @@ public class StandardValueGridShapeTests
         Assert.AreEqual(5, grid[1, 1]);
         Assert.AreEqual(10, grid[(2, 2)]);
         Assert.AreEqual(0, grid[0, 0]);
+
+        grid.Dispose();
     }
 
     [Test]
