@@ -7,7 +7,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void Constructor_CreatesEmptyGrid()
     {
-        using var grid = new ValueGridShape<int>(3, 4);
+        var grid = new ValueGridShape<int>(3, 4);
 
         Assert.AreEqual(3, grid.Width);
         Assert.AreEqual(4, grid.Height);
@@ -21,7 +21,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void Constructor_WithDefaultValue_FillsGrid()
     {
-        using var grid = new ValueGridShape<int>(3, 3, 42);
+        var grid = new ValueGridShape<int>(3, 3, 42);
 
         for (int y = 0; y < 3; y++)
         for (int x = 0; x < 3; x++)
@@ -31,7 +31,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void SetValue_GetValue_WorkCorrectly()
     {
-        using var grid = new ValueGridShape<string>(2, 2);
+        var grid = new ValueGridShape<string>(2, 2);
 
         grid.SetValue((0, 0), "A");
         grid.SetValue((1, 1), "B");
@@ -44,7 +44,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void Indexer_WorksCorrectly()
     {
-        using var grid = new ValueGridShape<int>(3, 3);
+        var grid = new ValueGridShape<int>(3, 3);
 
         grid[1, 1] = 5;
         grid[(2, 2)] = 10;
@@ -57,7 +57,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void Fill_FillsAllCells()
     {
-        using var grid = new ValueGridShape<int>(3, 3);
+        var grid = new ValueGridShape<int>(3, 3);
 
         grid.Fill(7);
 
@@ -69,7 +69,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void FillRect_FillsRectangleArea()
     {
-        using var grid = new ValueGridShape<int>(5, 5);
+        var grid = new ValueGridShape<int>(5, 5);
 
         grid.FillRect(1, 1, 3, 2, 99);
 
@@ -84,7 +84,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void Clear_ResetsToDefault()
     {
-        using var grid = new ValueGridShape<int>(3, 3);
+        var grid = new ValueGridShape<int>(3, 3);
         grid.Fill(5);
 
         grid.Clear();
@@ -97,7 +97,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void Contains_DetectsBounds()
     {
-        using var grid = new ValueGridShape<int>(3, 3);
+        var grid = new ValueGridShape<int>(3, 3);
 
         Assert.IsTrue(grid.Contains((0, 0)));
         Assert.IsTrue(grid.Contains((2, 2)));
@@ -150,7 +150,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void CountValue_CountsCorrectly()
     {
-        using var grid = new ValueGridShape<int>(3, 3);
+        var grid = new ValueGridShape<int>(3, 3);
         grid.SetValue((0, 0), 5);
         grid.SetValue((1, 1), 5);
         grid.SetValue((2, 2), 10);
@@ -163,7 +163,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void CountWhere_CountsWithPredicate()
     {
-        using var grid = new ValueGridShape<int>(3, 3);
+        var grid = new ValueGridShape<int>(3, 3);
         grid.SetValue((0, 0), 5);
         grid.SetValue((1, 1), 10);
         grid.SetValue((2, 2), 15);
@@ -175,7 +175,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void Any_DetectsMatchingElements()
     {
-        using var grid = new ValueGridShape<int>(2, 2);
+        var grid = new ValueGridShape<int>(2, 2);
         grid.SetValue((1, 1), 42);
 
         Assert.IsTrue(grid.Any(x => x == 42));
@@ -185,7 +185,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void All_ChecksAllElements()
     {
-        using var grid = new ValueGridShape<int>(2, 2, 5);
+        var grid = new ValueGridShape<int>(2, 2, 5);
 
         Assert.IsTrue(grid.All(x => x == 5));
 
@@ -201,7 +201,7 @@ public class StandardValueGridShapeTests
         valueGrid.SetValue((1, 1), 1);
         valueGrid.SetValue((2, 2), 0);
 
-        using var gridShape = valueGrid.ToGridShape(1);
+        var gridShape = valueGrid.ToGridShape(1);
 
         Assert.AreEqual(3, gridShape.Width);
         Assert.AreEqual(3, gridShape.Height);
@@ -218,7 +218,7 @@ public class StandardValueGridShapeTests
         valueGrid.SetValue((1, 1), 10);
         valueGrid.SetValue((2, 2), 3);
 
-        using var gridShape = valueGrid.ToGridShape(x => x > 5);
+        var gridShape = valueGrid.ToGridShape(x => x > 5);
 
         Assert.IsFalse(gridShape.GetCell((0, 0)));
         Assert.IsTrue(gridShape.GetCell((1, 1)));
@@ -228,7 +228,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void FromGridShape_ConvertsCorrectly()
     {
-        using var gridShape = Shapes.LShape();
+        var gridShape = Shapes.LShape();
         using var valueGrid = new ValueGridShape<int>(2, 2);
 
         valueGrid.FromGridShape(gridShape, 1, 0);
@@ -242,7 +242,7 @@ public class StandardValueGridShapeTests
     [Test]
     public void AsReadOnly_ReturnsReadOnlyView()
     {
-        using var grid = new ValueGridShape<int>(2, 2);
+        var grid = new ValueGridShape<int>(2, 2);
         grid.SetValue((1, 1), 42);
 
         var readOnly = grid.AsReadOnly();

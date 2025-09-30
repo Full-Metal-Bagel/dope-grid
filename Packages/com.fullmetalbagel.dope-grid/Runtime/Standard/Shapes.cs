@@ -143,6 +143,12 @@ public static class Shapes
         var height = shape.Height;
         var newBound = GetRotatedDimensions(shape, degree);
 
+        if (degree == RotationDegree.None)
+        {
+            shape.Bits.CopyTo(output);
+            return shape;
+        }
+
         for (var y = 0; y < height; y++)
         {
             for (var x = 0; x < width; x++)

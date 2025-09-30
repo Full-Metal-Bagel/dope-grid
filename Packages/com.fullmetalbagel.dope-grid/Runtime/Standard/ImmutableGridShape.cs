@@ -108,7 +108,9 @@ internal class ImmutableGridShapeRepository
             if (bound.width != shape.Width || bound.height != shape.Height)
                 continue;
 
-            var pattern = GetPattern(i);
+            var patternBytes = _patterns[i];
+            var bitLength = bound.width * bound.height;
+            var pattern = new ReadOnlySpanBitArray(patternBytes.AsSpan(), bitLength);
             if (pattern.SequenceEqual(shape.Bits))
                 return i;
         }

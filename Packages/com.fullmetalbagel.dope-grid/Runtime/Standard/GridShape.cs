@@ -10,9 +10,9 @@ public struct GridShape : IEquatable<GridShape>, IDisposable
     public int Height { get; }
     public int Size => Width * Height;
 
-    public ReadOnlySpanBitArray ReadOnlyBits => new(_bits.AsSpan(0, _byteCount), Size);
-    internal SpanBitArray Bits => new(_bits.AsSpan(0, _byteCount), Size);
-    private byte[] _bits;
+    public ReadOnlySpanBitArray ReadOnlyBits => new(_bits!.AsSpan(0, _byteCount), Size);
+    internal SpanBitArray Bits => new(_bits!.AsSpan(0, _byteCount), Size);
+    private byte[]? _bits;
     private readonly int _byteCount;
 
     public int OccupiedSpaceCount => ReadOnlyBits.CountBits(0, Size);
@@ -90,7 +90,7 @@ public struct GridShape : IEquatable<GridShape>, IDisposable
         if (_bits != null)
         {
             ArrayPool<byte>.Shared.Return(_bits);
-            _bits = null!;
+            _bits = null;
         }
     }
 

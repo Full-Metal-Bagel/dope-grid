@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DopeGrid.Standard;
 
-public class ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable where T : IEquatable<T>
+public class ValueGridShape<T> : IEquatable<ValueGridShape<T>> where T : IEquatable<T>
 {
     public int Width { get; }
     public int Height { get; }
@@ -107,11 +107,6 @@ public class ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable wher
     public int CountWhere(Func<T, bool> predicate) => AsReadOnly().CountWhere(predicate);
     public bool Any(Func<T, bool> predicate) => AsReadOnly().Any(predicate);
     public bool All(Func<T, bool> predicate) => AsReadOnly().All(predicate);
-
-    public void Dispose()
-    {
-        GC.SuppressFinalize(this);
-    }
 
     public bool Equals(ValueGridShape<T>? other)
     {

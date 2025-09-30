@@ -111,11 +111,9 @@ public struct GridBoard : IDisposable
 
     public GridBoard Clone()
     {
-        var clone = new GridBoard(Width, Height)
-        {
-            _initializedGrid = InitializedGrid.Clone(),
-            _grid = _grid.Clone()
-        };
+        var clone = new GridBoard(Width, Height);
+        _grid.CopyTo(clone._grid);
+        _initializedGrid.CopyTo(clone._initializedGrid);
         clone._items.AddRange(_items);
         clone._itemPositions.AddRange(_itemPositions);
         return clone;
