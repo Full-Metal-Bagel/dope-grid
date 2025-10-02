@@ -1,5 +1,5 @@
 {
-    "name": "DopeInventory.Ugui",
+    "name": "DopeGrid.Inventory.Ugui",
     "rootNamespace": "",
     "references": [
         "GUID:04eb7e0343b59421cb3393dad67dcdc4",
