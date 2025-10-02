@@ -426,4 +426,25 @@ public static class Shapes
         }
         return true;
     }
+
+    public static GridPosition FindFirstFitWithFixedRotation(this ValueGridShape<int> grid, ImmutableGridShape item)
+    {
+        return grid.AsReadOnly().FindFirstFitWithFixedRotation(item);
+    }
+
+    public static GridPosition FindFirstFitWithFixedRotation(this in ValueGridShape<int>.ReadOnly grid, ImmutableGridShape item)
+    {
+        var maxY = grid.Height - item.Height + 1;
+        var maxX = grid.Width - item.Width + 1;
+
+        for (var y = 0; y < maxY; y++)
+        for (var x = 0; x < maxX; x++)
+        {
+            var pos = new GridPosition(x, y);
+            if (grid.IsWithinBounds(item, pos) && grid.CheckShapeCells(item, pos, (_, value) => value == -1))
+                return pos;
+        }
+
+        return GridPosition.Invalid;
+    }
 }

@@ -6,28 +6,20 @@ namespace DopeGrid.Native;
 public struct IndexedGridBoard : IDisposable
 {
     private ValueGridShape<int> _grid; // Stores item index at each cell (-1 for empty)
-    public ValueGridShape<int> Grid => _grid;
+    public readonly ValueGridShape<int>.ReadOnly Grid => _grid;
 
     private ValueGridShape<int> _initializedGrid;
-    public ValueGridShape<int> InitializedGrid => _initializedGrid;
+    public readonly ValueGridShape<int>.ReadOnly InitializedGrid => _initializedGrid;
 
     private NativeList<ItemSlot> _items; // Stable array - indices never change
     private NativeList<int> _freeIndices; // Stack of freed item indices
     private int _itemCount;
 
-    public int Width => _initializedGrid.Width;
-    public int Height => _initializedGrid.Height;
+    public readonly int Width => _initializedGrid.Width;
+    public readonly int Height => _initializedGrid.Height;
 
-    public int ItemCount => _itemCount;
-    public int FreeSpace => _grid.CountValue(-1);
-
-    internal readonly record struct ItemSlot(ImmutableGridShape Shape, GridPosition Position)
-    {
-        public static readonly ItemSlot Invalid = new(ImmutableGridShape.Empty, GridPosition.Invalid);
-        public ImmutableGridShape Shape { get; } = Shape;
-        public GridPosition Position { get; } = Position;
-        public bool IsValid => Position.IsValid || !Shape.IsEmpty;
-    }
+    public readonly int ItemCount => _itemCount;
+    public readonly int FreeSpace => _grid.CountValue(-1);
 
     public IndexedGridBoard(int width, int height, Allocator allocator = Allocator.Persistent)
     {
@@ -50,14 +42,14 @@ public struct IndexedGridBoard : IDisposable
 
     public ImmutableGridShape GetItemShape(int index)
     {
-        if (index < 0 || index >= _items.Length || !_items[index].IsValid)
+        if (index < 0 || index >= _items.Length)
             return ImmutableGridShape.Empty;
         return _items[index].Shape;
     }
 
     public GridPosition GetItemPosition(int index)
     {
-        if (index < 0 || index >= _items.Length || !_items[index].IsValid)
+        if (index < 0 || index >= _items.Length)
             return GridPosition.Invalid;
         return _items[index].Position;
     }
@@ -81,7 +73,7 @@ public struct IndexedGridBoard : IDisposable
         GridPosition position;
         do
         {
-            position = FindFirstFitWithFixedRotation(rotatedItem);
+            position = _grid.FindFirstFitWithFixedRotation(rotatedItem);
             if (position.IsValid)
             {
                 var index = AddItemAt(rotatedItem, position);
@@ -183,22 +175,6 @@ public struct IndexedGridBoard : IDisposable
         return clone;
     }
 
-    private GridPosition FindFirstFitWithFixedRotation(ImmutableGridShape item)
-    {
-        var maxY = Height - item.Height + 1;
-        var maxX = Width - item.Width + 1;
-
-        for (var y = 0; y < maxY; y++)
-        for (var x = 0; x < maxX; x++)
-        {
-            var pos = new GridPosition(x, y);
-            if (CanPlaceItem(item, pos))
-                return pos;
-        }
-
-        return GridPosition.Invalid;
-    }
-
     private bool CanPlaceItem(ImmutableGridShape item, GridPosition pos)
     {
         var grid = _grid.AsReadOnly();
@@ -232,14 +208,14 @@ public struct IndexedGridBoard : IDisposable
 
         public ImmutableGridShape GetItemShape(int index)
         {
-            if (index < 0 || index >= _items.Length || !_items[index].IsValid)
+            if (index < 0 || index >= _items.Length)
                 return ImmutableGridShape.Empty;
             return _items[index].Shape;
         }
 
         public GridPosition GetItemPosition(int index)
         {
-            if (index < 0 || index >= _items.Length || !_items[index].IsValid)
+            if (index < 0 || index >= _items.Length)
                 return GridPosition.Invalid;
             return _items[index].Position;
         }

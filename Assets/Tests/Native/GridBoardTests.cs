@@ -376,7 +376,7 @@ public class GridBoardTests
     public void AsReadOnly_ProvidesReadOnlyAccess()
     {
         var shape = Shapes.ImmutableSquare(2);
-        var (index, _) = _gridBoard.TryAddItemAt(shape, new GridPosition(2, 3));
+        var index = _gridBoard.TryAddItemAt(shape, new GridPosition(2, 3));
 
         var readOnly = _gridBoard.AsReadOnly();
 
