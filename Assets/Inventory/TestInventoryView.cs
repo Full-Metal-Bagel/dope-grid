@@ -62,7 +62,7 @@ public class TestInventoryView : MonoBehaviour
             // Build model item definition from UI shape
             var instanceId = _items.NextItemInstanceId;
             var itemDef = new ItemDefinition(guid, ui.Shape.ToImmutableGridShape());
-            var rotation = rotations[instanceId % rotations.Length];
+            var rotation = rotations[instanceId % (ulong)rotations.Length];
             var candidate = new InventoryItem(instanceId, itemDef, rotation, new int2(-1, -1));
 
             if (!_inventory.TryAutoPlaceItem(candidate, out _))

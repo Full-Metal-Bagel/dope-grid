@@ -195,13 +195,13 @@ namespace DopeGrid.Inventory
         public void SetLabelMode(LabelMode mode) => _labelMode = mode;
         public void ToggleLabelMode() => _labelMode ^= LabelMode.InstanceId; // toggle instance id flag
 
-        private string BuildLabel(int itemIndex, int instanceId)
+        private string BuildLabel(int itemIndex, InventoryItemInstanceId id)
         {
             var showIndex = (_labelMode & LabelMode.ItemIndex) != 0;
             var showInstance = (_labelMode & LabelMode.InstanceId) != 0;
-            if (showIndex && showInstance) return $"{Colorize(itemIndex.ToString(), _indexColor)}\n{Colorize(instanceId.ToString(), _instanceColor)}";
+            if (showIndex && showInstance) return $"{Colorize(itemIndex.ToString(), _indexColor)}\n{Colorize(id.ToString(), _instanceColor)}";
             if (showIndex) return Colorize(itemIndex.ToString(), _indexColor);
-            if (showInstance) return Colorize(instanceId.ToString(), _instanceColor);
+            if (showInstance) return Colorize(id.ToString(), _instanceColor);
             return string.Empty;
         }
 

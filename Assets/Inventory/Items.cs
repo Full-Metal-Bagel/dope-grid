@@ -3,15 +3,14 @@ using UnityEngine;
 
 public class Items : MonoBehaviour
 {
-    private int _itemInstanceId = -1;
+    private ulong _itemInstanceId = 0;
     public SharedInventoryData SharedInventoryData { get; } = new();
 
-    public int NextItemInstanceId
+    public InventoryItemInstanceId NextItemInstanceId
     {
         get
         {
-            _itemInstanceId++;
-            return _itemInstanceId;
+            return (InventoryItemInstanceId)_itemInstanceId++;
         }
     }
 }

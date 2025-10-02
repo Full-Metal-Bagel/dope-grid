@@ -14,7 +14,7 @@ internal sealed class InventoryViewDragPreviewController : IDisposable
     private readonly Vector2 _cellSize;
     private readonly Color _placeableColor;
     private readonly Color _blockedColor;
-    private readonly Dictionary<int, Image> _draggingViews = new();
+    private readonly Dictionary<InventoryItemInstanceId, Image> _draggingViews = new();
 
     public InventoryViewDragPreviewController(SharedInventoryData sharedInventoryData, RectTransform view, Vector2 cellSize, Color placeableColor, Color blockedColor)
     {
@@ -39,8 +39,8 @@ internal sealed class InventoryViewDragPreviewController : IDisposable
 
     public void UpdateDragPlacementPreview(Inventory inventory)
     {
-        var seen = HashSetPool<int>.Get();
-        var toRemove = ListPool<int>.Get();
+        var seen = HashSetPool<InventoryItemInstanceId>.Get();
+        var toRemove = ListPool<InventoryItemInstanceId>.Get();
 
         try
         {
@@ -121,8 +121,8 @@ internal sealed class InventoryViewDragPreviewController : IDisposable
         }
         finally
         {
-            HashSetPool<int>.Release(seen);
-            ListPool<int>.Release(toRemove);
+            HashSetPool<InventoryItemInstanceId>.Release(seen);
+            ListPool<InventoryItemInstanceId>.Release(toRemove);
         }
     }
 
