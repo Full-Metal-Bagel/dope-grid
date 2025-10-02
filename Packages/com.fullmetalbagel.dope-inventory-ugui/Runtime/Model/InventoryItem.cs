@@ -4,6 +4,13 @@ using Unity.Mathematics;
 
 namespace DopeGrid.Inventory;
 
+public readonly record struct InventoryItemInstanceId(ulong Id)
+{
+    public ulong Id { get; } = Id;
+    public static implicit operator ulong(InventoryItemInstanceId instanceId) => instanceId.Id;
+    public static explicit operator InventoryItemInstanceId(ulong id) => new(id);
+}
+
 public readonly record struct InventoryItem(int InstanceId, ItemDefinition Definition, RotationDegree Rotation, int2 Position)
 {
     public static InventoryItem Invalid => new(-1, default, RotationDegree.None, default);
