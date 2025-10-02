@@ -207,4 +207,52 @@ public struct IndexedGridBoard : IDisposable
 
         return grid.CheckShapeCells(item, pos, (_, value) => value == -1);
     }
+
+    public static implicit operator ReadOnly(IndexedGridBoard board) => board.AsReadOnly();
+    public ReadOnly AsReadOnly() => new(_grid.AsReadOnly(), _items.AsReadOnly(), _itemCount);
+
+    public readonly ref struct ReadOnly
+    {
+        private readonly ValueGridShape<int>.ReadOnly _grid;
+        private readonly NativeArray<ItemSlot>.ReadOnly _items;
+        private readonly int _itemCount;
+
+        public ValueGridShape<int>.ReadOnly Grid => _grid;
+        public int Width => _grid.Width;
+        public int Height => _grid.Height;
+        public int ItemCount => _itemCount;
+        public int FreeSpace => _grid.CountValue(-1);
+
+        internal ReadOnly(ValueGridShape<int>.ReadOnly grid, NativeArray<ItemSlot>.ReadOnly items, int itemCount)
+        {
+            _grid = grid;
+            _items = items;
+            _itemCount = itemCount;
+        }
+
+        public ImmutableGridShape GetItemShape(int index)
+        {
+            if (index < 0 || index >= _items.Length || !_items[index].IsValid)
+                return ImmutableGridShape.Empty;
+            return _items[index].Shape;
+        }
+
+        public GridPosition GetItemPosition(int index)
+        {
+            if (index < 0 || index >= _items.Length || !_items[index].IsValid)
+                return GridPosition.Invalid;
+            return _items[index].Position;
+        }
+
+        public int GetItemIndexAt(GridPosition pos)
+        {
+            if (!_grid.Contains(pos)) return -1;
+            return _grid[pos];
+        }
+
+        public bool IsCellOccupied(GridPosition pos)
+        {
+            return GetItemIndexAt(pos) >= 0;
+        }
+    }
 }

@@ -369,4 +369,38 @@ public class GridBoardTests
     }
 
     #endregion
+
+    #region ReadOnly Tests
+
+    [Test]
+    public void AsReadOnly_ProvidesReadOnlyAccess()
+    {
+        var shape = Shapes.ImmutableSquare(2);
+        var (index, _) = _gridBoard.TryAddItemAt(shape, new GridPosition(2, 3));
+
+        var readOnly = _gridBoard.AsReadOnly();
+
+        Assert.AreEqual(_gridBoard.Width, readOnly.Width);
+        Assert.AreEqual(_gridBoard.Height, readOnly.Height);
+        Assert.AreEqual(_gridBoard.ItemCount, readOnly.ItemCount);
+        Assert.AreEqual(_gridBoard.FreeSpace, readOnly.FreeSpace);
+        Assert.AreEqual(shape, readOnly.GetItemShape(index));
+        Assert.AreEqual(new GridPosition(2, 3), readOnly.GetItemPosition(index));
+        Assert.IsTrue(readOnly.IsCellOccupied(new GridPosition(2, 3)));
+        Assert.IsFalse(readOnly.IsCellOccupied(new GridPosition(0, 0)));
+    }
+
+    [Test]
+    public void ImplicitConversion_ToReadOnly()
+    {
+        var shape = Shapes.ImmutableSquare(2);
+        _gridBoard.TryAddItemAt(shape, new GridPosition(1, 1));
+
+        GridBoard.ReadOnly readOnly = _gridBoard; // Implicit conversion
+
+        Assert.AreEqual(1, readOnly.ItemCount);
+        Assert.IsTrue(readOnly.IsCellOccupied(new GridPosition(1, 1)));
+    }
+
+    #endregion
 }

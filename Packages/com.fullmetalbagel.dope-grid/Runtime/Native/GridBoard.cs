@@ -155,4 +155,46 @@ public struct GridBoard : IDisposable
         clone._freeIndices.CopyFrom(_freeIndices);
         return clone;
     }
+
+    public static implicit operator ReadOnly(GridBoard board) => board.AsReadOnly();
+    public ReadOnly AsReadOnly() => new(_grid.AsReadOnly(), _items.AsReadOnly(), _itemCount);
+
+    public readonly ref struct ReadOnly
+    {
+        private readonly GridShape.ReadOnly _grid;
+        private readonly NativeArray<ItemSlot>.ReadOnly _items;
+        private readonly int _itemCount;
+
+        public GridShape.ReadOnly CurrentGrid => _grid;
+        public int Width => _grid.Width;
+        public int Height => _grid.Height;
+        public int ItemCount => _itemCount;
+        public int FreeSpace => _grid.FreeSpaceCount;
+
+        internal ReadOnly(GridShape.ReadOnly grid, NativeArray<ItemSlot>.ReadOnly items, int itemCount)
+        {
+            _grid = grid;
+            _items = items;
+            _itemCount = itemCount;
+        }
+
+        public ImmutableGridShape GetItemShape(int index)
+        {
+            if (index < 0 || index >= _items.Length || !_items[index].IsValid)
+                return ImmutableGridShape.Empty;
+            return _items[index].Shape;
+        }
+
+        public GridPosition GetItemPosition(int index)
+        {
+            if (index < 0 || index >= _items.Length || !_items[index].IsValid)
+                return GridPosition.Invalid;
+            return _items[index].Position;
+        }
+
+        public bool IsCellOccupied(GridPosition pos)
+        {
+            return _grid.GetCell(pos);
+        }
+    }
 }

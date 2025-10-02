@@ -259,4 +259,77 @@ public class IndexedGridBoardTests
         shape.Dispose();
         board.Dispose();
     }
+
+    [Test]
+    public void AsReadOnly_ProvidesReadOnlyAccess()
+    {
+        var board = new IndexedGridBoard(5, 5, Allocator.Temp);
+
+        var shape = new GridShape(2, 2, Allocator.Temp);
+        for (int y = 0; y < 2; y++)
+        for (int x = 0; x < 2; x++)
+            shape.SetCell(new int2(x, y), true);
+
+        var index = board.TryAddItemAt(shape.GetOrCreateImmutable(), new GridPosition(2, 3));
+        var readOnly = board.AsReadOnly();
+
+        Assert.AreEqual(board.Width, readOnly.Width);
+        Assert.AreEqual(board.Height, readOnly.Height);
+        Assert.AreEqual(board.ItemCount, readOnly.ItemCount);
+        Assert.AreEqual(board.FreeSpace, readOnly.FreeSpace);
+        Assert.AreEqual(shape.GetOrCreateImmutable(), readOnly.GetItemShape(index));
+        Assert.AreEqual(new GridPosition(2, 3), readOnly.GetItemPosition(index));
+        Assert.AreEqual(index, readOnly.GetItemIndexAt(new GridPosition(2, 3)));
+        Assert.IsTrue(readOnly.IsCellOccupied(new GridPosition(2, 3)));
+        Assert.IsFalse(readOnly.IsCellOccupied(new GridPosition(0, 0)));
+
+        shape.Dispose();
+        board.Dispose();
+    }
+
+    [Test]
+    public void ImplicitConversion_ToReadOnly()
+    {
+        var board = new IndexedGridBoard(5, 5, Allocator.Temp);
+
+        var shape = new GridShape(2, 2, Allocator.Temp);
+        for (int y = 0; y < 2; y++)
+        for (int x = 0; x < 2; x++)
+            shape.SetCell(new int2(x, y), true);
+
+        var index = board.TryAddItemAt(shape.GetOrCreateImmutable(), new GridPosition(1, 1));
+
+        IndexedGridBoard.ReadOnly readOnly = board; // Implicit conversion
+
+        Assert.AreEqual(1, readOnly.ItemCount);
+        Assert.IsTrue(readOnly.IsCellOccupied(new GridPosition(1, 1)));
+        Assert.AreEqual(index, readOnly.GetItemIndexAt(new GridPosition(1, 1)));
+
+        shape.Dispose();
+        board.Dispose();
+    }
+
+    [Test]
+    public void ReadOnly_Grid_AccessibleThroughProperty()
+    {
+        var board = new IndexedGridBoard(5, 5, Allocator.Temp);
+
+        var shape = new GridShape(2, 2, Allocator.Temp);
+        for (int y = 0; y < 2; y++)
+        for (int x = 0; x < 2; x++)
+            shape.SetCell(new int2(x, y), true);
+
+        var index = board.TryAddItemAt(shape.GetOrCreateImmutable(), new GridPosition(1, 1));
+        var readOnly = board.AsReadOnly();
+
+        // Access the grid directly
+        Assert.AreEqual(index, readOnly.Grid[1, 1]);
+        Assert.AreEqual(index, readOnly.Grid[2, 1]);
+        Assert.AreEqual(index, readOnly.Grid[1, 2]);
+        Assert.AreEqual(index, readOnly.Grid[2, 2]);
+        Assert.AreEqual(-1, readOnly.Grid[0, 0]);
+
+        shape.Dispose();
+        board.Dispose();
+    }
 }
