@@ -61,7 +61,7 @@ public struct Inventory : INativeDisposable
         position = new(-1, -1);
         for (var rotation = RotationDegree.None; rotation <= RotationDegree.Clockwise270; rotation++)
         {
-            var shape = itemDefinition.Shape;
+            var shape = itemDefinition.Shape.GetRotatedShape(rotation);
             if (((ReadOnly)this).TryFindFirstFitPosition(shape, out position))
             {
                 var placedItem = new InventoryItem(id, itemDefinition, rotation, position);
