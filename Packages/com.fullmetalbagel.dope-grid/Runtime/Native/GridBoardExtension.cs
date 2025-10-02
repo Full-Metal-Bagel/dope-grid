@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 using Unity.Collections;
 
@@ -6,13 +7,13 @@ namespace DopeGrid.Native;
 public static class GridBoardExtension
 {
     [Pure, MustUseReturnValue]
-    public static GridPosition FindFirstFit(this GridShape container, ImmutableGridShape item)
+    public static GridPosition FindFirstFitWithFixedRotation(this GridShape container, ImmutableGridShape item)
     {
-        return container.AsReadOnly().FindFirstFit(item);
+        return container.AsReadOnly().FindFirstFitWithFixedRotation(item);
     }
 
     [Pure, MustUseReturnValue]
-    public static GridPosition FindFirstFit(this in GridShape.ReadOnly container, ImmutableGridShape item)
+    public static GridPosition FindFirstFitWithFixedRotation(this in GridShape.ReadOnly container, ImmutableGridShape item)
     {
         var maxY = container.Height - item.Height + 1;
         var maxX = container.Width - item.Width + 1;
@@ -22,7 +23,39 @@ public static class GridBoardExtension
             if (container.CanPlaceItem(item, new GridPosition(x, y)))
                 return new GridPosition(x, y);
 
-        return new GridPosition(-1, -1);
+        return GridPosition.Invalid;
+    }
+
+    [Pure, MustUseReturnValue]
+    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation(this in GridShape container, ImmutableGridShape item)
+    {
+        return container.AsReadOnly().FindFirstFitWithFreeRotation(item);
+    }
+
+    [Pure, MustUseReturnValue]
+    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation(this in GridShape.ReadOnly container, ImmutableGridShape item)
+    {
+        var rotateCount = 0;
+        var rotatedItem = item;
+        var position = GridPosition.Invalid;
+        do
+        {
+            position = FindFirstFitWithFixedRotation(container, rotatedItem);
+            if (position.IsValid) break;
+            rotatedItem = rotatedItem.Rotate90();
+            rotateCount++;
+        }
+        while (rotatedItem != item);
+
+        var rotation = rotateCount switch
+        {
+            0 => RotationDegree.None,
+            1 => RotationDegree.Clockwise90,
+            2 => RotationDegree.Clockwise180,
+            3 => RotationDegree.Clockwise270,
+            _ => throw new NotImplementedException()
+        };
+        return (position, rotation);
     }
 
     public static int PlaceMultipleShapes(
@@ -35,7 +68,7 @@ public static class GridBoardExtension
         var readonlyContainer = container.AsReadOnly();
         for (var i = 0; i < items.Length; i++)
         {
-            var pos = readonlyContainer.FindFirstFit(items[i]);
+            var pos = readonlyContainer.FindFirstFitWithFixedRotation(items[i]);
             if (pos.X >= 0)
             {
                 container.PlaceItem(items[i], pos);
