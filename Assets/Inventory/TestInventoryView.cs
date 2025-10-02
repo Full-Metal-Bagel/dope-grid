@@ -63,7 +63,8 @@ public class TestInventoryView : MonoBehaviour
             var instanceId = _items.NextItemInstanceId;
             var itemDef = new ItemDefinition(guid, ui.Shape.ToImmutableGridShape());
 
-            if (!_inventory.TryAutoPlaceItem(instanceId, itemDef, out _))
+            var placedItem = _inventory.TryAutoPlaceItem(instanceId, itemDef);
+            if (!placedItem.IsValid)
             {
                 Debug.LogWarning($"Inventory full; failed to place item instance {instanceId} ({ui.name}).");
             }

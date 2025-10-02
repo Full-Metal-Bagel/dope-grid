@@ -111,8 +111,8 @@ namespace DopeGrid.Inventory
                         var text = _itemTexts[index++];
                         var rt = (RectTransform)text.transform;
                         rt.sizeDelta = cellSize;
-                        var gridPos = new int2(origin.x + x, origin.y + y);
-                        rt.anchoredPosition = new Vector2(gridPos.x * cellSize.x, -(gridPos.y * cellSize.y));
+                        var gridPos = new GridPosition(origin.X + x, origin.Y + y);
+                        rt.anchoredPosition = new Vector2(gridPos.X * cellSize.x, -(gridPos.Y * cellSize.y));
                         text.fontSize = fontSize;
                         text.text = BuildLabel(i, item.InstanceId);
                         text.gameObject.SetActive(true);

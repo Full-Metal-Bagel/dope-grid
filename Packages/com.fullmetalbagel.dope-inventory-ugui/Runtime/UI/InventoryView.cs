@@ -6,14 +6,12 @@ namespace DopeGrid.Inventory
     [RequireComponent(typeof(RectTransform))]
     public class InventoryView : UIBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
+        [SerializeField] private Vector2 _cellSize = new(64f, 64f);
         [SerializeField] private Color _placeableColor = new(0f, 1f, 0f, 0.35f);
         [SerializeField] private Color _blockedColor = new(1f, 0f, 0f, 0.35f);
 
-        private static readonly Vector2 s_defaultCellSize = new(64f, 64f);
-
         private Inventory _inventory;
         private SharedInventoryData _sharedInventoryData = null!;
-        private Vector2 _cellSize = s_defaultCellSize;
 
         private InventoryViewSyncer _viewSyncer = null!;
         private InventoryViewDragPreviewController _viewDragPreviewController = null!;
@@ -43,33 +41,11 @@ namespace DopeGrid.Inventory
             _sharedInventoryData = sharedInventoryData;
 
             var rectTransform = (RectTransform)transform;
-            _cellSize = ResolveCellSize(rectTransform, _inventory.Width, _inventory.Height);
             rectTransform.sizeDelta = new Vector2(_inventory.Width * _cellSize.x, _inventory.Height * _cellSize.y);
 
             _viewSyncer = new InventoryViewSyncer(_sharedInventoryData, transform, _cellSize);
             _viewDragPreviewController = new InventoryViewDragPreviewController(_sharedInventoryData, rectTransform, _cellSize, _placeableColor, _blockedColor);
             _dragController = new InventoryViewDragController(_sharedInventoryData, rectTransform, inventory, CellSize);
-        }
-
-        private static Vector2 ResolveCellSize(RectTransform rectTransform, int gridWidth, int gridHeight)
-        {
-            gridWidth = Mathf.Max(1, gridWidth);
-            gridHeight = Mathf.Max(1, gridHeight);
-
-            var rect = rectTransform.rect;
-            var width = rect.width;
-            var height = rect.height;
-
-            if (width <= 0f) width = rectTransform.sizeDelta.x;
-            if (height <= 0f) height = rectTransform.sizeDelta.y;
-
-            if (width <= 0f) width = gridWidth * s_defaultCellSize.x;
-            if (height <= 0f) height = gridHeight * s_defaultCellSize.y;
-
-            width = Mathf.Abs(width);
-            height = Mathf.Abs(height);
-
-            return new Vector2(width / gridWidth, height / gridHeight);
         }
 
         public void SetDraggingItemRotation(RotationDegree rotation)
