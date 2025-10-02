@@ -56,14 +56,19 @@ public struct Inventory : INativeDisposable
         _itemMap.Clear();
     }
 
-    public bool TryAutoPlaceItem(in InventoryItem inventoryItem, out int2 position)
+    public bool TryAutoPlaceItem(InventoryItemInstanceId id, ItemDefinition itemDefinition, out int2 position)
     {
-        if (((ReadOnly)this).TryFindFirstFitPosition(inventoryItem.Shape, out position))
+        position = new(-1, -1);
+        for (var rotation = RotationDegree.None; rotation <= RotationDegree.Clockwise270; rotation++)
         {
-            var placedItem = new InventoryItem(inventoryItem.InstanceId, inventoryItem.Definition, inventoryItem.Rotation, position);
-            return TryPlaceItem(placedItem);
+            var shape = itemDefinition.Shape;
+            if (((ReadOnly)this).TryFindFirstFitPosition(shape, out position))
+            {
+                var placedItem = new InventoryItem(id, itemDefinition, rotation, position);
+                PlaceItem(placedItem);
+                return true;
+            }
         }
-
         return false;
     }
 
@@ -71,12 +76,16 @@ public struct Inventory : INativeDisposable
     {
         var shape = inventoryItem.Shape;
         if (!CanPlaceItemAt(shape, inventoryItem.Position)) return false;
+        PlaceItem(inventoryItem);
+        return true;
+    }
 
+    private void PlaceItem(in InventoryItem inventoryItem)
+    {
         var itemIndex = _items.Length;
         _items.Add(inventoryItem);
         _itemMap.Add(inventoryItem.InstanceId, itemIndex);
-        PlaceItemOnGrid(shape, inventoryItem.Position, itemIndex);
-        return true;
+        PlaceItemOnGrid(inventoryItem.Shape, inventoryItem.Position, itemIndex);
     }
 
     public bool RemoveItem(InventoryItemInstanceId id)

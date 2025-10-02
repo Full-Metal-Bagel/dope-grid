@@ -62,10 +62,8 @@ public class TestInventoryView : MonoBehaviour
             // Build model item definition from UI shape
             var instanceId = _items.NextItemInstanceId;
             var itemDef = new ItemDefinition(guid, ui.Shape.ToImmutableGridShape());
-            var rotation = rotations[instanceId % (ulong)rotations.Length];
-            var candidate = new InventoryItem(instanceId, itemDef, rotation, new int2(-1, -1));
 
-            if (!_inventory.TryAutoPlaceItem(candidate, out _))
+            if (!_inventory.TryAutoPlaceItem(instanceId, itemDef, out _))
             {
                 Debug.LogWarning($"Inventory full; failed to place item instance {instanceId} ({ui.name}).");
             }

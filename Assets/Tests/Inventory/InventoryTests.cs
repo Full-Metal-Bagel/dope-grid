@@ -575,11 +575,10 @@ public class InventoryTests
     {
         var inventory = new Inventory(5, 5, Allocator.Temp);
         var item1 = new InventoryItem((InventoryItemInstanceId)1, _squareItem2x2, RotationDegree.None, new int2(0, 0));
-        var item2 = new InventoryItem((InventoryItemInstanceId)2, _squareItem2x2, RotationDegree.None, new int2(-1, -1)); // Invalid position
 
         inventory.TryPlaceItem(item1);
 
-        var result = inventory.TryAutoPlaceItem(item2, out var position);
+        var result = inventory.TryAutoPlaceItem((InventoryItemInstanceId)2, _squareItem2x2, out var position);
 
         Assert.IsTrue(result);
         Assert.AreEqual(new int2(2, 0), position);
@@ -604,8 +603,7 @@ public class InventoryTests
             }
         }
 
-        var newItem = new InventoryItem((InventoryItemInstanceId)100, _singleCellItem, RotationDegree.None, new int2(-1, -1));
-        var result = inventory.TryAutoPlaceItem(newItem, out var position);
+        var result = inventory.TryAutoPlaceItem((InventoryItemInstanceId)100, _singleCellItem, out var position);
 
         Assert.IsFalse(result);
         Assert.AreEqual(new int2(-1, -1), position);
@@ -855,8 +853,7 @@ public class InventoryTests
         Assert.AreEqual(3, inventory.ItemCount);
 
         // Try auto-place a new item
-        var item5 = new InventoryItem((InventoryItemInstanceId)5, _squareItem2x2, RotationDegree.None, new int2(-1, -1));
-        Assert.IsTrue(inventory.TryAutoPlaceItem(item5, out var autoPosition));
+        Assert.IsTrue(inventory.TryAutoPlaceItem((InventoryItemInstanceId)5, _squareItem2x2, out var autoPosition));
         Assert.AreEqual(new int2(0, 0), autoPosition); // Should place where item1 was
 
         // Clear and verify
