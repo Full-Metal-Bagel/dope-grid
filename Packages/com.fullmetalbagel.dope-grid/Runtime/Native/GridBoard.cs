@@ -21,20 +21,12 @@ public struct GridBoard : IDisposable
     public int ItemCount => _itemCount;
     public int FreeSpace => _grid.FreeSpaceCount;
 
-    private struct ItemSlot
+    private readonly record struct ItemSlot(ImmutableGridShape Shape, GridPosition Position)
     {
-        public ImmutableGridShape Shape;
-        public GridPosition Position;
-        public bool IsValid;
-
-        public ItemSlot(ImmutableGridShape shape, GridPosition position)
-        {
-            Shape = shape;
-            Position = position;
-            IsValid = true;
-        }
-
-        public static readonly ItemSlot Invalid = new() { IsValid = false };
+        public static readonly ItemSlot Invalid = new(ImmutableGridShape.Empty, GridPosition.Invalid);
+        public ImmutableGridShape Shape { get; } = Shape;
+        public GridPosition Position { get; } = Position;
+        public bool IsValid => Position.IsValid || !Shape.IsEmpty;
     }
 
     public GridBoard(int width, int height, Allocator allocator = Allocator.Persistent)
@@ -102,7 +94,7 @@ public struct GridBoard : IDisposable
         int itemIndex;
         if (_freeIndices.Length > 0)
         {
-            itemIndex = _freeIndices[_freeIndices.Length - 1];
+            itemIndex = _freeIndices[^1];
             _freeIndices.Length--;
         }
         else

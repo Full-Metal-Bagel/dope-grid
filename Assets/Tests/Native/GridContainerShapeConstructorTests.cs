@@ -1,4 +1,5 @@
 using System;
+using DopeGrid;
 using DopeGrid.Native;
 using NUnit.Framework;
 using Unity.Collections;
@@ -22,7 +23,7 @@ public class GridContainerShapeConstructorTests
         for (var y = 0; y < 5; y++)
         for (var x = 0; x < 5; x++)
         {
-            Assert.IsFalse(container.IsCellOccupied(new int2(x, y)));
+            Assert.IsFalse(container.IsCellOccupied(new GridPosition(x, y)));
         }
     }
 
@@ -32,10 +33,10 @@ public class GridContainerShapeConstructorTests
         using var shape = new GridShape(4, 4, Allocator.Temp);
 
         // Fill some cells to create a pattern
-        shape.SetCell(new int2(0, 0), true);
-        shape.SetCell(new int2(1, 1), true);
-        shape.SetCell(new int2(2, 2), true);
-        shape.SetCell(new int2(3, 3), true);
+        shape.SetCell(new GridPosition(0, 0), true);
+        shape.SetCell(new GridPosition(1, 1), true);
+        shape.SetCell(new GridPosition(2, 2), true);
+        shape.SetCell(new GridPosition(3, 3), true);
 
         using var container = new GridBoard(shape, Allocator.Temp);
 
@@ -45,14 +46,14 @@ public class GridContainerShapeConstructorTests
         Assert.AreEqual(12, container.FreeSpace); // 16 - 4 occupied cells
 
         // Verify the pattern was copied
-        Assert.IsTrue(container.IsCellOccupied(new int2(0, 0)));
-        Assert.IsTrue(container.IsCellOccupied(new int2(1, 1)));
-        Assert.IsTrue(container.IsCellOccupied(new int2(2, 2)));
-        Assert.IsTrue(container.IsCellOccupied(new int2(3, 3)));
+        Assert.IsTrue(container.IsCellOccupied(new GridPosition(0, 0)));
+        Assert.IsTrue(container.IsCellOccupied(new GridPosition(1, 1)));
+        Assert.IsTrue(container.IsCellOccupied(new GridPosition(2, 2)));
+        Assert.IsTrue(container.IsCellOccupied(new GridPosition(3, 3)));
 
         // Verify other cells are free
-        Assert.IsFalse(container.IsCellOccupied(new int2(0, 1)));
-        Assert.IsFalse(container.IsCellOccupied(new int2(1, 0)));
+        Assert.IsFalse(container.IsCellOccupied(new GridPosition(0, 1)));
+        Assert.IsFalse(container.IsCellOccupied(new GridPosition(1, 0)));
     }
 
     [Test]
@@ -66,35 +67,35 @@ public class GridContainerShapeConstructorTests
         Assert.AreEqual(4, container.FreeSpace); // Cross has 5 occupied cells out of 9
 
         // Verify cross pattern
-        Assert.IsFalse(container.IsCellOccupied(new int2(0, 0)));
-        Assert.IsTrue(container.IsCellOccupied(new int2(1, 0)));
-        Assert.IsFalse(container.IsCellOccupied(new int2(2, 0)));
+        Assert.IsFalse(container.IsCellOccupied(new GridPosition(0, 0)));
+        Assert.IsTrue(container.IsCellOccupied(new GridPosition(1, 0)));
+        Assert.IsFalse(container.IsCellOccupied(new GridPosition(2, 0)));
 
-        Assert.IsTrue(container.IsCellOccupied(new int2(0, 1)));
-        Assert.IsTrue(container.IsCellOccupied(new int2(1, 1)));
-        Assert.IsTrue(container.IsCellOccupied(new int2(2, 1)));
+        Assert.IsTrue(container.IsCellOccupied(new GridPosition(0, 1)));
+        Assert.IsTrue(container.IsCellOccupied(new GridPosition(1, 1)));
+        Assert.IsTrue(container.IsCellOccupied(new GridPosition(2, 1)));
 
-        Assert.IsFalse(container.IsCellOccupied(new int2(0, 2)));
-        Assert.IsTrue(container.IsCellOccupied(new int2(1, 2)));
-        Assert.IsFalse(container.IsCellOccupied(new int2(2, 2)));
+        Assert.IsFalse(container.IsCellOccupied(new GridPosition(0, 2)));
+        Assert.IsTrue(container.IsCellOccupied(new GridPosition(1, 2)));
+        Assert.IsFalse(container.IsCellOccupied(new GridPosition(2, 2)));
     }
 
     [Test]
     public void Constructor_ClonesShapeIndependently()
     {
         using var originalShape = new GridShape(3, 3, Allocator.Temp);
-        originalShape.SetCell(new int2(1, 1), true);
+        originalShape.SetCell(new GridPosition(1, 1), true);
 
         using var container = new GridBoard(originalShape, Allocator.Temp);
 
         // Modify original shape after creating container
-        originalShape.SetCell(new int2(0, 0), true);
-        originalShape.SetCell(new int2(2, 2), true);
+        originalShape.SetCell(new GridPosition(0, 0), true);
+        originalShape.SetCell(new GridPosition(2, 2), true);
 
         // Container should not be affected
-        Assert.IsFalse(container.IsCellOccupied(new int2(0, 0)));
-        Assert.IsTrue(container.IsCellOccupied(new int2(1, 1)));
-        Assert.IsFalse(container.IsCellOccupied(new int2(2, 2)));
+        Assert.IsFalse(container.IsCellOccupied(new GridPosition(0, 0)));
+        Assert.IsTrue(container.IsCellOccupied(new GridPosition(1, 1)));
+        Assert.IsFalse(container.IsCellOccupied(new GridPosition(2, 2)));
         Assert.AreEqual(8, container.FreeSpace); // Only center cell occupied
     }
 
@@ -102,9 +103,9 @@ public class GridContainerShapeConstructorTests
     public void Constructor_InitializedGridMatchesInput()
     {
         using var shape = new GridShape(3, 3, Allocator.Temp);
-        shape.SetCell(new int2(0, 0), true);
-        shape.SetCell(new int2(2, 0), true);
-        shape.SetCell(new int2(1, 1), true);
+        shape.SetCell(new GridPosition(0, 0), true);
+        shape.SetCell(new GridPosition(2, 0), true);
+        shape.SetCell(new GridPosition(1, 1), true);
 
         using var container = new GridBoard(shape, Allocator.Temp);
 
@@ -115,17 +116,17 @@ public class GridContainerShapeConstructorTests
         Assert.AreEqual(3, initializedGrid.Height);
         Assert.AreEqual(3, initializedGrid.OccupiedSpaceCount);
 
-        Assert.IsTrue(initializedGrid.GetCell(new int2(0, 0)));
-        Assert.IsTrue(initializedGrid.GetCell(new int2(2, 0)));
-        Assert.IsTrue(initializedGrid.GetCell(new int2(1, 1)));
+        Assert.IsTrue(initializedGrid.GetCell(new GridPosition(0, 0)));
+        Assert.IsTrue(initializedGrid.GetCell(new GridPosition(2, 0)));
+        Assert.IsTrue(initializedGrid.GetCell(new GridPosition(1, 1)));
     }
 
     [Test]
     public void Constructor_CurrentGridMatchesInitialGrid()
     {
         using var shape = new GridShape(4, 3, Allocator.Temp);
-        shape.SetCell(new int2(1, 0), true);
-        shape.SetCell(new int2(2, 1), true);
+        shape.SetCell(new GridPosition(1, 0), true);
+        shape.SetCell(new GridPosition(2, 1), true);
 
         using var container = new GridBoard(shape, Allocator.Temp);
 
@@ -147,7 +148,7 @@ public class GridContainerShapeConstructorTests
         {
             var x = i % size;
             var y = i / size;
-            largeShape.SetCell(new int2(x, y), true);
+            largeShape.SetCell(new GridPosition(x, y), true);
         }
 
         using var container = new GridBoard(largeShape, Allocator.Temp);
@@ -164,7 +165,7 @@ public class GridContainerShapeConstructorTests
     public void Constructor_WithDifferentAllocators()
     {
         using var shape = new GridShape(3, 3, Allocator.Temp);
-        shape.SetCell(new int2(1, 1), true);
+        shape.SetCell(new GridPosition(1, 1), true);
 
         // Test with Temp allocator
         using (var container = new GridBoard(shape, Allocator.Temp))
@@ -195,7 +196,7 @@ public class GridContainerShapeConstructorTests
         Assert.AreEqual(1, container.Height);
         Assert.AreEqual(1, container.FreeSpace);
 
-        shape.SetCell(new int2(0, 0), true);
+        shape.SetCell(new GridPosition(0, 0), true);
         using var fullContainer = new GridBoard(shape, Allocator.Temp);
         Assert.AreEqual(0, fullContainer.FreeSpace);
     }
@@ -226,10 +227,10 @@ public class GridContainerShapeConstructorTests
         using var shape = new GridShape(3, 3, Allocator.Temp);
 
         // Block top-left 2x2 area
-        shape.SetCell(new int2(0, 0), true);
-        shape.SetCell(new int2(1, 0), true);
-        shape.SetCell(new int2(0, 1), true);
-        shape.SetCell(new int2(1, 1), true);
+        shape.SetCell(new GridPosition(0, 0), true);
+        shape.SetCell(new GridPosition(1, 0), true);
+        shape.SetCell(new GridPosition(0, 1), true);
+        shape.SetCell(new GridPosition(1, 1), true);
 
         using var container = new GridBoard(shape, Allocator.Temp);
 
@@ -237,13 +238,13 @@ public class GridContainerShapeConstructorTests
         using var item = new GridShape(2, 2, Allocator.Temp);
         for (var y = 0; y < 2; y++)
         for (var x = 0; x < 2; x++)
-            item.SetCell(new int2(x, y), true);
+            item.SetCell(new GridPosition(x, y), true);
 
         // Should not be able to place at (0,0) due to pre-filled cells
-        Assert.IsFalse(container.TryAddItemAt(item.GetOrCreateImmutable(), new int2(0, 0)));
+        Assert.That(container.TryAddItemAt(item.GetOrCreateImmutable(), new GridPosition(0, 0)), Is.EqualTo(-1));
 
         // Should fail at (1,0) because it would overlap with blocked cells at (1,0) and (1,1)
-        Assert.IsFalse(container.TryAddItemAt(item.GetOrCreateImmutable(), new int2(1, 0)));
+        Assert.That(container.TryAddItemAt(item.GetOrCreateImmutable(), new GridPosition(1, 0)), Is.EqualTo(-1));
 
         // Grid state: [X][X][ ]
         //              [X][X][ ]
@@ -252,9 +253,9 @@ public class GridContainerShapeConstructorTests
 
         // But a 1x2 vertical item should fit in the rightmost column
         using var verticalItem = new GridShape(1, 2, Allocator.Temp);
-        verticalItem.SetCell(new int2(0, 0), true);
-        verticalItem.SetCell(new int2(0, 1), true);
-        Assert.IsTrue(container.TryAddItemAt(verticalItem.GetOrCreateImmutable(), new int2(2, 0)));
+        verticalItem.SetCell(new GridPosition(0, 0), true);
+        verticalItem.SetCell(new GridPosition(0, 1), true);
+        Assert.That(container.TryAddItemAt(verticalItem.GetOrCreateImmutable(), new GridPosition(2, 0)), Is.EqualTo(0));
     }
 
     [Test]
@@ -281,7 +282,7 @@ public class GridContainerShapeConstructorTests
         for (var x = 0; x < size; x++)
         {
             if ((x + y) % 3 == 0)
-                shape.SetCell(new int2(x, y), true);
+                shape.SetCell(new GridPosition(x, y), true);
         }
 
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();

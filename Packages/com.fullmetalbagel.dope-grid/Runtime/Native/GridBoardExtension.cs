@@ -6,13 +6,13 @@ namespace DopeGrid.Native;
 public static class GridBoardExtension
 {
     [Pure, MustUseReturnValue]
-    public static GridPosition FindFirstFit(this GridShape container, in GridShape.ReadOnly item)
+    public static GridPosition FindFirstFit(this GridShape container, ImmutableGridShape item)
     {
         return container.AsReadOnly().FindFirstFit(item);
     }
 
     [Pure, MustUseReturnValue]
-    public static GridPosition FindFirstFit(this in GridShape.ReadOnly container, in GridShape.ReadOnly item)
+    public static GridPosition FindFirstFit(this in GridShape.ReadOnly container, ImmutableGridShape item)
     {
         var maxY = container.Height - item.Height + 1;
         var maxX = container.Width - item.Width + 1;
@@ -27,7 +27,7 @@ public static class GridBoardExtension
 
     public static int PlaceMultipleShapes(
         this GridShape container,
-        NativeArray<GridShape> items,
+        NativeArray<ImmutableGridShape> items,
         NativeArray<GridPosition> outPositions)
     {
         var placed = 0;
@@ -48,13 +48,13 @@ public static class GridBoardExtension
     }
 
     [Pure, MustUseReturnValue]
-    public static bool CanPlaceItem(this GridShape container, in GridShape.ReadOnly item, GridPosition pos)
+    public static bool CanPlaceItem(this GridShape container, ImmutableGridShape item, GridPosition pos)
     {
         return container.AsReadOnly().CanPlaceItem(item, pos);
     }
 
     [Pure, MustUseReturnValue]
-    public static bool CanPlaceItem(this in GridShape.ReadOnly container, in GridShape.ReadOnly item, GridPosition pos)
+    public static bool CanPlaceItem(this in GridShape.ReadOnly container, ImmutableGridShape item, GridPosition pos)
     {
         // Bounds check
         if (pos.X < 0 || pos.Y < 0 || pos.X + item.Width > container.Width || pos.Y + item.Height > container.Height)
@@ -76,7 +76,7 @@ public static class GridBoardExtension
         return true;
     }
 
-    public static void PlaceItem(this GridShape container, in GridShape.ReadOnly item, GridPosition pos)
+    public static void PlaceItem(this GridShape container, ImmutableGridShape item, GridPosition pos)
     {
         for (var sy = 0; sy < item.Height; sy++)
         for (var sx = 0; sx < item.Width; sx++)
@@ -90,7 +90,7 @@ public static class GridBoardExtension
         }
     }
 
-    public static void RemoveItem(this GridShape container, in GridShape.ReadOnly item, GridPosition pos)
+    public static void RemoveItem(this GridShape container, ImmutableGridShape item, GridPosition pos)
     {
         for (var sy = 0; sy < item.Height; sy++)
         for (var sx = 0; sx < item.Width; sx++)

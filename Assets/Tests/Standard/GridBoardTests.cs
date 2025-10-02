@@ -185,7 +185,7 @@ public class StandardGridBoardTests
         var item = Shapes.ImmutableSingle();
 
         _gridBoard.TryAddItem(item);
-        var pos = _gridBoard.ItemPositions[0];
+        var pos = _gridBoard.GetItemPosition(0);
 
         Assert.AreEqual(GridPosition.Zero, pos); // Should place at top-left first
     }

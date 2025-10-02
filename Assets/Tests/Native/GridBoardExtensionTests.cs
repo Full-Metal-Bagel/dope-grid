@@ -19,7 +19,7 @@ public class GridBoardExtensionTests
         item.SetCell(new int2(0, 1), true);
         item.SetCell(new int2(1, 1), true);
 
-        var position = inventory.FindFirstFit(item);
+        var position = inventory.FindFirstFit(item.GetOrCreateImmutable());
 
         Assert.AreEqual(2, position.X);
         Assert.AreEqual(0, position.Y);
@@ -39,7 +39,7 @@ public class GridBoardExtensionTests
         var item = new GridShape(1, 1, Allocator.Temp);
         item.SetCell(new int2(0, 0), true);
 
-        var position = inventory.FindFirstFit(item);
+        var position = inventory.FindFirstFit(item.GetOrCreateImmutable());
 
         Assert.AreEqual(-1, position.X);
         Assert.AreEqual(-1, position.Y);
@@ -59,11 +59,12 @@ public class GridBoardExtensionTests
         item.SetCell(new int2(1, 0), true);
         item.SetCell(new int2(0, 1), true);
         item.SetCell(new int2(1, 1), true);
+        var immutableItem = item.GetOrCreateImmutable();
 
-        Assert.IsTrue(inventory.CanPlaceItem(item, new int2(0, 0)));
-        Assert.IsFalse(inventory.CanPlaceItem(item, new int2(2, 2)));
-        Assert.IsFalse(inventory.CanPlaceItem(item, new int2(1, 1)));
-        Assert.IsTrue(inventory.CanPlaceItem(item, new int2(3, 3)));
+        Assert.IsTrue(inventory.CanPlaceItem(immutableItem, new int2(0, 0)));
+        Assert.IsFalse(inventory.CanPlaceItem(immutableItem, new int2(2, 2)));
+        Assert.IsFalse(inventory.CanPlaceItem(immutableItem, new int2(1, 1)));
+        Assert.IsTrue(inventory.CanPlaceItem(immutableItem, new int2(3, 3)));
 
         inventory.Dispose();
         item.Dispose();
@@ -80,7 +81,7 @@ public class GridBoardExtensionTests
         item.SetCell(new int2(1, 1), true);
         item.SetCell(new int2(1, 2), true);
 
-        inventory.PlaceItem(item, new int2(1, 1));
+        inventory.PlaceItem(item.GetOrCreateImmutable(), new int2(1, 1));
 
         Assert.IsTrue(inventory.GetCell(new int2(1, 1)));
         Assert.IsTrue(inventory.GetCell(new int2(1, 2)));
@@ -104,8 +105,8 @@ public class GridBoardExtensionTests
         item.SetCell(new int2(0, 1), true);
         item.SetCell(new int2(1, 1), true);
 
-        inventory.PlaceItem(item, new int2(1, 1));
-        inventory.RemoveItem(item, new int2(1, 1));
+        inventory.PlaceItem(item.GetOrCreateImmutable(), new int2(1, 1));
+        inventory.RemoveItem(item.GetOrCreateImmutable(), new int2(1, 1));
 
         for (var y = 0; y < 5; y++)
         for (var x = 0; x < 5; x++)
@@ -120,23 +121,23 @@ public class GridBoardExtensionTests
     {
         var inventory = new GridShape(10, 10, Allocator.Temp);
 
-        var items = new NativeArray<GridShape>(3, Allocator.Temp);
+        var items = new NativeArray<ImmutableGridShape>(3, Allocator.Temp);
         var positions = new NativeArray<GridPosition>(3, Allocator.Temp);
 
         for (var i = 0; i < 3; i++)
         {
-            items[i] = new GridShape(3, 3, Allocator.Temp);
+            var item = new GridShape(3, 3, Allocator.Temp);
             for (var y = 0; y < 3; y++)
             for (var x = 0; x < 3; x++)
-                items[i].SetCell(new int2(x, y), true);
+                item.SetCell(new int2(x, y), true);
+            items[i] = item.GetOrCreateImmutable();
+            item.Dispose();
         }
 
         var placed = inventory.PlaceMultipleShapes(items, positions);
 
         Assert.AreEqual(3, placed);
 
-        for (var i = 0; i < 3; i++)
-            items[i].Dispose();
         items.Dispose();
         positions.Dispose();
         inventory.Dispose();

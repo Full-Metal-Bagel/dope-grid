@@ -30,7 +30,7 @@ public readonly record struct ImmutableGridShape(int Id)
     public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
     public bool GetCell(int x, int y) => Pattern.Get(GetIndex(x, y));
 
-    public static implicit operator GridShape.ReadOnly(ImmutableGridShape shape) => shape.ToReadOnlyGridShape();
+    public static explicit operator GridShape.ReadOnly(ImmutableGridShape shape) => shape.ToReadOnlyGridShape();
     public GridShape.ReadOnly ToReadOnlyGridShape() => new(Width, Height, Pattern);
 
     public void CopyTo(GridShape other)

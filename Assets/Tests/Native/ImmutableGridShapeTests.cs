@@ -202,8 +202,7 @@ public class ImmutableGridShapeTests
         var shape = Shapes.Cross(Allocator.Temp);
         var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
-        // Implicit conversion
-        GridShape.ReadOnly readOnly = immutable;
+        GridShape.ReadOnly readOnly = (GridShape.ReadOnly)immutable;
 
         Assert.AreEqual(immutable.Width, readOnly.Width);
         Assert.AreEqual(immutable.Height, readOnly.Height);
