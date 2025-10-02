@@ -21,7 +21,7 @@ public struct IndexedGridBoard : IDisposable
     public int ItemCount => _itemCount;
     public int FreeSpace => _grid.CountValue(-1);
 
-    private readonly record struct ItemSlot(ImmutableGridShape Shape, GridPosition Position)
+    internal readonly record struct ItemSlot(ImmutableGridShape Shape, GridPosition Position)
     {
         public static readonly ItemSlot Invalid = new(ImmutableGridShape.Empty, GridPosition.Invalid);
         public ImmutableGridShape Shape { get; } = Shape;
