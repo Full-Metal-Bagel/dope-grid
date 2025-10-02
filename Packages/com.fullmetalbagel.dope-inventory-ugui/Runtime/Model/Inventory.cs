@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using DopeGrid.Native;
-using JetBrains.Annotations;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;

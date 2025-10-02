@@ -49,9 +49,9 @@ public class GridBoardTests
     {
         var itemShape = Shapes.ImmutableSquare(2);
 
-        var added = _gridBoard.TryAddItem(itemShape);
+        var index = _gridBoard.TryAddItem(itemShape);
 
-        Assert.IsTrue(added);
+        Assert.AreEqual(0, index);
         Assert.AreEqual(1, _gridBoard.ItemCount);
         Assert.AreEqual(96, _gridBoard.FreeSpace);
     }
@@ -61,9 +61,9 @@ public class GridBoardTests
     {
         var itemShape = Shapes.ImmutableSquare(2);
 
-        var added = _gridBoard.TryAddItemAt(itemShape, new int2(3, 4));
+        var index = _gridBoard.TryAddItemAt(itemShape, new int2(3, 4));
 
-        Assert.IsTrue(added);
+        Assert.AreEqual(0, index);
         Assert.AreEqual(1, _gridBoard.ItemCount);
         Assert.IsTrue(_gridBoard.IsCellOccupied(new int2(3, 4)));
         Assert.IsTrue(_gridBoard.IsCellOccupied(new int2(4, 4)));
@@ -79,7 +79,7 @@ public class GridBoardTests
         _gridBoard.TryAddItemAt(itemShape, new int2(3, 4));
         var secondAdd = _gridBoard.TryAddItemAt(itemShape, new int2(3, 4));
 
-        Assert.IsFalse(secondAdd);
+        Assert.AreEqual(-1, secondAdd);
         Assert.AreEqual(1, _gridBoard.ItemCount);
     }
 
@@ -88,9 +88,9 @@ public class GridBoardTests
     {
         var itemShape = Shapes.ImmutableSingle();
 
-        var added = _gridBoard.TryAddItemAt(itemShape, new int2(10, 10));
+        var index = _gridBoard.TryAddItemAt(itemShape, new int2(10, 10));
 
-        Assert.IsFalse(added);
+        Assert.AreEqual(-1, index);
         Assert.AreEqual(0, _gridBoard.ItemCount);
     }
 
@@ -134,6 +134,34 @@ public class GridBoardTests
 
         Assert.AreEqual(0, _gridBoard.ItemCount);
         Assert.AreEqual(100, _gridBoard.FreeSpace);
+    }
+
+    [Test]
+    public void GetItemShape_ReturnsAddedItems()
+    {
+        var item1 = Shapes.ImmutableSquare(2);
+        var item2 = Shapes.ImmutableSingle();
+
+        var index1 = _gridBoard.TryAddItem(item1);
+        var index2 = _gridBoard.TryAddItem(item2);
+
+        Assert.AreEqual(2, _gridBoard.ItemCount);
+        Assert.AreEqual(item1, _gridBoard.GetItemShape(index1));
+        Assert.AreEqual(item2, _gridBoard.GetItemShape(index2));
+    }
+
+    [Test]
+    public void GetItemPosition_ReturnsCorrectPositions()
+    {
+        var item1 = Shapes.ImmutableSquare(2);
+        var item2 = Shapes.ImmutableSingle();
+
+        var index1 = _gridBoard.TryAddItemAt(item1, new int2(1, 2));
+        var index2 = _gridBoard.TryAddItemAt(item2, new int2(5, 6));
+
+        Assert.AreEqual(2, _gridBoard.ItemCount);
+        Assert.AreEqual(new int2(1, 2), _gridBoard.GetItemPosition(index1));
+        Assert.AreEqual(new int2(5, 6), _gridBoard.GetItemPosition(index2));
     }
 
     #endregion
@@ -191,9 +219,9 @@ public class GridBoardTests
     {
         var lShape = Shapes.ImmutableLShape();
 
-        var added = _gridBoard.TryAddItem(lShape);
+        var index = _gridBoard.TryAddItem(lShape);
 
-        Assert.IsTrue(added);
+        Assert.AreEqual(0, index);
         Assert.AreEqual(1, _gridBoard.ItemCount);
         Assert.AreEqual(97, _gridBoard.FreeSpace); // L shape has 3 cells
     }
@@ -214,9 +242,9 @@ public class GridBoardTests
         var immutableHollow = hollowSquare.GetOrCreateImmutable();
         hollowSquare.Dispose();
 
-        var added = _gridBoard.TryAddItem(immutableHollow);
+        var index = _gridBoard.TryAddItem(immutableHollow);
 
-        Assert.IsTrue(added);
+        Assert.AreEqual(0, index);
         Assert.AreEqual(1, _gridBoard.ItemCount);
         Assert.AreEqual(92, _gridBoard.FreeSpace);
     }
@@ -232,7 +260,7 @@ public class GridBoardTests
 
         var addedCount = 0;
         for (var i = 0; i < 100; i++)
-            if (_gridBoard.TryAddItem(smallItem))
+            if (_gridBoard.TryAddItem(smallItem) >= 0)
                 addedCount++;
 
         Assert.AreEqual(100, addedCount);
@@ -240,7 +268,7 @@ public class GridBoardTests
         Assert.AreEqual(0, _gridBoard.FreeSpace);
 
         var extraAdd = _gridBoard.TryAddItem(smallItem);
-        Assert.IsFalse(extraAdd);
+        Assert.AreEqual(-1, extraAdd);
     }
 
     [Test]
@@ -298,9 +326,9 @@ public class GridBoardTests
         for (var x = 0; x < 11; x++)
             largeItem.SetCell(x, y, true);
 
-        var added = _gridBoard.TryAddItem(largeItem.GetOrCreateImmutable());
+        var index = _gridBoard.TryAddItem(largeItem.GetOrCreateImmutable());
 
-        Assert.IsFalse(added);
+        Assert.AreEqual(-1, index);
         Assert.AreEqual(0, _gridBoard.ItemCount);
 
         largeItem.Dispose();
@@ -314,9 +342,9 @@ public class GridBoardTests
         for (var x = 0; x < 10; x++)
             exactFit.SetCell(new int2(x, y), true);
 
-        var added = _gridBoard.TryAddItem(exactFit.GetOrCreateImmutable());
+        var index = _gridBoard.TryAddItem(exactFit.GetOrCreateImmutable());
 
-        Assert.IsTrue(added);
+        Assert.AreEqual(0, index);
         Assert.AreEqual(1, _gridBoard.ItemCount);
         Assert.AreEqual(0, _gridBoard.FreeSpace);
 
@@ -328,11 +356,11 @@ public class GridBoardTests
     {
         var item = CreateSquareShape(2, Allocator.Temp);
 
-        var added = _gridBoard.TryAddItemAt(item.GetOrCreateImmutable(), new int2(-1, 0));
-        Assert.IsFalse(added);
+        var index = _gridBoard.TryAddItemAt(item.GetOrCreateImmutable(), new int2(-1, 0));
+        Assert.AreEqual(-1, index);
 
-        added = _gridBoard.TryAddItemAt(item.GetOrCreateImmutable(), new int2(0, -1));
-        Assert.IsFalse(added);
+        index = _gridBoard.TryAddItemAt(item.GetOrCreateImmutable(), new int2(0, -1));
+        Assert.AreEqual(-1, index);
 
         item.Dispose();
     }

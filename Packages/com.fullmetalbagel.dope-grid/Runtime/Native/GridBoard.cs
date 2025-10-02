@@ -11,21 +11,39 @@ public struct GridBoard : IDisposable
     private GridShape _initializedGrid;
     public GridShape.ReadOnly InitializedGrid => _initializedGrid;
 
-    private NativeList<ImmutableGridShape> _items;
-    public NativeArray<ImmutableGridShape>.ReadOnly Items => _items.AsReadOnly();
-
-    private NativeList<GridPosition> _itemPositions; // top-left position
-    public NativeArray<GridPosition>.ReadOnly ItemPositions => _itemPositions.AsReadOnly();
+    private NativeList<ItemSlot> _items; // Stable array - indices never change
+    private NativeList<int> _freeIndices; // Stack of freed item indices
+    private int _itemCount;
 
     public int Width => _initializedGrid.Width;
     public int Height => _initializedGrid.Height;
+
+    public int ItemCount => _itemCount;
+    public int FreeSpace => _grid.FreeSpaceCount;
+
+    private struct ItemSlot
+    {
+        public ImmutableGridShape Shape;
+        public GridPosition Position;
+        public bool IsValid;
+
+        public ItemSlot(ImmutableGridShape shape, GridPosition position)
+        {
+            Shape = shape;
+            Position = position;
+            IsValid = true;
+        }
+
+        public static readonly ItemSlot Invalid = new() { IsValid = false };
+    }
 
     public GridBoard(int width, int height, Allocator allocator = Allocator.Persistent)
     {
         _grid = new GridShape(width, height, allocator);
         _initializedGrid = _grid.Clone(allocator);
-        _items = new NativeList<ImmutableGridShape>(allocator);
-        _itemPositions = new NativeList<GridPosition>(allocator);
+        _items = new NativeList<ItemSlot>(allocator);
+        _freeIndices = new NativeList<int>(allocator);
+        _itemCount = 0;
     }
 
     public GridBoard(GridShape containerShape, Allocator allocator = Allocator.Persistent)
@@ -33,58 +51,84 @@ public struct GridBoard : IDisposable
         if (containerShape.IsEmpty) throw new ArgumentException(nameof(containerShape));
         _grid = containerShape.Clone(allocator);
         _initializedGrid = _grid.Clone(allocator);
-        _items = new NativeList<ImmutableGridShape>(allocator);
-        _itemPositions = new NativeList<GridPosition>(allocator);
+        _items = new NativeList<ItemSlot>(allocator);
+        _freeIndices = new NativeList<int>(allocator);
+        _itemCount = 0;
     }
 
-    public int ItemCount => _items.Length;
-    public int FreeSpace => _grid.FreeSpaceCount;
+    public ImmutableGridShape GetItemShape(int index)
+    {
+        if (index < 0 || index >= _items.Length || !_items[index].IsValid)
+            return ImmutableGridShape.Empty;
+        return _items[index].Shape;
+    }
+
+    public GridPosition GetItemPosition(int index)
+    {
+        if (index < 0 || index >= _items.Length || !_items[index].IsValid)
+            return GridPosition.Invalid;
+        return _items[index].Position;
+    }
 
     public bool IsCellOccupied(GridPosition pos)
     {
         return _grid.GetCell(pos);
     }
 
-    public bool TryAddItem(ImmutableGridShape item)
+    public int TryAddItem(ImmutableGridShape item)
     {
         var pos = _grid.FindFirstFit(item);
         if (pos.X >= 0)
         {
-            AddItemAt(item, pos);
-            return true;
+            return AddItemAt(item, pos);
         }
 
-        return false;
+        return -1;
     }
 
-    public bool TryAddItemAt(ImmutableGridShape shape, GridPosition pos)
+    public int TryAddItemAt(ImmutableGridShape shape, GridPosition pos)
     {
         if (_grid.CanPlaceItem(shape, pos))
         {
-            AddItemAt(shape, pos);
-            return true;
+            return AddItemAt(shape, pos);
         }
 
-        return false;
+        return -1;
     }
 
-    private void AddItemAt(ImmutableGridShape shape, GridPosition pos)
+    private int AddItemAt(ImmutableGridShape shape, GridPosition pos)
     {
+        // Allocate stable index
+        int itemIndex;
+        if (_freeIndices.Length > 0)
+        {
+            itemIndex = _freeIndices[_freeIndices.Length - 1];
+            _freeIndices.Length--;
+        }
+        else
+        {
+            itemIndex = _items.Length;
+            _items.Add(ItemSlot.Invalid); // Placeholder
+        }
+
         _grid.PlaceItem(shape, pos);
-        _items.Add(shape);
-        _itemPositions.Add(pos);
+        _items[itemIndex] = new ItemSlot(shape, pos);
+        _itemCount++;
+
+        return itemIndex;
     }
 
     public void RemoveItem(int index)
     {
-        if (index >= 0 && index < _items.Length)
+        if (index >= 0 && index < _items.Length && _items[index].IsValid)
         {
-            var shape = _items[index];
-            var pos = _itemPositions[index];
-            _grid.RemoveItem(shape, pos);
+            var slot = _items[index];
+            _grid.RemoveItem(slot.Shape, slot.Position);
 
-            _items.RemoveAtSwapBack(index);
-            _itemPositions.RemoveAtSwapBack(index);
+            // Mark slot as free and add to free list
+            _items[index] = ItemSlot.Invalid;
+            _freeIndices.Add(index);
+            _itemCount--;
         }
     }
 
@@ -92,7 +136,8 @@ public struct GridBoard : IDisposable
     {
         InitializedGrid.CopyTo(_grid);
         _items.Clear();
-        _itemPositions.Clear();
+        _freeIndices.Clear();
+        _itemCount = 0;
     }
 
     public void Dispose()
@@ -100,7 +145,7 @@ public struct GridBoard : IDisposable
         _initializedGrid.Dispose();
         _grid.Dispose();
         _items.Dispose();
-        _itemPositions.Dispose();
+        _freeIndices.Dispose();
     }
 
     public GridBoard Clone(Allocator allocator)
@@ -109,11 +154,12 @@ public struct GridBoard : IDisposable
         {
             _initializedGrid = InitializedGrid.Clone(allocator),
             _grid = _grid.Clone(allocator),
-            _items = new NativeList<ImmutableGridShape>(_items.Capacity, allocator),
-            _itemPositions = new NativeList<GridPosition>(_itemPositions.Capacity, allocator)
+            _items = new NativeList<ItemSlot>(_items.Capacity, allocator),
+            _freeIndices = new NativeList<int>(_freeIndices.Capacity, allocator),
+            _itemCount = _itemCount
         };
         clone._items.CopyFrom(_items);
-        clone._itemPositions.CopyFrom(_itemPositions);
+        clone._freeIndices.CopyFrom(_freeIndices);
         return clone;
     }
 }
