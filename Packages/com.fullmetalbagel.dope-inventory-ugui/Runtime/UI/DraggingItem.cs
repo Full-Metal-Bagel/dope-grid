@@ -7,7 +7,7 @@ namespace DopeGrid.Inventory;
 
 public class DraggingItem
 {
-    public int InstanceId { get; }
+    public InventoryItemInstanceId InstanceId { get; }
     public ItemDefinition Definition { get; }
     public Guid DefinitionId => Definition.Id;
     public ImmutableGridShape Shape => Definition.Shape.GetRotatedShape(Rotation);
@@ -19,9 +19,9 @@ public class DraggingItem
     public int2 TargetPosition { get; set; } = default;
     public int LastFrame { get; set; } = 0;
 
-    public DraggingItem(int instanceId, ItemDefinition definition, RectTransform view, RotationDegree rotation = RotationDegree.None)
+    public DraggingItem(InventoryItemInstanceId id, ItemDefinition definition, RectTransform view, RotationDegree rotation = RotationDegree.None)
     {
-        InstanceId = instanceId;
+        InstanceId = id;
         Definition = definition;
         View = view;
         Rotation = rotation;

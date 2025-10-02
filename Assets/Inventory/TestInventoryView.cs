@@ -12,7 +12,7 @@ public class TestInventoryView : MonoBehaviour
     [SerializeField] private InventoryView _view = null!;
     [SerializeField] private int _width = 6;
     [SerializeField] private int _height = 6;
-    [SerializeField] private UIItemDefinition[] _uiItems = Array.Empty<UIItemDefinition>();
+    [SerializeField] private UIImageGridDefinition[] _uiItems = Array.Empty<UIImageGridDefinition>();
 
     private Inventory _inventory;
     private Items _items;
@@ -38,7 +38,7 @@ public class TestInventoryView : MonoBehaviour
         {
             if (ui == null) continue;
             if (!Guid.TryParse(ui.Id, out var guid)) continue;
-            _items.SharedInventoryData.Definitions[guid] = ui;
+            _items.SharedInventoryData.Definitions[guid] = ui.ToData();
         }
     }
 
@@ -62,10 +62,8 @@ public class TestInventoryView : MonoBehaviour
             // Build model item definition from UI shape
             var instanceId = _items.NextItemInstanceId;
             var itemDef = new ItemDefinition(guid, ui.Shape.ToImmutableGridShape());
-            var rotation = rotations[instanceId % rotations.Length];
-            var candidate = new InventoryItem(instanceId, itemDef, rotation, new int2(-1, -1));
 
-            if (!_inventory.TryAutoPlaceItem(candidate, out _))
+            if (!_inventory.TryAutoPlaceItem(instanceId, itemDef, out _))
             {
                 Debug.LogWarning($"Inventory full; failed to place item instance {instanceId} ({ui.name}).");
             }

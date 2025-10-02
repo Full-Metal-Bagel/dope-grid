@@ -16,7 +16,7 @@ public struct Inventory : INativeDisposable
     private NativeList<InventoryItem> _items;
     public NativeList<InventoryItem> Items => _items;
 
-    private NativeHashMap<int/*instance id*/, int/*item index*/> _itemMap;
+    private NativeHashMap<ulong/*instance id*/, int/*item index*/> _itemMap;
 
     public int Width => _grid.Width;
     public int Height => _grid.Height;
@@ -28,7 +28,7 @@ public struct Inventory : INativeDisposable
     {
         _grid = new ValueGridShape<int>(width, height, -1, allocator); // -1 means empty cell
         _items = new NativeList<InventoryItem>(width * height, allocator);
-        _itemMap = new NativeHashMap<int, int>(width * height, allocator);
+        _itemMap = new NativeHashMap<ulong, int>(width * height, allocator);
     }
 
     public InventoryItem this[int index] => _items[index];
@@ -37,16 +37,16 @@ public struct Inventory : INativeDisposable
 
     public readonly bool IsSame(in Inventory other) => ((ReadOnly)this).IsSame(other);
     public readonly InventoryItem GetItemAt(int2 position) => ((ReadOnly)this).GetItemAt(position);
-    public readonly InventoryItem GetItemByInstanceId(int instanceId) => ((ReadOnly)this).GetItemByInstanceId(instanceId);
+    public readonly InventoryItem GetItemByInstanceId(InventoryItemInstanceId id) => ((ReadOnly)this).GetItemByInstanceId(id);
     public readonly bool IsPositionOccupied(int2 position) => ((ReadOnly)this).IsPositionOccupied(position);
     public readonly bool CanPlaceItemAt(in InventoryItem inventoryItem, int2 position) => ((ReadOnly)this).CanPlaceItemAt(inventoryItem, position);
     public readonly bool CanPlaceItemAt(ImmutableGridShape shape, int2 position) => ((ReadOnly)this).CanPlaceItemAt(shape, position);
     public readonly int GetFreeSpaceCount() => ((ReadOnly)this).GetFreeSpaceCount();
     public readonly int GetOccupiedSpaceCount() => ((ReadOnly)this).GetOccupiedSpaceCount();
-    public readonly bool ContainsItem(int instanceId) => ((ReadOnly)this).ContainsItem(instanceId);
-    public readonly int GetItemIndex(int instanceId) => ((ReadOnly)this).GetItemIndex(instanceId);
+    public readonly bool ContainsItem(InventoryItemInstanceId id) => ((ReadOnly)this).ContainsItem(id);
+    public readonly int GetItemIndex(InventoryItemInstanceId id) => ((ReadOnly)this).GetItemIndex(id);
     public readonly bool TryFindFirstFitPosition(ImmutableGridShape shape, out int2 position) => ((ReadOnly)this).TryFindFirstFitPosition(shape, out position);
-    public readonly bool CanMoveItem(int instanceId, ImmutableGridShape shape, int2 newPosition) => ((ReadOnly)this).CanMoveItem(instanceId, shape, newPosition);
+    public readonly bool CanMoveItem(InventoryItemInstanceId id, ImmutableGridShape shape, int2 newPosition) => ((ReadOnly)this).CanMoveItem(id, shape, newPosition);
 
     public void Clear()
     {
@@ -56,14 +56,19 @@ public struct Inventory : INativeDisposable
         _itemMap.Clear();
     }
 
-    public bool TryAutoPlaceItem(in InventoryItem inventoryItem, out int2 position)
+    public bool TryAutoPlaceItem(InventoryItemInstanceId id, ItemDefinition itemDefinition, out int2 position)
     {
-        if (((ReadOnly)this).TryFindFirstFitPosition(inventoryItem.Shape, out position))
+        position = new(-1, -1);
+        for (var rotation = RotationDegree.None; rotation <= RotationDegree.Clockwise270; rotation++)
         {
-            var placedItem = new InventoryItem(inventoryItem.InstanceId, inventoryItem.Definition, inventoryItem.Rotation, position);
-            return TryPlaceItem(placedItem);
+            var shape = itemDefinition.Shape;
+            if (((ReadOnly)this).TryFindFirstFitPosition(shape, out position))
+            {
+                var placedItem = new InventoryItem(id, itemDefinition, rotation, position);
+                PlaceItem(placedItem);
+                return true;
+            }
         }
-
         return false;
     }
 
@@ -71,17 +76,21 @@ public struct Inventory : INativeDisposable
     {
         var shape = inventoryItem.Shape;
         if (!CanPlaceItemAt(shape, inventoryItem.Position)) return false;
-
-        var itemIndex = _items.Length;
-        _items.Add(inventoryItem);
-        _itemMap.Add(inventoryItem.InstanceId, itemIndex);
-        PlaceItemOnGrid(shape, inventoryItem.Position, itemIndex);
+        PlaceItem(inventoryItem);
         return true;
     }
 
-    public bool RemoveItem(int instanceId)
+    private void PlaceItem(in InventoryItem inventoryItem)
     {
-        var itemIndex = GetItemIndex(instanceId);
+        var itemIndex = _items.Length;
+        _items.Add(inventoryItem);
+        _itemMap.Add(inventoryItem.InstanceId, itemIndex);
+        PlaceItemOnGrid(inventoryItem.Shape, inventoryItem.Position, itemIndex);
+    }
+
+    public bool RemoveItem(InventoryItemInstanceId id)
+    {
+        var itemIndex = GetItemIndex(id);
         if (itemIndex < 0 || itemIndex >= _items.Length)
             return false;
 
@@ -105,18 +114,18 @@ public struct Inventory : INativeDisposable
         return true;
     }
 
-    public bool TryMoveItem(int instanceId, int2 newPosition)
+    public bool TryMoveItem(InventoryItemInstanceId id, int2 newPosition)
     {
-        var itemIndex = GetItemIndex(instanceId);
+        var itemIndex = GetItemIndex(id);
         if (itemIndex < 0 || itemIndex >= _items.Length) return false;
 
         var item = _items[itemIndex];
         return TryMoveItemInternal(itemIndex, item, newPosition, item.Rotation);
     }
 
-    public bool TryMoveItem(int instanceId, int2 newPosition, RotationDegree newRotation)
+    public bool TryMoveItem(InventoryItemInstanceId id, int2 newPosition, RotationDegree newRotation)
     {
-        var itemIndex = GetItemIndex(instanceId);
+        var itemIndex = GetItemIndex(id);
         if (itemIndex < 0 || itemIndex >= _items.Length) return false;
 
         var item = _items[itemIndex];
@@ -180,7 +189,7 @@ public struct Inventory : INativeDisposable
     {
         private readonly ValueGridShape<int>.ReadOnly _grid;
         private readonly NativeArray<InventoryItem>.ReadOnly _items;
-        private readonly NativeHashMap<int/*instance id*/, int/*item index*/>.ReadOnly _itemMap;
+        private readonly NativeHashMap<ulong/*instance id*/, int/*item index*/>.ReadOnly _itemMap;
 
         public ValueGridShape<int>.ReadOnly Grid => _grid;
         public NativeArray<InventoryItem>.ReadOnly Items => _items;
@@ -190,7 +199,7 @@ public struct Inventory : INativeDisposable
         public int ItemCount => _items.Length;
         public bool IsEmpty => _items.Length == 0;
 
-        internal ReadOnly(ValueGridShape<int>.ReadOnly grid, NativeArray<InventoryItem>.ReadOnly items, NativeHashMap<int, int>.ReadOnly itemMap)
+        internal ReadOnly(ValueGridShape<int>.ReadOnly grid, NativeArray<InventoryItem>.ReadOnly items, NativeHashMap<ulong, int>.ReadOnly itemMap)
         {
             _grid = grid;
             _items = items;
@@ -224,32 +233,32 @@ public struct Inventory : INativeDisposable
 
         public bool CanPlaceItemAt(ImmutableGridShape shape, int2 position) => CanPlaceAt(shape, position);
 
-        public bool CanMoveItem(int instanceId, ImmutableGridShape shape, int2 newPosition)
+        public bool CanMoveItem(InventoryItemInstanceId id, ImmutableGridShape shape, int2 newPosition)
         {
             if (!_grid.IsWithinBounds(shape, newPosition))
                 return false;
 
             // Check that cells are either empty or occupied by the item we're moving
-            var itemIndex = GetItemIndex(instanceId);
+            var itemIndex = GetItemIndex(id);
             return _grid.CheckShapeCells(shape, newPosition, (_, value, index) => value == -1 || value == index, itemIndex);
         }
 
         public int GetFreeSpaceCount() => _grid.CountValue(-1);
         public int GetOccupiedSpaceCount() => _grid.Size - GetFreeSpaceCount();
 
-        public bool ContainsItem(int instanceId)
+        public bool ContainsItem(InventoryItemInstanceId id)
         {
-            return _itemMap.ContainsKey(instanceId);
+            return _itemMap.ContainsKey(id);
         }
 
-        public int GetItemIndex(int instanceId)
+        public int GetItemIndex(InventoryItemInstanceId id)
         {
-            return _itemMap.TryGetValue(instanceId, out var itemIndex) ? itemIndex : -1;
+            return _itemMap.TryGetValue(id, out var itemIndex) ? itemIndex : -1;
         }
 
-        public InventoryItem GetItemByInstanceId(int instanceId)
+        public InventoryItem GetItemByInstanceId(InventoryItemInstanceId id)
         {
-            var index = GetItemIndex(instanceId);
+            var index = GetItemIndex(id);
             return index >= 0 ? _items[index] : InventoryItem.Invalid;
         }
 

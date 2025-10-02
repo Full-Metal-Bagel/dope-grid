@@ -33,7 +33,7 @@ namespace DopeGrid.Inventory
         public void Initialize(Inventory inventory, SharedInventoryData sharedInventoryData)
         {
             Debug.Assert(inventory.IsCreated, this);
-            if (inventory.IsEmpty)
+            if (inventory.Width == 0 || inventory.Height == 0)
             {
                 Debug.LogError($"Inventory must be initialized with a size greater than zero. The provided inventory is {_inventory.Width}x{_inventory.Height}. Halting initialization.", this);
                 return;

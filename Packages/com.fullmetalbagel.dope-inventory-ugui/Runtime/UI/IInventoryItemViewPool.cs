@@ -34,8 +34,15 @@ public class DefaultInventoryItemViewPool : IInventoryItemViewPool
             rectTransform.localEulerAngles = Vector3.zero;
             rectTransform.localScale = Vector3.one;
         },
-        actionOnDestroy: image => GameObject.Destroy(image.gameObject)
-    );
+        actionOnDestroy: image =>
+        {
+            if (!image || !image.gameObject)
+            {
+                Debug.LogError("invalid image");
+                return;
+            }
+            GameObject.Destroy(image.gameObject);
+        });
 
     static DefaultInventoryItemViewPool()
     {

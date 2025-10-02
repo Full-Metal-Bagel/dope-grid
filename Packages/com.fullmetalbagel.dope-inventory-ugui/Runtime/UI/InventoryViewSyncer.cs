@@ -12,7 +12,7 @@ internal sealed class InventoryViewSyncer : IDisposable
     private readonly SharedInventoryData _sharedInventoryData;
     private readonly Transform _parent;
     private readonly Vector2 _cellSize;
-    private readonly Dictionary<int, Image> _itemViews = new();
+    private readonly Dictionary<InventoryItemInstanceId, Image> _itemViews = new();
 
     public InventoryViewSyncer(SharedInventoryData sharedInventoryData, Transform parent, Vector2 cellSize)
     {
@@ -35,8 +35,8 @@ internal sealed class InventoryViewSyncer : IDisposable
 
     public void SyncViews(Inventory.ReadOnly inventory)
     {
-        var seen = HashSetPool<int>.Get();
-        var toRemove = ListPool<int>.Get();
+        var seen = HashSetPool<InventoryItemInstanceId>.Get();
+        var toRemove = ListPool<InventoryItemInstanceId>.Get();
 
         try
         {
@@ -93,19 +93,19 @@ internal sealed class InventoryViewSyncer : IDisposable
         }
         finally
         {
-            HashSetPool<int>.Release(seen);
-            ListPool<int>.Release(toRemove);
+            HashSetPool<InventoryItemInstanceId>.Release(seen);
+            ListPool<InventoryItemInstanceId>.Release(toRemove);
         }
     }
 
-    private Image GetOrCreateItemView(int instanceId)
+    private Image GetOrCreateItemView(InventoryItemInstanceId id)
     {
-        if (_itemViews.TryGetValue(instanceId, out var existing) && existing != null)
+        if (_itemViews.TryGetValue(id, out var existing) && existing != null)
             return existing;
 
         var image = _sharedInventoryData.Pool.Get();
 #if UNITY_EDITOR
-        image.name = $"Item_{instanceId}";
+        image.name = $"Item_{id}";
 #endif
         image.transform.SetParent(_parent, false);
         image.gameObject.SetActive(true);
@@ -114,7 +114,7 @@ internal sealed class InventoryViewSyncer : IDisposable
         var rt = (RectTransform)image.transform;
         EnsureTopLeftAnchors(rt);
 
-        _itemViews[instanceId] = image;
+        _itemViews[id] = image;
         return image;
     }
 
