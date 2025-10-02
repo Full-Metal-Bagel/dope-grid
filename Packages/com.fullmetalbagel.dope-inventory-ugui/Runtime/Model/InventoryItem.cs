@@ -1,6 +1,5 @@
 using System;
 using DopeGrid.Native;
-using Unity.Mathematics;
 
 namespace DopeGrid.Inventory;
 

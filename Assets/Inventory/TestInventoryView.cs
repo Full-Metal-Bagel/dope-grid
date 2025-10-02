@@ -60,13 +60,12 @@ public class TestInventoryView : MonoBehaviour
             if (!Guid.TryParse(ui.Id, out var guid)) continue;
 
             // Build model item definition from UI shape
-            var instanceId = _items.NextItemInstanceId;
             var itemDef = new ItemDefinition(guid, ui.Shape.ToImmutableGridShape());
 
-            var placedItem = _inventory.TryAutoPlaceItem(instanceId, itemDef);
+            var placedItem = _inventory.TryAutoPlaceItem(itemDef);
             if (!placedItem.IsValid)
             {
-                Debug.LogWarning($"Inventory full; failed to place item instance {instanceId} ({ui.name}).");
+                Debug.LogWarning($"Inventory full; failed to place item ({ui.name}).");
             }
         }
     }
