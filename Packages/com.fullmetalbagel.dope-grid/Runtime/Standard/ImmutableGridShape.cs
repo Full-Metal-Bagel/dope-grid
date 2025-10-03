@@ -28,6 +28,10 @@ public readonly record struct ImmutableGridShape(int Id)
     public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
     public bool GetCell(int x, int y) => Pattern.Get(GetIndex(x, y));
 
+    public bool this[GridPosition pos] => GetCell(pos);
+    public bool this[int x, int y] => GetCell(x, y);
+    public bool this[int index] => Pattern.Get(index);
+
     public static implicit operator GridShape.ReadOnly(ImmutableGridShape shape) => shape.ToReadOnlyGridShape();
     public GridShape.ReadOnly ToReadOnlyGridShape() => new(Width, Height, Pattern);
 
