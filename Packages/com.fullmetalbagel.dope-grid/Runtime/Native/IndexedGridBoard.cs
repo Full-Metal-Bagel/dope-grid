@@ -19,7 +19,7 @@ public struct IndexedGridBoard : IDisposable
     public readonly int Height => _initializedGrid.Height;
 
     public readonly int ItemCount => _itemCount;
-    public readonly int FreeSpace => _grid.CountValue(-1);
+    public readonly int FreeSpace => Grid.CountValue(-1);
 
     public IndexedGridBoard(int width, int height, Allocator allocator = Allocator.Persistent)
     {

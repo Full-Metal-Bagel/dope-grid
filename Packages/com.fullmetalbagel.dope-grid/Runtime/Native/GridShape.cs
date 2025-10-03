@@ -9,9 +9,10 @@ public struct GridShape : IReadOnlyGridShape, IEquatable<GridShape>, INativeDisp
 {
     public int Width { get; }
     public int Height { get; }
+    public readonly int Size => Width * Height;
 
-    public readonly ReadOnlySpanBitArray ReadOnlyBits => new(_bits.AsReadOnlySpan(), this.Size());
-    internal SpanBitArray Bits => new(_bits.AsSpan(), this.Size());
+    public readonly ReadOnlySpanBitArray ReadOnlyBits => new(_bits.AsReadOnlySpan(), Size);
+    internal SpanBitArray Bits => new(_bits.AsSpan(), Size);
     private NativeArray<byte> _bits;
 
     public readonly int OccupiedSpaceCount => ((ReadOnly)this).OccupiedSpaceCount;
@@ -31,13 +32,13 @@ public struct GridShape : IReadOnlyGridShape, IEquatable<GridShape>, INativeDisp
 
     public bool this[int x, int y]
     {
-        readonly get => this.GetCellValue(x, y);
+        get => this.GetCellValue(x, y);
         set => SetCell(x, y, value);
     }
 
     public bool this[GridPosition pos]
     {
-        readonly get => this.GetCellValue(pos);
+        get => this.GetCellValue(pos);
         set => SetCell(pos, value);
     }
 

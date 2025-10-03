@@ -35,13 +35,13 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
 
     public T this[int x, int y]
     {
-        readonly get => this.GetCellValue(x, y);
+        get => this.GetCellValue(x, y);
         set => SetValue(x, y, value);
     }
 
     public T this[GridPosition pos]
     {
-        readonly get => this.GetCellValue(pos);
+        get => this.GetCellValue(pos);
         set => SetValue(pos, value);
     }
 

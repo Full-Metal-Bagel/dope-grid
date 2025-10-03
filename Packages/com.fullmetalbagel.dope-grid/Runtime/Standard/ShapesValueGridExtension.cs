@@ -26,37 +26,4 @@ public static class ShapesValueGridExtension
             }
         }
     }
-
-    public static bool IsWithinBounds<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, (int x, int y) position)
-        where T : IEquatable<T>
-    {
-        return position.x >= 0 && position.y >= 0 &&
-               position.x + shape.Width <= grid.Width &&
-               position.y + shape.Height <= grid.Height;
-    }
-
-    public static bool CheckShapeCells<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, (int x, int y) position, Func<(int x, int y), T, bool> cellPredicate)
-        where T : IEquatable<T>
-    {
-        return grid.CheckShapeCells(shape, position, (pos, value, predicate) => predicate(pos, value), cellPredicate);
-    }
-
-    public static bool CheckShapeCells<T, TData>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, (int x, int y) position, Func<(int x, int y), T, TData, bool> cellPredicate, TData data)
-        where T : IEquatable<T>
-    {
-        for (int y = 0; y < shape.Height; y++)
-        {
-            for (int x = 0; x < shape.Width; x++)
-            {
-                if (shape.GetCell((x, y)))
-                {
-                    var gridPos = (position.x + x, position.y + y);
-                    var cellValue = grid[gridPos];
-                    if (!cellPredicate(gridPos, cellValue, data))
-                        return false;
-                }
-            }
-        }
-        return true;
-    }
 }
