@@ -1,0 +1,16 @@
+<#@ template language="C#" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ include file="../Core/GridShapeExtension.ttinclude" #>
+
+namespace DopeGrid.Standard;
+
+<#
+    MakeExtensionForReadOnlyGridShape(
+        ("GridShape", "bool"),
+        ("GridShape.ReadOnly", "bool"),
+        ("ValueGridShape<T>", "T where T : System.IEquatable<T>"),
+        ("ValueGridShape<T>.ReadOnly", "T where T : System.IEquatable<T>"),
+        ("ImmutableGridShape", "bool")
+    );
+#>
