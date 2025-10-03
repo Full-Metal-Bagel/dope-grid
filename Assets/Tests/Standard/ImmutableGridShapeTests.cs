@@ -31,10 +31,17 @@ public class StandardImmutableGridShapeTests
     [Test]
     public void GetOrCreateImmutable_RequiresTrimmedShape()
     {
-        using var untrimmed = new GridShape(5, 5);
-        untrimmed.SetCell((2, 2), true);
+        var untrimmed = new GridShape(5, 5);
+        try
+        {
+            untrimmed[2, 2] = true;
 
-        Assert.Throws<System.ArgumentException>(() => untrimmed.GetOrCreateImmutable());
+            Assert.Throws<System.ArgumentException>(() => untrimmed.GetOrCreateImmutable());
+        }
+        finally
+        {
+            untrimmed.Dispose();
+        }
     }
 
     [Test]
@@ -54,10 +61,10 @@ public class StandardImmutableGridShapeTests
     {
         var immutable = Shapes.ImmutableLShape();
 
-        Assert.IsTrue(immutable.GetCell((0, 0)));
-        Assert.IsTrue(immutable.GetCell((0, 1)));
-        Assert.IsTrue(immutable.GetCell((1, 1)));
-        Assert.IsFalse(immutable.GetCell((1, 0)));
+        Assert.IsTrue(immutable.GetCellValue((0, 0)));
+        Assert.IsTrue(immutable.GetCellValue((0, 1)));
+        Assert.IsTrue(immutable.GetCellValue((1, 1)));
+        Assert.IsFalse(immutable.GetCellValue((1, 0)));
     }
 
     [Test]
@@ -123,7 +130,7 @@ public class StandardImmutableGridShapeTests
 
         for (int y = 0; y < 2; y++)
         for (int x = 0; x < 2; x++)
-            Assert.IsTrue(readOnly.GetCell((x, y)));
+            Assert.IsTrue(readOnly.GetCellValue((x, y)));
     }
 
     [Test]
@@ -134,10 +141,10 @@ public class StandardImmutableGridShapeTests
 
         immutable.CopyTo(target);
 
-        Assert.IsTrue(target.GetCell((0, 0)));
-        Assert.IsTrue(target.GetCell((0, 1)));
-        Assert.IsTrue(target.GetCell((1, 1)));
-        Assert.IsFalse(target.GetCell((1, 0)));
+        Assert.IsTrue(target[0, 0]);
+        Assert.IsTrue(target[0, 1]);
+        Assert.IsTrue(target[1, 1]);
+        Assert.IsFalse(target[1, 0]);
     }
 
     [Test]

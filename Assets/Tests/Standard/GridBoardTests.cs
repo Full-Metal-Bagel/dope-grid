@@ -31,20 +31,27 @@ public class StandardGridBoardTests
     public void Constructor_WithShape_ClonesShape()
     {
         // Create a 5x5 container with some cells marked as obstacles
-        using var containerShape = new GridShape(5, 5);
-        containerShape.SetCell((0, 0), true); // Mark one cell as occupied/obstacle
-        containerShape.SetCell((4, 4), true); // Mark another cell as occupied/obstacle
+        var containerShape = new GridShape(5, 5);
+        var board = new GridBoard(containerShape);
+        try
+        {
+            containerShape.SetCellValue((0, 0), true); // Mark one cell as occupied/obstacle
+            containerShape.SetCellValue((4, 4), true); // Mark another cell as occupied/obstacle
 
-        using var board = new GridBoard(containerShape);
+            Assert.AreEqual(5, board.Width);
+            Assert.AreEqual(5, board.Height);
+            Assert.AreEqual(23, board.FreeSpace); // 25 - 2 occupied cells
 
-        Assert.AreEqual(5, board.Width);
-        Assert.AreEqual(5, board.Height);
-        Assert.AreEqual(23, board.FreeSpace); // 25 - 2 occupied cells
-
-        // Verify the occupied cells are preserved
-        Assert.IsTrue(board.IsCellOccupied((0, 0)));
-        Assert.IsTrue(board.IsCellOccupied((4, 4)));
-        Assert.IsFalse(board.IsCellOccupied((2, 2)));
+            // Verify the occupied cells are preserved
+            Assert.IsTrue(board.IsCellOccupied((0, 0)));
+            Assert.IsTrue(board.IsCellOccupied((4, 4)));
+            Assert.IsFalse(board.IsCellOccupied((2, 2)));
+        }
+        finally
+        {
+            containerShape.Dispose();
+            board.Dispose();
+        }
     }
 
     [Test]
@@ -157,8 +164,8 @@ public class StandardGridBoardTests
         var item1 = Shapes.ImmutableSquare(2);
         var item2 = Shapes.ImmutableSingle();
 
-        var index1 = _gridBoard.TryAddItem(item1);
-        var index2 = _gridBoard.TryAddItem(item2);
+        var (index1, _) = _gridBoard.TryAddItem(item1);
+        var (index2, _) = _gridBoard.TryAddItem(item2);
 
         Assert.AreEqual(2, _gridBoard.ItemCount);
         Assert.AreEqual(item1, _gridBoard.GetItemShape(index1));
@@ -195,16 +202,22 @@ public class StandardGridBoardTests
     {
         _gridBoard.TryAddItem(Shapes.ImmutableSquare(2));
 
-        using var clone = _gridBoard.Clone();
+        var clone = _gridBoard.Clone();
+        try
+        {
+            Assert.AreEqual(_gridBoard.Width, clone.Width);
+            Assert.AreEqual(_gridBoard.Height, clone.Height);
+            Assert.AreEqual(_gridBoard.ItemCount, clone.ItemCount);
 
-        Assert.AreEqual(_gridBoard.Width, clone.Width);
-        Assert.AreEqual(_gridBoard.Height, clone.Height);
-        Assert.AreEqual(_gridBoard.ItemCount, clone.ItemCount);
+            clone.TryAddItem(Shapes.ImmutableSingle());
 
-        clone.TryAddItem(Shapes.ImmutableSingle());
-
-        Assert.AreEqual(1, _gridBoard.ItemCount);
-        Assert.AreEqual(2, clone.ItemCount);
+            Assert.AreEqual(1, _gridBoard.ItemCount);
+            Assert.AreEqual(2, clone.ItemCount);
+        }
+        finally
+        {
+            clone.Dispose();
+        }
     }
 
     [Test]

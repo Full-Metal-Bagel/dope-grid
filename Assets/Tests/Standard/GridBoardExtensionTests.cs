@@ -7,196 +7,223 @@ public class StandardGridBoardExtensionTests
     [Test]
     public void FindFirstFit_FindsCorrectPosition()
     {
-        using var container = new GridShape(5, 5);
-        using var item = Shapes.Square(2);
-
-        var pos = container.FindFirstFit(item.AsReadOnly());
-
-        Assert.AreEqual(GridPosition.Zero, pos);
-    }
-
-    [Test]
-    public void FindFirstFit_SkipsOccupiedAreas()
-    {
-        using var container = new GridShape(5, 5);
-        container.FillRect(0, 0, 2, 2, true);
-
-        using var item = Shapes.Square(2);
-        var pos = container.FindFirstFit(item.AsReadOnly());
-
-        Assert.AreNotEqual((0, 0), pos);
-        Assert.IsTrue(pos.X >= 0 && pos.Y >= 0);
-    }
-
-    [Test]
-    public void FindFirstFit_ReturnsNegativeWhenNoFit()
-    {
-        using var container = new GridShape(2, 2);
-        container.FillAll(true);
-
-        using var item = Shapes.Single();
-        var pos = container.FindFirstFit(item.AsReadOnly());
-
-        Assert.AreEqual(new GridPosition(-1, -1), pos);
-    }
-
-    [Test]
-    public void FindFirstFit_ItemTooLarge_ReturnsNegative()
-    {
-        using var container = new GridShape(3, 3);
-        using var item = Shapes.Square(5);
-
-        var pos = container.FindFirstFit(item.AsReadOnly());
-
-        Assert.AreEqual(new GridPosition(-1, -1), pos);
-    }
-
-    [Test]
-    public void CanPlaceItem_ReturnsTrueForValidPosition()
-    {
-        using var container = new GridShape(5, 5);
-        using var item = Shapes.Square(2);
-
-        Assert.IsTrue(container.CanPlaceItem(item.AsReadOnly(), (1, 1)));
-        Assert.IsTrue(container.CanPlaceItem(item.AsReadOnly(), (0, 0)));
-        Assert.IsTrue(container.CanPlaceItem(item.AsReadOnly(), (3, 3)));
-    }
-
-    [Test]
-    public void CanPlaceItem_ReturnsFalseForOutOfBounds()
-    {
-        using var container = new GridShape(5, 5);
-        using var item = Shapes.Square(2);
-
-        Assert.IsFalse(container.CanPlaceItem(item.AsReadOnly(), (4, 4)));
-        Assert.IsFalse(container.CanPlaceItem(item.AsReadOnly(), (5, 0)));
-        Assert.IsFalse(container.CanPlaceItem(item.AsReadOnly(), (-1, 0)));
-    }
-
-    [Test]
-    public void CanPlaceItem_ReturnsFalseForOccupiedSpace()
-    {
-        using var container = new GridShape(5, 5);
-        container.SetCell((2, 2), true);
-
-        using var item = Shapes.Square(2);
-
-        Assert.IsFalse(container.CanPlaceItem(item.AsReadOnly(), (1, 1)));
-        Assert.IsTrue(container.CanPlaceItem(item.AsReadOnly(), (3, 3)));
-    }
-
-    [Test]
-    public void PlaceItem_PlacesItemCorrectly()
-    {
-        using var container = new GridShape(5, 5);
-        using var item = Shapes.LShape();
-
-        container.PlaceItem(item.AsReadOnly(), (1, 1));
-
-        Assert.IsTrue(container.GetCell((1, 1)));
-        Assert.IsTrue(container.GetCell((1, 2)));
-        Assert.IsTrue(container.GetCell((2, 2)));
-        Assert.IsFalse(container.GetCell((2, 1)));
-        Assert.IsFalse(container.GetCell((0, 0)));
-    }
-
-    [Test]
-    public void PlaceItem_OnlyPlacesShapeCells()
-    {
-        using var container = new GridShape(5, 5);
-        using var item = Shapes.LShape();
-
-        container.PlaceItem(item.AsReadOnly(), (2, 2));
-
-        // L-shape at (2,2): (2,2), (2,3), (3,3)
-        Assert.IsTrue(container.GetCell((2, 2)));
-        Assert.IsTrue(container.GetCell((2, 3)));
-        Assert.IsTrue(container.GetCell((3, 3)));
-        Assert.IsFalse(container.GetCell((3, 2)));
-    }
-
-    [Test]
-    public void RemoveItem_RemovesItemCorrectly()
-    {
-        using var container = new GridShape(5, 5);
-        using var item = Shapes.Square(2);
-
-        container.PlaceItem(item.AsReadOnly(), (1, 1));
-        container.RemoveItem(item.AsReadOnly(), (1, 1));
-
-        Assert.IsFalse(container.GetCell((1, 1)));
-        Assert.IsFalse(container.GetCell((2, 1)));
-        Assert.IsFalse(container.GetCell((1, 2)));
-        Assert.IsFalse(container.GetCell((2, 2)));
-    }
-
-    [Test]
-    public void RemoveItem_OnlyRemovesShapeCells()
-    {
-        using var container = new GridShape(5, 5);
-        container.FillAll(true);
-
-        using var item = Shapes.LShape();
-
-        container.RemoveItem(item.AsReadOnly(), (2, 2));
-
-        // L-shape cells should be removed
-        Assert.IsFalse(container.GetCell((2, 2)));
-        Assert.IsFalse(container.GetCell((2, 3)));
-        Assert.IsFalse(container.GetCell((3, 3)));
-        // Other cells should remain
-        Assert.IsTrue(container.GetCell((3, 2)));
-        Assert.IsTrue(container.GetCell((0, 0)));
-    }
-
-    [Test]
-    public void PlaceMultipleShapes_PlacesAllThatFit()
-    {
-        using var container = new GridShape(10, 10);
-
-        var items = new[]
+        var container = new GridShape(5, 5);
+        var item = Shapes.Square(2);
+        try
         {
-            Shapes.Square(2),
-            Shapes.Single(),
-            Shapes.Line(3)
-        };
+            var pos = container.FindFirstFitWithFixedRotation(item.GetOrCreateImmutable(), freeValue: false);
 
-        var positions = new GridPosition[items.Length];
-        var placed = container.PlaceMultipleShapes(items, positions);
-
-        Assert.AreEqual(3, placed);
-
-        // Verify all items were placed
-        for (int i = 0; i < placed; i++)
-        {
-            Assert.IsTrue(positions[i].X >= 0);
-            Assert.IsTrue(positions[i].Y >= 0);
+            Assert.AreEqual(GridPosition.Zero, pos);
         }
-
-        foreach (var item in items)
+        finally
         {
+            container.Dispose();
             item.Dispose();
         }
     }
 
     [Test]
-    public void PlaceMultipleShapes_StopsWhenContainerFull()
+    public void FindFirstFit_SkipsOccupiedAreas()
     {
-        using var container = new GridShape(2, 2);
-
-        var items = new[]
+        var container = new GridShape(5, 5);
+        var item = Shapes.Square(2);
+        try
         {
-            Shapes.Square(2),
-            Shapes.Single()  // Won't fit after first item
-        };
+            container.FillRect(0, 0, 2, 2, true);
 
-        var positions = new GridPosition[items.Length];
-        var placed = container.PlaceMultipleShapes(items, positions);
+            var pos = container.FindFirstFitWithFixedRotation(item.GetOrCreateImmutable(), freeValue: false);
 
-        Assert.AreEqual(1, placed);
-
-        foreach (var item in items)
+            Assert.AreNotEqual((0, 0), pos);
+            Assert.IsTrue(pos.X >= 0 && pos.Y >= 0);
+        }
+        finally
         {
+            container.Dispose();
+            item.Dispose();
+        }
+    }
+
+    [Test]
+    public void FindFirstFit_ReturnsNegativeWhenNoFit()
+    {
+        var container = new GridShape(2, 2);
+        var item = Shapes.Single();
+        try
+        {
+            container.FillAll(true);
+
+            var pos = container.FindFirstFitWithFixedRotation(item.GetOrCreateImmutable(), freeValue: false);
+
+            Assert.AreEqual(new GridPosition(-1, -1), pos);
+        }
+        finally
+        {
+            container.Dispose();
+            item.Dispose();
+        }
+    }
+
+    [Test]
+    public void FindFirstFit_ItemTooLarge_ReturnsNegative()
+    {
+        var container = new GridShape(3, 3);
+        var item = Shapes.Square(5);
+        try
+        {
+            var pos = container.FindFirstFitWithFixedRotation(item.GetOrCreateImmutable(), freeValue: false);
+
+            Assert.AreEqual(new GridPosition(-1, -1), pos);
+        }
+        finally
+        {
+            container.Dispose();
+            item.Dispose();
+        }
+    }
+
+    [Test]
+    public void CanPlaceItem_ReturnsTrueForValidPosition()
+    {
+        var container = new GridShape(5, 5);
+        var item = Shapes.Square(2);
+        try
+        {
+            Assert.IsTrue(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(1, 1), freeValue: false));
+            Assert.IsTrue(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(0, 0), freeValue: false));
+            Assert.IsTrue(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(3, 3), freeValue: false));
+        }
+        finally
+        {
+            container.Dispose();
+            item.Dispose();
+        }
+    }
+
+    [Test]
+    public void CanPlaceItem_ReturnsFalseForOutOfBounds()
+    {
+        var container = new GridShape(5, 5);
+        var item = Shapes.Square(2);
+        try
+        {
+            Assert.IsFalse(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(4, 4), freeValue: false));
+            Assert.IsFalse(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(5, 0), freeValue: false));
+            Assert.IsFalse(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(-1, 0), freeValue: false));
+        }
+        finally
+        {
+            container.Dispose();
+            item.Dispose();
+        }
+    }
+
+    [Test]
+    public void CanPlaceItem_ReturnsFalseForOccupiedSpace()
+    {
+        var container = new GridShape(5, 5);
+        var item = Shapes.Square(2);
+        try
+        {
+            container[2, 2] = true;
+
+            Assert.IsFalse(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(1, 1), freeValue: false));
+            Assert.IsTrue(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(3, 3), freeValue: false));
+        }
+        finally
+        {
+            container.Dispose();
+            item.Dispose();
+        }
+    }
+
+    [Test]
+    public void PlaceItem_PlacesItemCorrectly()
+    {
+        var container = new GridShape(5, 5);
+        var item = Shapes.LShape();
+        try
+        {
+            container.PlaceItem(item.GetOrCreateImmutable(), new GridPosition(1, 1), value: true);
+
+            Assert.IsTrue(container[1, 1]);
+            Assert.IsTrue(container[1, 2]);
+            Assert.IsTrue(container[2, 2]);
+            Assert.IsFalse(container[2, 1]);
+            Assert.IsFalse(container[0, 0]);
+        }
+        finally
+        {
+            container.Dispose();
+            item.Dispose();
+        }
+    }
+
+    [Test]
+    public void PlaceItem_OnlyPlacesShapeCells()
+    {
+        var container = new GridShape(5, 5);
+        var item = Shapes.LShape();
+        try
+        {
+            container.PlaceItem(item.GetOrCreateImmutable(), new GridPosition(2, 2), value: true);
+
+            // L-shape at (2,2): (2,2), (2,3), (3,3)
+            Assert.IsTrue(container[2, 2]);
+            Assert.IsTrue(container[2, 3]);
+            Assert.IsTrue(container[3, 3]);
+            Assert.IsFalse(container[3, 2]);
+        }
+        finally
+        {
+            container.Dispose();
+            item.Dispose();
+        }
+    }
+
+    [Test]
+    public void RemoveItem_RemovesItemCorrectly()
+    {
+        var container = new GridShape(5, 5);
+        var item = Shapes.Square(2);
+        try
+        {
+            container.PlaceItem(item.GetOrCreateImmutable(), new GridPosition(1, 1), value: true);
+            container.RemoveItem(item.GetOrCreateImmutable(), new GridPosition(1, 1), freeValue: false);
+
+            Assert.IsFalse(container[1, 1]);
+            Assert.IsFalse(container[2, 1]);
+            Assert.IsFalse(container[1, 2]);
+            Assert.IsFalse(container[2, 2]);
+        }
+        finally
+        {
+            container.Dispose();
+            item.Dispose();
+        }
+    }
+
+    [Test]
+    public void RemoveItem_OnlyRemovesShapeCells()
+    {
+        var container = new GridShape(5, 5);
+        var item = Shapes.LShape();
+        try
+        {
+            container.FillAll(true);
+
+            container.RemoveItem(item.GetOrCreateImmutable(), new GridPosition(2, 2), freeValue: false);
+
+            // L-shape cells should be removed
+            Assert.IsFalse(container[2, 2]);
+            Assert.IsFalse(container[2, 3]);
+            Assert.IsFalse(container[3, 3]);
+            // Other cells should remain
+            Assert.IsTrue(container[3, 2]);
+            Assert.IsTrue(container[0, 0]);
+        }
+        finally
+        {
+            container.Dispose();
             item.Dispose();
         }
     }
@@ -204,32 +231,47 @@ public class StandardGridBoardExtensionTests
     [Test]
     public void CanPlaceItem_WithComplexShape_WorksCorrectly()
     {
-        using var container = new GridShape(5, 5);
-        using var tShape = Shapes.TShape();
+        var container = new GridShape(5, 5);
+        var tShape = Shapes.TShape();
+        try
+        {
+            // T-shape: XXX
+            //           X
+            Assert.IsTrue(container.CanPlaceItem(tShape.GetOrCreateImmutable(), new GridPosition(0, 0), freeValue: false));
+            Assert.IsTrue(container.CanPlaceItem(tShape.GetOrCreateImmutable(), new GridPosition(2, 3), freeValue: false));
 
-        // T-shape: XXX
-        //           X
-        Assert.IsTrue(container.CanPlaceItem(tShape.AsReadOnly(), (0, 0)));
-        Assert.IsTrue(container.CanPlaceItem(tShape.AsReadOnly(), (2, 3)));
-
-        container.SetCell((1, 0), true);
-        Assert.IsFalse(container.CanPlaceItem(tShape.AsReadOnly(), (0, 0)));
+            container[1, 0] = true;
+            Assert.IsFalse(container.CanPlaceItem(tShape.GetOrCreateImmutable(), new GridPosition(0, 0), freeValue: false));
+        }
+        finally
+        {
+            container.Dispose();
+            tShape.Dispose();
+        }
     }
 
     [Test]
     public void PlaceAndRemove_RoundTrip_RestoresOriginalState()
     {
-        using var container = new GridShape(5, 5);
-        using var original = container.Clone();
-        using var item = Shapes.Cross();
-
-        container.PlaceItem(item.AsReadOnly(), (1, 1));
-        container.RemoveItem(item.AsReadOnly(), (1, 1));
-
-        for (int y = 0; y < 5; y++)
-        for (int x = 0; x < 5; x++)
+        var container = new GridShape(5, 5);
+        var original = container.Clone();
+        var item = Shapes.Cross();
+        try
         {
-            Assert.AreEqual(original.GetCell((x, y)), container.GetCell((x, y)));
+            container.PlaceItem(item.GetOrCreateImmutable(), new GridPosition(1, 1), value: true);
+            container.RemoveItem(item.GetOrCreateImmutable(), new GridPosition(1, 1), freeValue: false);
+
+            for (int y = 0; y < 5; y++)
+            for (int x = 0; x < 5; x++)
+            {
+                Assert.AreEqual(original[x, y], container[x, y]);
+            }
+        }
+        finally
+        {
+            container.Dispose();
+            original.Dispose();
+            item.Dispose();
         }
     }
 }

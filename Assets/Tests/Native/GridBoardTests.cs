@@ -27,7 +27,7 @@ public class GridBoardTests
         var shape = new GridShape(size, size, allocator);
         for (var y = 0; y < size; y++)
         for (var x = 0; x < size; x++)
-            shape.SetCell(new GridPosition(x, y), true);
+            shape.SetCellValue(new GridPosition(x, y), true);
         return shape;
     }
 
@@ -231,14 +231,14 @@ public class GridBoardTests
     {
         // Create a 3x3 hollow square manually since we don't have a premade one
         var hollowSquare = new GridShape(3, 3, Allocator.Temp);
-        hollowSquare.SetCell(new GridPosition(0, 0), true);
-        hollowSquare.SetCell(new GridPosition(1, 0), true);
-        hollowSquare.SetCell(new GridPosition(2, 0), true);
-        hollowSquare.SetCell(new GridPosition(0, 1), true);
-        hollowSquare.SetCell(new GridPosition(2, 1), true);
-        hollowSquare.SetCell(new GridPosition(0, 2), true);
-        hollowSquare.SetCell(new GridPosition(1, 2), true);
-        hollowSquare.SetCell(new GridPosition(2, 2), true);
+        hollowSquare.SetCellValue(new GridPosition(0, 0), true);
+        hollowSquare.SetCellValue(new GridPosition(1, 0), true);
+        hollowSquare.SetCellValue(new GridPosition(2, 0), true);
+        hollowSquare.SetCellValue(new GridPosition(0, 1), true);
+        hollowSquare.SetCellValue(new GridPosition(2, 1), true);
+        hollowSquare.SetCellValue(new GridPosition(0, 2), true);
+        hollowSquare.SetCellValue(new GridPosition(1, 2), true);
+        hollowSquare.SetCellValue(new GridPosition(2, 2), true);
         var immutableHollow = hollowSquare.GetOrCreateImmutable();
         hollowSquare.Dispose();
 
@@ -283,7 +283,7 @@ public class GridBoardTests
         // Create vertical line manually
         var line1x4 = new GridShape(1, 4, Allocator.Temp);
         for (var y = 0; y < 4; y++)
-            line1x4.SetCell(new GridPosition(0, y), true);
+            line1x4.SetCellValue(new GridPosition(0, y), true);
         var immutableLine1x4 = line1x4.GetOrCreateImmutable();
         line1x4.Dispose();
 
@@ -327,7 +327,7 @@ public class GridBoardTests
         var largeItem = new GridShape(11, 11, Allocator.Temp);
         for (var y = 0; y < 11; y++)
         for (var x = 0; x < 11; x++)
-            largeItem.SetCell(x, y, true);
+            largeItem.SetCellValue(x, y, true);
 
         var (index, rotation) = _gridBoard.TryAddItem(largeItem.GetOrCreateImmutable());
 
@@ -343,7 +343,7 @@ public class GridBoardTests
         var exactFit = new GridShape(10, 10, Allocator.Temp);
         for (var y = 0; y < 10; y++)
         for (var x = 0; x < 10; x++)
-            exactFit.SetCell(new GridPosition(x, y), true);
+            exactFit.SetCellValue(new GridPosition(x, y), true);
 
         var (index, rotation) = _gridBoard.TryAddItem(exactFit.GetOrCreateImmutable());
 

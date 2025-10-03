@@ -15,8 +15,8 @@ public class ValueGridShapeTests
 
         Assert.AreEqual(0, grid.Width);
         Assert.AreEqual(0, grid.Height);
-        Assert.AreEqual(0, grid.Size);
-        Assert.IsTrue(grid.IsEmpty);
+        Assert.AreEqual(0, grid.Size());
+        Assert.IsTrue(grid.IsEmpty());
 
         grid.Dispose();
     }
@@ -28,8 +28,8 @@ public class ValueGridShapeTests
 
         Assert.AreEqual(3, grid.Width);
         Assert.AreEqual(4, grid.Height);
-        Assert.AreEqual(12, grid.Size);
-        Assert.IsFalse(grid.IsEmpty);
+        Assert.AreEqual(12, grid.Size());
+        Assert.IsFalse(grid.IsEmpty());
 
         for (int y = 0; y < grid.Height; y++)
         {
@@ -68,10 +68,10 @@ public class ValueGridShapeTests
         var grid1 = new ValueGridShape<int>(0, 5, Allocator.Temp);
         var grid2 = new ValueGridShape<int>(5, 0, Allocator.Temp);
 
-        Assert.IsTrue(grid1.IsEmpty);
-        Assert.IsTrue(grid2.IsEmpty);
-        Assert.AreEqual(0, grid1.Size);
-        Assert.AreEqual(0, grid2.Size);
+        Assert.IsTrue(grid1.IsEmpty());
+        Assert.IsTrue(grid2.IsEmpty());
+        Assert.AreEqual(0, grid1.Size());
+        Assert.AreEqual(0, grid2.Size());
 
         grid1.Dispose();
         grid2.Dispose();
@@ -86,14 +86,14 @@ public class ValueGridShapeTests
     {
         var grid = new ValueGridShape<int>(3, 3, Allocator.Temp);
 
-        grid.SetValue(0, 0, 1);
-        grid.SetValue(1, 1, 2);
-        grid.SetValue(2, 2, 3);
+        grid.SetCellValue(0, 0, 1);
+        grid.SetCellValue(1, 1, 2);
+        grid.SetCellValue(2, 2, 3);
 
-        Assert.AreEqual(1, grid.GetValue(0, 0));
-        Assert.AreEqual(2, grid.GetValue(1, 1));
-        Assert.AreEqual(3, grid.GetValue(2, 2));
-        Assert.AreEqual(0, grid.GetValue(0, 1));
+        Assert.AreEqual(1, grid.GetCellValue(0, 0));
+        Assert.AreEqual(2, grid.GetCellValue(1, 1));
+        Assert.AreEqual(3, grid.GetCellValue(2, 2));
+        Assert.AreEqual(0, grid.GetCellValue(0, 1));
 
         grid.Dispose();
     }
@@ -103,13 +103,13 @@ public class ValueGridShapeTests
     {
         var grid = new ValueGridShape<int>(3, 3, Allocator.Temp);
 
-        grid.SetValue(new int2(0, 0), 10);
-        grid.SetValue(new int2(1, 2), 20);
-        grid.SetValue(new int2(2, 1), 30);
+        grid.SetCellValue(0, 0, 10);
+        grid.SetCellValue(1, 2, 20);
+        grid.SetCellValue(2, 1, 30);
 
-        Assert.AreEqual(10, grid.GetValue(new int2(0, 0)));
-        Assert.AreEqual(20, grid.GetValue(new int2(1, 2)));
-        Assert.AreEqual(30, grid.GetValue(new int2(2, 1)));
+        Assert.AreEqual(10, grid.GetCellValue(0, 0));
+        Assert.AreEqual(20, grid.GetCellValue(1, 2));
+        Assert.AreEqual(30, grid.GetCellValue(2, 1));
 
         grid.Dispose();
     }
@@ -136,13 +136,13 @@ public class ValueGridShapeTests
     {
         var grid = new ValueGridShape<float>(4, 4, Allocator.Temp);
 
-        grid[new int2(0, 0)] = 1.5f;
-        grid[new int2(2, 3)] = 2.5f;
-        grid[new int2(3, 1)] = 3.5f;
+        grid[0, 0] = 1.5f;
+        grid[2, 3] = 2.5f;
+        grid[3, 1] = 3.5f;
 
-        Assert.AreEqual(1.5f, grid[new int2(0, 0)]);
-        Assert.AreEqual(2.5f, grid[new int2(2, 3)]);
-        Assert.AreEqual(3.5f, grid[new int2(3, 1)]);
+        Assert.AreEqual(1.5f, grid[0, 0]);
+        Assert.AreEqual(2.5f, grid[2, 3]);
+        Assert.AreEqual(3.5f, grid[3, 1]);
 
         grid.Dispose();
     }
@@ -158,7 +158,7 @@ public class ValueGridShapeTests
         Assert.AreEqual(6, grid.GetIndex(1, 1));
         Assert.AreEqual(14, grid.GetIndex(4, 2));
 
-        Assert.AreEqual(7, grid.GetIndex(new int2(2, 1)));
+        Assert.AreEqual(7, grid.GetIndex(2, 1));
 
         grid.Dispose();
     }
@@ -245,24 +245,6 @@ public class ValueGridShapeTests
         grid.Dispose();
     }
 
-    [Test]
-    public void Clear_ResetsAllValuesToDefault()
-    {
-        var grid = new ValueGridShape<int>(3, 3, 42, Allocator.Temp);
-
-        grid.Clear();
-
-        for (int y = 0; y < grid.Height; y++)
-        {
-            for (int x = 0; x < grid.Width; x++)
-            {
-                Assert.AreEqual(0, grid[x, y]);
-            }
-        }
-
-        grid.Dispose();
-    }
-
     #endregion
 
     #region Contains Tests
@@ -300,11 +282,11 @@ public class ValueGridShapeTests
     {
         var grid = new ValueGridShape<int>(3, 3, Allocator.Temp);
 
-        Assert.IsTrue(grid.Contains(new int2(0, 0)));
-        Assert.IsTrue(grid.Contains(new int2(2, 2)));
-        Assert.IsFalse(grid.Contains(new int2(-1, 0)));
-        Assert.IsFalse(grid.Contains(new int2(3, 0)));
-        Assert.IsFalse(grid.Contains(new int2(0, 3)));
+        Assert.IsTrue(grid.Contains(0, 0));
+        Assert.IsTrue(grid.Contains(2, 2));
+        Assert.IsFalse(grid.Contains(-1, 0));
+        Assert.IsFalse(grid.Contains(3, 0));
+        Assert.IsFalse(grid.Contains(0, 3));
 
         grid.Dispose();
     }
@@ -407,10 +389,10 @@ public class ValueGridShapeTests
         Assert.AreEqual(valueGrid.Width, gridShape.Width);
         Assert.AreEqual(valueGrid.Height, gridShape.Height);
 
-        Assert.IsTrue(gridShape.GetCell(new int2(0, 0)));
-        Assert.IsTrue(gridShape.GetCell(new int2(1, 1)));
-        Assert.IsFalse(gridShape.GetCell(new int2(2, 0)));
-        Assert.IsFalse(gridShape.GetCell(new int2(0, 1)));
+        Assert.IsTrue(gridShape.GetCellValue(0, 0));
+        Assert.IsTrue(gridShape.GetCellValue(1, 1));
+        Assert.IsFalse(gridShape.GetCellValue(2, 0));
+        Assert.IsFalse(gridShape.GetCellValue(0, 1));
 
         valueGrid.Dispose();
         gridShape.Dispose();
@@ -427,10 +409,10 @@ public class ValueGridShapeTests
 
         var gridShape = valueGrid.ToGridShape(v => v >= 10, Allocator.Temp);
 
-        Assert.IsFalse(gridShape.GetCell(new int2(0, 0)));
-        Assert.IsTrue(gridShape.GetCell(new int2(1, 1)));
-        Assert.IsTrue(gridShape.GetCell(new int2(2, 2)));
-        Assert.IsFalse(gridShape.GetCell(new int2(0, 2)));
+        Assert.IsFalse(gridShape.GetCellValue(0, 0));
+        Assert.IsTrue(gridShape.GetCellValue(1, 1));
+        Assert.IsTrue(gridShape.GetCellValue(2, 2));
+        Assert.IsFalse(gridShape.GetCellValue(0, 2));
 
         valueGrid.Dispose();
         gridShape.Dispose();
@@ -440,9 +422,9 @@ public class ValueGridShapeTests
     public void FromGridShape_ConvertsCorrectly()
     {
         var gridShape = new GridShape(3, 3, Allocator.Temp);
-        gridShape.SetCell(new int2(0, 0), true);
-        gridShape.SetCell(new int2(1, 1), true);
-        gridShape.SetCell(new int2(2, 2), false);
+        gridShape.SetCellValue(0, 0, true);
+        gridShape.SetCellValue(1, 1, true);
+        gridShape.SetCellValue(2, 2, false);
 
         var valueGrid = new ValueGridShape<int>(3, 3, Allocator.Temp);
         valueGrid.FromGridShape(gridShape, 100, -1);
@@ -496,7 +478,7 @@ public class ValueGridShapeTests
         var grid = new ValueGridShape<int>(3, 3, Allocator.Temp);
         for (int i = 0; i < 9; i++)
         {
-            grid.SetValue(i % 3, i / 3, i);
+            grid.SetCellValue(i % 3, i / 3, i);
         }
 
         Assert.AreEqual(5, grid.CountWhere(v => v >= 4));
@@ -732,9 +714,9 @@ public class ValueGridShapeTests
         Assert.AreEqual(6, grid.CountValue(false));
 
         var gridShape = grid.ToGridShape(true, Allocator.Temp);
-        Assert.IsTrue(gridShape.GetCell(new int2(0, 0)));
-        Assert.IsTrue(gridShape.GetCell(new int2(1, 1)));
-        Assert.IsFalse(gridShape.GetCell(new int2(0, 1)));
+        Assert.IsTrue(gridShape.GetCellValue(0, 0));
+        Assert.IsTrue(gridShape.GetCellValue(1, 1));
+        Assert.IsFalse(gridShape.GetCellValue(0, 1));
 
         grid.Dispose();
         gridShape.Dispose();

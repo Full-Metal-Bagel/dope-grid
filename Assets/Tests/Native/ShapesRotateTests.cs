@@ -15,7 +15,7 @@ public class ShapesRotateTests
 
         Assert.AreEqual(1, rotated.Width);
         Assert.AreEqual(1, rotated.Height);
-        Assert.IsTrue(rotated.GetCell(new int2(0, 0)));
+        Assert.IsTrue(rotated[0, 0]);
 
         // Verify invariants
         Assert.AreEqual(shape.OccupiedSpaceCount, rotated.OccupiedSpaceCount, "OccupiedSpaceCount should be preserved");
@@ -30,9 +30,9 @@ public class ShapesRotateTests
 
         Assert.AreEqual(1, rotated.Width);
         Assert.AreEqual(3, rotated.Height);
-        Assert.IsTrue(rotated.GetCell(new int2(0, 0)));
-        Assert.IsTrue(rotated.GetCell(new int2(0, 1)));
-        Assert.IsTrue(rotated.GetCell(new int2(0, 2)));
+        Assert.IsTrue(rotated[0, 0]);
+        Assert.IsTrue(rotated[0, 1]);
+        Assert.IsTrue(rotated[0, 2]);
 
         // Verify invariants
         Assert.AreEqual(shape.OccupiedSpaceCount, rotated.OccupiedSpaceCount, "OccupiedSpaceCount should be preserved");
@@ -48,9 +48,9 @@ public class ShapesRotateTests
 
         Assert.AreEqual(3, rotated.Width);
         Assert.AreEqual(1, rotated.Height);
-        Assert.IsTrue(rotated.GetCell(new int2(0, 0)));
-        Assert.IsTrue(rotated.GetCell(new int2(1, 0)));
-        Assert.IsTrue(rotated.GetCell(new int2(2, 0)));
+        Assert.IsTrue(rotated[0, 0]);
+        Assert.IsTrue(rotated[1, 0]);
+        Assert.IsTrue(rotated[2, 0]);
 
         // Verify invariants
         Assert.AreEqual(shape.OccupiedSpaceCount, rotated.OccupiedSpaceCount, "OccupiedSpaceCount should be preserved");
@@ -65,9 +65,9 @@ public class ShapesRotateTests
 
         Assert.AreEqual(1, rotated.Width);
         Assert.AreEqual(3, rotated.Height);
-        Assert.IsTrue(rotated.GetCell(new int2(0, 0)));
-        Assert.IsTrue(rotated.GetCell(new int2(0, 1)));
-        Assert.IsTrue(rotated.GetCell(new int2(0, 2)));
+        Assert.IsTrue(rotated[0, 0]);
+        Assert.IsTrue(rotated[0, 1]);
+        Assert.IsTrue(rotated[0, 2]);
 
         // Verify invariants
         Assert.AreEqual(shape.OccupiedSpaceCount, rotated.OccupiedSpaceCount, "OccupiedSpaceCount should be preserved");
@@ -82,10 +82,10 @@ public class ShapesRotateTests
 
         Assert.AreEqual(2, rotated.Width);
         Assert.AreEqual(2, rotated.Height);
-        Assert.IsTrue(rotated.GetCell(new int2(0, 0)));
-        Assert.IsTrue(rotated.GetCell(new int2(1, 0)));
-        Assert.IsTrue(rotated.GetCell(new int2(0, 1)));
-        Assert.IsFalse(rotated.GetCell(new int2(1, 1)));
+        Assert.IsTrue(rotated[0, 0]);
+        Assert.IsTrue(rotated[1, 0]);
+        Assert.IsTrue(rotated[0, 1]);
+        Assert.IsFalse(rotated[1, 1]);
 
         // Verify invariants
         Assert.AreEqual(3, shape.OccupiedSpaceCount, "L-shape should have 3 occupied cells");
@@ -101,12 +101,12 @@ public class ShapesRotateTests
 
         Assert.AreEqual(2, rotated.Width);
         Assert.AreEqual(3, rotated.Height);
-        Assert.IsFalse(rotated.GetCell(new int2(0, 0)));
-        Assert.IsTrue(rotated.GetCell(new int2(1, 0)));
-        Assert.IsTrue(rotated.GetCell(new int2(0, 1)));
-        Assert.IsTrue(rotated.GetCell(new int2(1, 1)));
-        Assert.IsFalse(rotated.GetCell(new int2(0, 2)));
-        Assert.IsTrue(rotated.GetCell(new int2(1, 2)));
+        Assert.IsFalse(rotated[0, 0]);
+        Assert.IsTrue(rotated[1, 0]);
+        Assert.IsTrue(rotated[0, 1]);
+        Assert.IsTrue(rotated[1, 1]);
+        Assert.IsFalse(rotated[0, 2]);
+        Assert.IsTrue(rotated[1, 2]);
 
         // Verify invariants
         Assert.AreEqual(4, shape.OccupiedSpaceCount, "T-shape should have 4 occupied cells");
@@ -122,17 +122,17 @@ public class ShapesRotateTests
         Assert.AreEqual(3, rotated.Width);
         Assert.AreEqual(3, rotated.Height);
 
-        Assert.IsFalse(rotated.GetCell(new int2(0, 0)));
-        Assert.IsTrue(rotated.GetCell(new int2(1, 0)));
-        Assert.IsFalse(rotated.GetCell(new int2(2, 0)));
+        Assert.IsFalse(rotated[0, 0]);
+        Assert.IsTrue(rotated[1, 0]);
+        Assert.IsFalse(rotated[2, 0]);
 
-        Assert.IsTrue(rotated.GetCell(new int2(0, 1)));
-        Assert.IsTrue(rotated.GetCell(new int2(1, 1)));
-        Assert.IsTrue(rotated.GetCell(new int2(2, 1)));
+        Assert.IsTrue(rotated[0, 1]);
+        Assert.IsTrue(rotated[1, 1]);
+        Assert.IsTrue(rotated[2, 1]);
 
-        Assert.IsFalse(rotated.GetCell(new int2(0, 2)));
-        Assert.IsTrue(rotated.GetCell(new int2(1, 2)));
-        Assert.IsFalse(rotated.GetCell(new int2(2, 2)));
+        Assert.IsFalse(rotated[0, 2]);
+        Assert.IsTrue(rotated[1, 2]);
+        Assert.IsFalse(rotated[2, 2]);
 
         // Verify invariants
         Assert.AreEqual(5, shape.OccupiedSpaceCount, "Cross should have 5 occupied cells");
@@ -149,10 +149,10 @@ public class ShapesRotateTests
         Assert.AreEqual(2, rotated.Width);
         Assert.AreEqual(2, rotated.Height);
 
-        Assert.IsTrue(rotated.GetCell(new int2(0, 0)));
-        Assert.IsTrue(rotated.GetCell(new int2(1, 0)));
-        Assert.IsTrue(rotated.GetCell(new int2(0, 1)));
-        Assert.IsTrue(rotated.GetCell(new int2(1, 1)));
+        Assert.IsTrue(rotated[0, 0]);
+        Assert.IsTrue(rotated[1, 0]);
+        Assert.IsTrue(rotated[0, 1]);
+        Assert.IsTrue(rotated[1, 1]);
 
         // Verify invariants
         Assert.AreEqual(4, shape.OccupiedSpaceCount, "2x2 square should have 4 occupied cells");
@@ -163,18 +163,25 @@ public class ShapesRotateTests
     [Test]
     public void Rotate_CustomShape()
     {
-        using var shape = new GridShape(3, 2, Allocator.Temp);
-        shape.SetCell(new int2(0, 0), true);
-        shape.SetCell(new int2(1, 0), true);
-        shape.SetCell(new int2(2, 1), true);
+        var shape = new GridShape(3, 2, Allocator.Temp);
+        try
+        {
+            shape[0, 0] = true;
+            shape[1, 0] = true;
+            shape[2, 1] = true;
 
-        using var rotated = shape.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
-        Assert.AreEqual(2, rotated.Width);
-        Assert.AreEqual(3, rotated.Height);
+            using var rotated = shape.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
+            Assert.AreEqual(2, rotated.Width);
+            Assert.AreEqual(3, rotated.Height);
 
-        // Verify invariants
-        Assert.AreEqual(3, shape.OccupiedSpaceCount, "Custom shape should have 3 occupied cells");
-        Assert.AreEqual(shape.OccupiedSpaceCount, rotated.OccupiedSpaceCount, "OccupiedSpaceCount should be preserved");
+            // Verify invariants
+            Assert.AreEqual(3, shape.OccupiedSpaceCount, "Custom shape should have 3 occupied cells");
+            Assert.AreEqual(shape.OccupiedSpaceCount, rotated.OccupiedSpaceCount, "OccupiedSpaceCount should be preserved");
+        }
+        finally
+        {
+            shape.Dispose();
+        }
     }
 
     [Test]
@@ -199,18 +206,19 @@ public class ShapesRotateTests
         var width = random.Next(5, 20);
         var height = random.Next(5, 20);
 
-        using var shape = new GridShape(width, height, Allocator.Temp);
-
-        // Randomly populate cells
-        var cellsToFill = random.Next(1, width * height / 2); // Fill up to half the grid
-        for (var i = 0; i < cellsToFill; i++)
+        var shape = new GridShape(width, height, Allocator.Temp);
+        try
         {
-            var x = random.Next(0, width);
-            var y = random.Next(0, height);
-            shape.SetCell(new int2(x, y), true);
-        }
+            // Randomly populate cells
+            var cellsToFill = random.Next(1, width * height / 2); // Fill up to half the grid
+            for (var i = 0; i < cellsToFill; i++)
+            {
+                var x = random.Next(0, width);
+                var y = random.Next(0, height);
+                shape[x, y] = true;
+            }
 
-        var originalOccupiedCount = shape.OccupiedSpaceCount;
+            var originalOccupiedCount = shape.OccupiedSpaceCount;
 
         // Test all rotation angles
         using var rotated90 = shape.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
@@ -274,8 +282,13 @@ public class ShapesRotateTests
         Assert.AreEqual(rotated270.Width * rotated270.Height, rotated270.Size,
             $"270° rotation Size should equal Width * Height (seed: {seed})");
 
-        // Note: Dimensions after rotation are based on the bounding box of occupied cells,
-        // not the original grid dimensions. The rotation algorithm trims empty space.
-        // So Size may differ from the original, but it will always be minimal to contain all occupied cells.
+            // Note: Dimensions after rotation are based on the bounding box of occupied cells,
+            // not the original grid dimensions. The rotation algorithm trims empty space.
+            // So Size may differ from the original, but it will always be minimal to contain all occupied cells.
+        }
+        finally
+        {
+            shape.Dispose();
+        }
     }
 }

@@ -34,10 +34,10 @@ public class IndexedGridBoardTests
         var board = new IndexedGridBoard(5, 5, Allocator.Temp);
 
         var shape = new GridShape(2, 2, Allocator.Temp);
-        shape.SetCell(new int2(0, 0), true);
-        shape.SetCell(new int2(1, 0), true);
-        shape.SetCell(new int2(0, 1), true);
-        shape.SetCell(new int2(1, 1), true);
+        shape.SetCellValue(0, 0, true);
+        shape.SetCellValue(1, 0, true);
+        shape.SetCellValue(0, 1, true);
+        shape.SetCellValue(1, 1, true);
 
         var index = board.TryAddItemAt(shape.GetOrCreateImmutable(), new GridPosition(1, 1));
 
@@ -67,7 +67,7 @@ public class IndexedGridBoardTests
         var shape = new GridShape(2, 2, Allocator.Temp);
         for (int y = 0; y < 2; y++)
         for (int x = 0; x < 2; x++)
-            shape.SetCell(new int2(x, y), true);
+            shape.SetCellValue(x, y, true);
 
         var immutableShape = shape.GetOrCreateImmutable();
 
@@ -90,7 +90,7 @@ public class IndexedGridBoardTests
         var shape = new GridShape(2, 2, Allocator.Temp);
         for (int y = 0; y < 2; y++)
         for (int x = 0; x < 2; x++)
-            shape.SetCell(new int2(x, y), true);
+            shape.SetCellValue(x, y, true);
 
         var index = board.TryAddItemAt(shape.GetOrCreateImmutable(), new GridPosition(1, 1));
         Assert.AreEqual(0, index);
@@ -118,7 +118,7 @@ public class IndexedGridBoardTests
         var shape = new GridShape(2, 2, Allocator.Temp);
         for (int y = 0; y < 2; y++)
         for (int x = 0; x < 2; x++)
-            shape.SetCell(new int2(x, y), true);
+            shape.SetCellValue(x, y, true);
         var immutableShape = shape.GetOrCreateImmutable();
 
         // Add three items
@@ -155,16 +155,16 @@ public class IndexedGridBoardTests
 
         // Block some cells
         var blockShape = new GridShape(3, 1, Allocator.Temp);
-        blockShape.SetCell(new int2(0, 0), true);
-        blockShape.SetCell(new int2(1, 0), true);
-        blockShape.SetCell(new int2(2, 0), true);
+        blockShape.SetCellValue(0, 0, true);
+        blockShape.SetCellValue(1, 0, true);
+        blockShape.SetCellValue(2, 0, true);
         board.TryAddItemAt(blockShape.GetOrCreateImmutable(), new GridPosition(0, 0));
 
         // Try to add 1x3 vertical item (will need rotation to fit)
         var item = new GridShape(1, 3, Allocator.Temp);
-        item.SetCell(new int2(0, 0), true);
-        item.SetCell(new int2(0, 1), true);
-        item.SetCell(new int2(0, 2), true);
+        item.SetCellValue(0, 0, true);
+        item.SetCellValue(0, 1, true);
+        item.SetCellValue(0, 2, true);
 
         var (index, rotation) = board.TryAddItem(item.GetOrCreateImmutable());
 
@@ -182,9 +182,9 @@ public class IndexedGridBoardTests
         var board = new IndexedGridBoard(5, 5, Allocator.Temp);
 
         var shape = new GridShape(2, 3, Allocator.Temp);
-        shape.SetCell(new int2(0, 0), true);
-        shape.SetCell(new int2(1, 1), true);
-        shape.SetCell(new int2(0, 2), true);
+        shape.SetCellValue(0, 0, true);
+        shape.SetCellValue(1, 1, true);
+        shape.SetCellValue(0, 2, true);
         var immutableShape = shape.GetOrCreateImmutable();
 
         var index = board.TryAddItemAt(immutableShape, new GridPosition(1, 1));
@@ -204,7 +204,7 @@ public class IndexedGridBoardTests
         var shape = new GridShape(2, 2, Allocator.Temp);
         for (int y = 0; y < 2; y++)
         for (int x = 0; x < 2; x++)
-            shape.SetCell(new int2(x, y), true);
+            shape.SetCellValue(x, y, true);
 
         var index = board.TryAddItemAt(shape.GetOrCreateImmutable(), new GridPosition(2, 3));
         var position = board.GetItemPosition(index);
@@ -224,7 +224,7 @@ public class IndexedGridBoardTests
         var shape = new GridShape(2, 2, Allocator.Temp);
         for (int y = 0; y < 2; y++)
         for (int x = 0; x < 2; x++)
-            shape.SetCell(new int2(x, y), true);
+            shape.SetCellValue(x, y, true);
 
         board.TryAddItemAt(shape.GetOrCreateImmutable(), new GridPosition(1, 1));
 
@@ -245,7 +245,7 @@ public class IndexedGridBoardTests
         var shape = new GridShape(2, 2, Allocator.Temp);
         for (int y = 0; y < 2; y++)
         for (int x = 0; x < 2; x++)
-            shape.SetCell(new int2(x, y), true);
+            shape.SetCellValue(x, y, true);
 
         board.TryAddItemAt(shape.GetOrCreateImmutable(), new GridPosition(1, 1));
         Assert.AreEqual(1, board.ItemCount);
@@ -268,7 +268,7 @@ public class IndexedGridBoardTests
         var shape = new GridShape(2, 2, Allocator.Temp);
         for (int y = 0; y < 2; y++)
         for (int x = 0; x < 2; x++)
-            shape.SetCell(new int2(x, y), true);
+            shape.SetCellValue(x, y, true);
 
         var index = board.TryAddItemAt(shape.GetOrCreateImmutable(), new GridPosition(2, 3));
         var readOnly = board.AsReadOnly();
@@ -295,7 +295,7 @@ public class IndexedGridBoardTests
         var shape = new GridShape(2, 2, Allocator.Temp);
         for (int y = 0; y < 2; y++)
         for (int x = 0; x < 2; x++)
-            shape.SetCell(new int2(x, y), true);
+            shape.SetCellValue(x, y, true);
 
         var index = board.TryAddItemAt(shape.GetOrCreateImmutable(), new GridPosition(1, 1));
 
@@ -317,7 +317,7 @@ public class IndexedGridBoardTests
         var shape = new GridShape(2, 2, Allocator.Temp);
         for (int y = 0; y < 2; y++)
         for (int x = 0; x < 2; x++)
-            shape.SetCell(new int2(x, y), true);
+            shape.SetCellValue(x, y, true);
 
         var index = board.TryAddItemAt(shape.GetOrCreateImmutable(), new GridPosition(1, 1));
         var readOnly = board.AsReadOnly();

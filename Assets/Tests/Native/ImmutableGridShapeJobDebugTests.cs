@@ -22,8 +22,8 @@ public class ImmutableGridShapeJobDebugTests
             {
                 // Step 1: Just create a simple GridShape
                 var shape = new GridShape(2, 2, Allocator.Temp);
-                shape.SetCell(new int2(0, 0), true);
-                shape.SetCell(new int2(1, 1), true);
+                shape.SetCellValue(0, 0, true);
+                shape.SetCellValue(1, 1, true);
 
                 Result[0] = 1; // Success marker
 
@@ -72,7 +72,7 @@ public class ImmutableGridShapeJobDebugTests
             try
             {
                 var shape = new GridShape(3, 3, Allocator.Temp);
-                shape.SetCell(new int2(1, 1), true);
+                shape.SetCellValue(1, 1, true);
 
                 // Try to trim the shape
                 var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
@@ -128,8 +128,8 @@ public class ImmutableGridShapeJobDebugTests
             try
             {
                 var shape = new GridShape(2, 2, Allocator.Temp);
-                shape.SetCell(new int2(0, 0), true);
-                shape.SetCell(new int2(1, 1), true);
+                shape.SetCellValue(0, 0, true);
+                shape.SetCellValue(1, 1, true);
 
                 var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
 
@@ -190,7 +190,7 @@ public class ImmutableGridShapeJobDebugTests
             try
             {
                 var shape = new GridShape(2, 2, Allocator.Temp);
-                shape.SetCell(new int2(0, 0), true);
+                shape.SetCellValue(0, 0, true);
 
                 Result[0] = 1;
 
@@ -240,7 +240,7 @@ public class ImmutableGridShapeJobDebugTests
             try
             {
                 var shape = new GridShape(2, 2, Allocator.Temp);
-                shape.SetCell(new int2(0, 0), true);
+                shape.SetCellValue(0, 0, true);
 
                 var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
                 var immutable = trimmed.AsReadOnly().GetOrCreateImmutable();
@@ -301,7 +301,7 @@ public class ImmutableGridShapeJobDebugTests
             try
             {
                 var shape = new GridShape(2, 2, Allocator.Temp);
-                shape.SetCell(new int2(index % 2, index / 2 % 2), true);
+                shape.SetCellValue(index % 2, index / 2 % 2, true);
 
                 var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
                 var immutable = trimmed.AsReadOnly().GetOrCreateImmutable();
@@ -363,7 +363,7 @@ public class ImmutableGridShapeJobDebugTests
                 // Test basic operations that don't require static access
                 Result[0] = shape.Width;
                 Result[1] = shape.Height;
-                Result[2] = shape.Size;
+                Result[2] = shape.Size();
             }
             catch (Exception e)
             {
@@ -395,7 +395,7 @@ public class ImmutableGridShapeJobDebugTests
 
             Assert.AreEqual(immutable.Width, result[0], "Width should match");
             Assert.AreEqual(immutable.Height, result[1], "Height should match");
-            Assert.AreEqual(immutable.Size, result[2], "Size should match");
+            Assert.AreEqual(immutable.Size(), result[2], "Size should match");
         }
         finally
         {
