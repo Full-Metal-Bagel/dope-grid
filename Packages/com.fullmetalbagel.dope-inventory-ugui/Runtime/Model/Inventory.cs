@@ -55,16 +55,12 @@ public struct Inventory : INativeDisposable
 
     public InventoryItem TryAutoPlaceItem(InventoryItemInstanceId id, ItemDefinition itemDefinition)
     {
-        for (var rotation = RotationDegree.None; rotation <= RotationDegree.Clockwise270; rotation++)
+        var (position, rotation) = _grid.FindFirstFitWithFreeRotation(itemDefinition.Shape, freeValue: -1);
+        if (position.IsValid)
         {
-            var shape = itemDefinition.Shape.GetRotatedShape(rotation);
-            var position = ((ReadOnly)this).FindFirstFitPosition(shape);
-            if (position.IsValid)
-            {
-                var placedItem = new InventoryItem(id, itemDefinition, rotation, position);
-                PlaceItem(placedItem);
-                return placedItem;
-            }
+            var placedItem = new InventoryItem(id, itemDefinition, rotation, position);
+            PlaceItem(placedItem);
+            return placedItem;
         }
         return InventoryItem.Invalid;
     }
@@ -261,19 +257,7 @@ public struct Inventory : INativeDisposable
 
         public GridPosition FindFirstFitPosition(ImmutableGridShape shape)
         {
-            for (int y = 0; y <= _grid.Height - shape.Height; y++)
-            {
-                for (int x = 0; x <= _grid.Width - shape.Width; x++)
-                {
-                    var pos = new GridPosition(x, y);
-                    if (CanPlaceAt(shape, pos))
-                    {
-                        return pos;
-                    }
-                }
-            }
-
-            return GridPosition.Invalid;
+            return _grid.FindFirstFitWithFixedRotation(shape, freeValue: -1);
         }
 
         private bool CanPlaceAt(ImmutableGridShape shape, GridPosition position)

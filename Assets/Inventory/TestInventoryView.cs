@@ -46,14 +46,6 @@ public class TestInventoryView : MonoBehaviour
     {
         if (_uiItems == null || _uiItems.Length == 0) return;
 
-        var rotations = new[]
-        {
-            RotationDegree.None,
-            RotationDegree.Clockwise90,
-            RotationDegree.Clockwise180,
-            RotationDegree.Clockwise270
-        };
-
         foreach (var ui in _uiItems)
         {
             if (ui == null) continue;
