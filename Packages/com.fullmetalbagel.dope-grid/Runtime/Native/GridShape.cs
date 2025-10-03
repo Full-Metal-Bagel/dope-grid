@@ -119,10 +119,6 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
         public int Height { get; }
         public ReadOnlySpanBitArray Bits { get; }
 
-        public int Size => Width * Height;
-        public int OccupiedSpaceCount => Bits.CountBits(0, Size);
-        public int FreeSpaceCount => Size - OccupiedSpaceCount;
-
         internal ReadOnly(int width, int height, ReadOnlySpanBitArray bits)
         {
             Width = width;
@@ -130,11 +126,8 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
             Bits = bits;
         }
 
-        public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-        public int GetIndex(int x, int y) => y * Width + x;
-
-        public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
-        public bool GetCell(int x, int y) => Bits.Get(GetIndex(x, y));
+        public bool this[GridPosition pos] => this[this.GetIndex(pos)];
+        public bool this[int index] => Bits.Get(index);
 
         public GridShape Clone(Allocator allocator)
         {

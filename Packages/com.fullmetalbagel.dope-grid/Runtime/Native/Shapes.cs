@@ -150,7 +150,7 @@ public static class Shapes
         {
             for (var x = 0; x < width; x++)
             {
-                if (!shape.GetCell(x, y)) continue;
+                if (!shape[x, y]) continue;
 
                 (int rotatedX, int rotatedY) = degree switch
                 {
@@ -216,42 +216,6 @@ public static class Shapes
         }
 
         return new GridShape.ReadOnly(width, height, output.AsReadOnly());
-    }
-
-    [Pure, MustUseReturnValue]
-    public static bool IsTrimmed(this GridShape shape)
-    {
-        return shape.AsReadOnly().IsTrimmed();
-    }
-
-    [Pure, MustUseReturnValue]
-    public static bool IsTrimmed(this in GridShape.ReadOnly shape)
-    {
-        // Empty shapes are considered trimmed
-        if (shape.Width == 0 || shape.Height == 0)
-            return true;
-
-        // A shape is trimmed when all four borders have at least one occupied cell
-        return HasOccupiedCellInRow(shape, 0) &&                    // Top row
-               HasOccupiedCellInRow(shape, shape.Height - 1) &&     // Bottom row
-               HasOccupiedCellInColumn(shape, 0) &&                 // Left column
-               HasOccupiedCellInColumn(shape, shape.Width - 1);     // Right column
-
-        static bool HasOccupiedCellInRow(in GridShape.ReadOnly shape, int row)
-        {
-            var rowStart = row * shape.Width;
-            return shape.Bits.TestAny(rowStart, shape.Width);
-        }
-
-        static bool HasOccupiedCellInColumn(in GridShape.ReadOnly shape, int column)
-        {
-            for (var row = 0; row < shape.Height; row++)
-            {
-                if (shape.GetCell(column, row))
-                    return true;
-            }
-            return false;
-        }
     }
 
     [Pure, MustUseReturnValue]
@@ -386,65 +350,11 @@ public static class Shapes
         {
             for (int x = startX; x < maxX; x++)
             {
-                if (shape.GetCell(x, y))
+                if (shape[x, y])
                 {
                     grid.SetValue(pos.X + x, pos.Y + y, value);
                 }
             }
         }
-    }
-
-    public static bool IsWithinBounds<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, GridPosition position)
-        where T : unmanaged, IEquatable<T>
-    {
-        return position is { X: >= 0, Y: >= 0 } &&
-               position.X + shape.Width <= grid.Width &&
-               position.Y + shape.Height <= grid.Height;
-    }
-
-    public static bool CheckShapeCells<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, GridPosition position, Func<GridPosition, T, bool> cellPredicate)
-        where T : unmanaged, IEquatable<T>
-    {
-        return grid.CheckShapeCells(shape, position, (pos, value, predicate) => predicate(pos, value), cellPredicate);
-    }
-
-    public static bool CheckShapeCells<T, TData>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, GridPosition position, Func<GridPosition, T, TData, bool> cellPredicate, TData data)
-        where T : unmanaged, IEquatable<T>
-    {
-        for (int y = 0; y < shape.Height; y++)
-        {
-            for (int x = 0; x < shape.Width; x++)
-            {
-                if (shape.GetCell(x, y))
-                {
-                    var gridPos = new GridPosition(position.X + x, position.Y + y);
-                    var cellValue = grid[gridPos];
-                    if (!cellPredicate(gridPos, cellValue, data))
-                        return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    public static GridPosition FindFirstFitWithFixedRotation(this ValueGridShape<int> grid, ImmutableGridShape item)
-    {
-        return grid.AsReadOnly().FindFirstFitWithFixedRotation(item);
-    }
-
-    public static GridPosition FindFirstFitWithFixedRotation(this in ValueGridShape<int>.ReadOnly grid, ImmutableGridShape item)
-    {
-        var maxY = grid.Height - item.Height + 1;
-        var maxX = grid.Width - item.Width + 1;
-
-        for (var y = 0; y < maxY; y++)
-        for (var x = 0; x < maxX; x++)
-        {
-            var pos = new GridPosition(x, y);
-            if (grid.IsWithinBounds(item, pos) && grid.CheckShapeCells(item, pos, (_, value) => value == -1))
-                return pos;
-        }
-
-        return GridPosition.Invalid;
     }
 }
