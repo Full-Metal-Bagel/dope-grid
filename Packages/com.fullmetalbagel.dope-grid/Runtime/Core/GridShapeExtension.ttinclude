@@ -325,6 +325,27 @@ public static partial class WritableGridShapeExtension
         FillRect(<#= modifier.Trim() #> shape, pos.X, pos.Y, width, height, value);
     }
 
+    public static void FillShape<#= genericConstraint #>(this <#= modifier #><#= typeName #> grid, ImmutableGridShape shape, GridPosition pos, <#= cellTypeParam #> value)<#= typeConstraint #>
+    {
+        // Check bounds to prevent out of range access
+        var maxX = System.Math.Min(shape.Width, grid.Width - pos.X);
+        var maxY = System.Math.Min(shape.Height, grid.Height - pos.Y);
+        var startX = System.Math.Max(0, -pos.X);
+        var startY = System.Math.Max(0, -pos.Y);
+
+        // Fill only the cells where the shape has true values
+        for (int y = startY; y < maxY; y++)
+        {
+            for (int x = startX; x < maxX; x++)
+            {
+                if (shape[x, y])
+                {
+                    grid.SetCellValue(<#= modifier.Trim() #> grid, pos.X + x, pos.Y + y, value);
+                }
+            }
+        }
+    }
+
     public static void Clear<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape)<#= typeConstraint #>
     {
         FillAll(<#= modifier.Trim() #> shape, default);
