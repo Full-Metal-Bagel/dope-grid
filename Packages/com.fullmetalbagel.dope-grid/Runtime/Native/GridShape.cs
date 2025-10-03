@@ -27,9 +27,6 @@ public struct GridShape : IReadOnlyGridShape, IEquatable<GridShape>, INativeDisp
         _bits = new NativeArray<byte>(SpanBitArrayUtility.ByteCount(bitLength), allocator, NativeArrayOptions.ClearMemory);
     }
 
-    public void SetCell(GridPosition pos, bool value) => SetCell(pos.X, pos.Y, value);
-    public void SetCell(int x, int y, bool value) => Bits.Set(this.GetIndex(x, y), value);
-
     public bool this[int x, int y]
     {
         get => this.GetCellValue(x, y);
@@ -48,32 +45,9 @@ public struct GridShape : IReadOnlyGridShape, IEquatable<GridShape>, INativeDisp
         set => Bits.Set(index, value);
     }
 
-    public GridShape FillAll(bool value)
+    public void FillAll(bool value)
     {
         Bits.SetAll(value);
-        return this;
-    }
-
-    public GridShape FillRect(int x, int y, int width, int height, bool value = true)
-    {
-        for (int dy = 0; dy < height; dy++)
-        {
-            for (int dx = 0; dx < width; dx++)
-            {
-                var px = x + dx;
-                var py = y + dy;
-                if (px >= 0 && px < Width && py >= 0 && py < Height)
-                {
-                    SetCell(px, py, value);
-                }
-            }
-        }
-        return this;
-    }
-
-    public GridShape FillRect(GridPosition pos, int width, int height, bool value = true)
-    {
-        return FillRect(pos.X, pos.Y, width, height, value);
     }
 
     public void Clear()

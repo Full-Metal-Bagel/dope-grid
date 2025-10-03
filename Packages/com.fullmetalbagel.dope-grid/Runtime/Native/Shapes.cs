@@ -335,26 +335,4 @@ public static class Shapes
             _ => throw new ArgumentOutOfRangeException(nameof(rotation), rotation, null)
         };
     }
-
-    public static void FillShape<T>(this ValueGridShape<T> grid, ImmutableGridShape shape, GridPosition pos, T value)
-        where T : unmanaged, IEquatable<T>
-    {
-        // Check bounds to prevent out of range access
-        var maxX = math.min(shape.Width, grid.Width - pos.X);
-        var maxY = math.min(shape.Height, grid.Height - pos.Y);
-        var startX = math.max(0, -pos.X);
-        var startY = math.max(0, -pos.Y);
-
-        // Fill only the cells where the shape has true values
-        for (int y = startY; y < maxY; y++)
-        {
-            for (int x = startX; x < maxX; x++)
-            {
-                if (shape[x, y])
-                {
-                    grid.SetValue(pos.X + x, pos.Y + y, value);
-                }
-            }
-        }
-    }
 }

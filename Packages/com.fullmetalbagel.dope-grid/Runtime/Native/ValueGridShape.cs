@@ -30,9 +30,6 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
         FillAll(defaultValue);
     }
 
-    public void SetValue(GridPosition pos, T value) => SetValue(pos.X, pos.Y, value);
-    public void SetValue(int x, int y, T value) => _values[this.GetIndex(x, y)] = value;
-
     public T this[int x, int y]
     {
         get => this.GetCellValue(x, y);
@@ -49,40 +46,6 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
     {
         readonly get => _values[index];
         set => _values[index] = value;
-    }
-
-    public void FillAll(T value)
-    {
-        for (int i = 0; i < _values.Length; i++)
-        {
-            _values[i] = value;
-        }
-    }
-
-    public void FillRect(int x, int y, int width, int height, T value)
-    {
-        for (int dy = 0; dy < height; dy++)
-        {
-            for (int dx = 0; dx < width; dx++)
-            {
-                var px = x + dx;
-                var py = y + dy;
-                if (px >= 0 && px < Width && py >= 0 && py < Height)
-                {
-                    SetValue(px, py, value);
-                }
-            }
-        }
-    }
-
-    public void FillRect(GridPosition pos, int width, int height, T value)
-    {
-        FillRect(pos.X, pos.Y, width, height, value);
-    }
-
-    public void Clear()
-    {
-        FillAll(default);
     }
 
     public readonly ValueGridShape<T> Clone(Allocator allocator) => ((ReadOnly)this).Clone(allocator);

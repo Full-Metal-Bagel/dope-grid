@@ -4,7 +4,7 @@ namespace DopeGrid.Native;
 
 public static partial class ReadOnlyGridShapeExtension
 {
-    
+
 #region ref GridShape
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -232,7 +232,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
 #endregion
-    
+
 #region in GridShape.ReadOnly
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -460,7 +460,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
 #endregion
-    
+
 #region ref ValueGridShape<T>
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -688,7 +688,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
 #endregion
-    
+
 #region in ValueGridShape<T>.ReadOnly
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -916,7 +916,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
 #endregion
-    
+
 #region in ImmutableGridShape
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -1141,6 +1141,146 @@ public static partial class ReadOnlyGridShapeExtension
     public static bool IsWithinBounds(this in ImmutableGridShape grid, ImmutableGridShape shape, int x, int y)
     {
         return IsWithinBounds(in grid, shape, new GridPosition(x, y));
+    }
+
+#endregion
+    }
+
+public static partial class WritableGridShapeExtension
+{
+
+#region ref GridShape
+
+    public static void SetCellValue(this ref GridShape shape, GridPosition pos, bool value) => shape.SetCellValue(pos.X, pos.Y, value);
+    public static void SetCellValue(this ref GridShape shape, int x, int y, bool value) => shape[x, y] = value;
+
+    public static void FillAll(this ref GridShape shape, bool value)
+    {
+        var size = shape.Width * shape.Height;
+        for (int i = 0; i < size; i++)
+            shape[i] = value;
+    }
+
+    public static void FillRect(this ref GridShape shape, int x, int y, int width, int height, bool value)
+    {
+        for (int dy = 0; dy < height; dy++)
+        {
+            for (int dx = 0; dx < width; dx++)
+            {
+                var px = x + dx;
+                var py = y + dy;
+                if (px >= 0 && px < shape.Width && py >= 0 && py < shape.Height)
+                {
+                    shape[px, py] = value;
+                }
+            }
+        }
+    }
+
+    public static void FillRect(this ref GridShape shape, GridPosition pos, int width, int height, bool value)
+    {
+        FillRect(ref shape, pos.X, pos.Y, width, height, value);
+    }
+
+    public static void Clear(this ref GridShape shape)
+    {
+        FillAll(ref shape, default);
+    }
+
+    public static void PlaceItem(this ref GridShape container, ImmutableGridShape item, GridPosition pos, bool value)
+    {
+        for (var sy = 0; sy < item.Height; sy++)
+        for (var sx = 0; sx < item.Width; sx++)
+        {
+            var shapePos = new GridPosition(sx, sy);
+            if (item.GetCellValue(shapePos))
+            {
+                var gridPos = new GridPosition(pos.X + sx, pos.Y + sy);
+                container.SetCellValue(gridPos, value);
+            }
+        }
+    }
+
+    public static void RemoveItem(this ref GridShape container, ImmutableGridShape item, GridPosition pos, bool freeValue = default)
+    {
+        for (var sy = 0; sy < item.Height; sy++)
+        for (var sx = 0; sx < item.Width; sx++)
+        {
+            var shapePos = new GridPosition(sx, sy);
+            if (item.GetCellValue(shapePos))
+            {
+                var gridPos = new GridPosition(pos.X + sx, pos.Y + sy);
+                container.SetCellValue(gridPos, freeValue);
+            }
+        }
+    }
+
+#endregion
+
+#region ref ValueGridShape<T>
+
+    public static void SetCellValue<T>(this ref ValueGridShape<T> shape, GridPosition pos, T value) where T : unmanaged, System.IEquatable<T> => shape.SetCellValue(pos.X, pos.Y, value);
+    public static void SetCellValue<T>(this ref ValueGridShape<T> shape, int x, int y, T value) where T : unmanaged, System.IEquatable<T> => shape[x, y] = value;
+
+    public static void FillAll<T>(this ref ValueGridShape<T> shape, T value) where T : unmanaged, System.IEquatable<T>
+    {
+        var size = shape.Width * shape.Height;
+        for (int i = 0; i < size; i++)
+            shape[i] = value;
+    }
+
+    public static void FillRect<T>(this ref ValueGridShape<T> shape, int x, int y, int width, int height, T value) where T : unmanaged, System.IEquatable<T>
+    {
+        for (int dy = 0; dy < height; dy++)
+        {
+            for (int dx = 0; dx < width; dx++)
+            {
+                var px = x + dx;
+                var py = y + dy;
+                if (px >= 0 && px < shape.Width && py >= 0 && py < shape.Height)
+                {
+                    shape.SetCellValue(px, py, value);
+                }
+            }
+        }
+    }
+
+    public static void FillRect<T>(this ref ValueGridShape<T> shape, GridPosition pos, int width, int height, T value) where T : unmanaged, System.IEquatable<T>
+    {
+        FillRect(ref shape, pos.X, pos.Y, width, height, value);
+    }
+
+    public static void Clear<T>(this ref ValueGridShape<T> shape) where T : unmanaged, System.IEquatable<T>
+    {
+        FillAll(ref shape, default);
+    }
+
+    public static void PlaceItem<T>(this ref ValueGridShape<T> container, ImmutableGridShape item, GridPosition pos, T value) where T : unmanaged, System.IEquatable<T>
+    {
+        for (var sy = 0; sy < item.Height; sy++)
+        for (var sx = 0; sx < item.Width; sx++)
+        {
+            var shapePos = new GridPosition(sx, sy);
+            if (item.GetCellValue(shapePos))
+            {
+                var gridPos = new GridPosition(pos.X + sx, pos.Y + sy);
+                container.SetCellValue(gridPos, value);
+            }
+        }
+    }
+
+    public static void RemoveItem<T>(this ref ValueGridShape<T> container, ImmutableGridShape item, GridPosition pos, T freeValue = default) where T : unmanaged, System.IEquatable<T>
+    {
+        for (var sy = 0; sy < item.Height; sy++)
+        for (var sx = 0; sx < item.Width; sx++)
+        {
+            var shapePos = new GridPosition(sx, sy);
+            if (item.GetCellValue(shapePos))
+            {
+                var gridPos = new GridPosition(pos.X + sx, pos.Y + sy);
+                container.SetCellValue(gridPos, freeValue);
+            }
+        }
     }
 
 #endregion

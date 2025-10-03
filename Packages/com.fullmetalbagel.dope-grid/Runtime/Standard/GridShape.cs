@@ -31,12 +31,6 @@ public struct GridShape : IEquatable<GridShape>, IDisposable
         Array.Clear(_bits, 0, _byteCount);
     }
 
-    public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-    public int GetIndex(int x, int y) => y * Width + x;
-
-    public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
-    public bool GetCell(int x, int y) => ReadOnlyBits.Get(GetIndex(x, y));
-
     public void SetCell(GridPosition pos, bool value) => SetCell(pos.X, pos.Y, value);
     public void SetCell(int x, int y, bool value) => Bits.Set(GetIndex(x, y), value);
 
@@ -137,12 +131,6 @@ public struct GridShape : IEquatable<GridShape>, IDisposable
             : this(bound.width, bound.height, bits)
         {
         }
-
-        public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-        public int GetIndex(int x, int y) => y * Width + x;
-
-        public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
-        public bool GetCell(int x, int y) => Bits.Get(GetIndex(x, y));
 
         public GridShape Clone()
         {

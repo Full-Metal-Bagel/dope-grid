@@ -11,4 +11,9 @@ namespace DopeGrid.Native;
         ("in ValueGridShape<T>.ReadOnly", "T where T : unmanaged, System.IEquatable<T>"),
         ("in ImmutableGridShape", "bool")
     );
+
+    MakeExtensionForWritableGridShape(
+        ("ref GridShape", "bool"),
+        ("ref ValueGridShape<T>", "T where T : unmanaged, System.IEquatable<T>")
+    );
 #>
