@@ -32,9 +32,6 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable whe
         Array.Fill(_values, defaultValue, 0, width * height);
     }
 
-    public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-    public int GetIndex(int x, int y) => y * Width + x;
-
     public T GetValue(GridPosition pos) => GetValue(pos.X, pos.Y);
     public T GetValue(int x, int y) => Values[GetIndex(x, y)];
 
@@ -51,6 +48,12 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable whe
     {
         get => GetValue(pos);
         set => SetValue(pos, value);
+    }
+
+    public T this[int index]
+    {
+        get => Values[index];
+        set => Values[index] = value;
     }
 
     public void Fill(T value)
@@ -107,11 +110,6 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable whe
         }
     }
 
-    public int CountValue(T value) => AsReadOnly().CountValue(value);
-    public int CountWhere(Func<T, bool> predicate) => AsReadOnly().CountWhere(predicate);
-    public bool Any(Func<T, bool> predicate) => AsReadOnly().Any(predicate);
-    public bool All(Func<T, bool> predicate) => AsReadOnly().All(predicate);
-
     public void Dispose()
     {
         if (_values != null)
@@ -163,9 +161,7 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable whe
 
         public T this[int x, int y] => GetValue(x, y);
         public T this[GridPosition pos] => GetValue(pos);
-
-        public bool Contains(GridPosition pos) => Contains(pos.X, pos.Y);
-        public bool Contains(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
+        public T this[int index] => _values[index];
 
         public ValueGridShape<T> Clone()
         {
@@ -202,57 +198,6 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable whe
                 }
             }
             return shape;
-        }
-
-        public int CountValue(T target)
-        {
-            return Count((v, t) => EqualityComparer<T>.Default.Equals(v, t), target);
-        }
-
-        public int CountWhere(Func<T, bool> predicate)
-        {
-            return Count((value, p) => p(value), predicate);
-        }
-
-        public int Count<TCaptureData>(Func<T, TCaptureData, bool> predicate, TCaptureData data)
-        {
-            int count = 0;
-            for (int i = 0; i < _values.Length; i++)
-            {
-                if (predicate(_values[i], data))
-                    count++;
-            }
-            return count;
-        }
-
-        public bool Any(Func<T, bool> predicate)
-        {
-            return Any((v, p) => p(v), predicate);
-        }
-
-        public bool Any<TCaptureData>(Func<T, TCaptureData, bool> predicate, TCaptureData data)
-        {
-            foreach (var t in _values)
-            {
-                if (predicate(t, data))
-                    return true;
-            }
-            return false;
-        }
-
-        public bool All(Func<T, bool> predicate)
-        {
-            return All((v, p) => p(v), predicate);
-        }
-
-        public bool All<TCaptureData>(Func<T, TCaptureData, bool> predicate, TCaptureData data)
-        {
-            foreach (var t in _values)
-            {
-                if (!predicate(t, data))
-                    return false;
-            }
-            return true;
         }
 
         public bool Equals(ReadOnly other)
