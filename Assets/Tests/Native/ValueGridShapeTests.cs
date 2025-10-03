@@ -171,7 +171,7 @@ public class ValueGridShapeTests
     public void Fill_SetsAllValues()
     {
         var grid = new ValueGridShape<int>(3, 3, Allocator.Temp);
-        grid.Fill(99);
+        grid.FillAll(99);
         for (int y = 0; y < grid.Height; y++)
         {
             for (int x = 0; x < grid.Width; x++)
@@ -511,7 +511,7 @@ public class ValueGridShapeTests
     public void Any_WorksCorrectly()
     {
         var grid = new ValueGridShape<int>(3, 3, Allocator.Temp);
-        grid.Fill(10);
+        grid.FillAll(10);
         grid[1, 1] = 20;
 
         Assert.IsTrue(grid.Any(v => v == 20));
@@ -527,7 +527,7 @@ public class ValueGridShapeTests
     public void All_WorksCorrectly()
     {
         var grid = new ValueGridShape<int>(3, 3, Allocator.Temp);
-        grid.Fill(10);
+        grid.FillAll(10);
 
         Assert.IsTrue(grid.All(v => v == 10));
         Assert.IsTrue(grid.All(v => v >= 10));
@@ -709,7 +709,7 @@ public class ValueGridShapeTests
         Assert.AreEqual(42, grid[0, 0].Value);
         Assert.IsTrue(grid[0, 0].Flag);
 
-        grid.Fill(new TestStruct { Value = 100, Flag = false });
+        grid.FillAll(new TestStruct { Value = 100, Flag = false });
         Assert.AreEqual(100, grid[1, 1].Value);
         Assert.IsFalse(grid[1, 1].Flag);
 

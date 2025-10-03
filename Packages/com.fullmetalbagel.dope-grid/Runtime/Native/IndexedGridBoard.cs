@@ -32,7 +32,7 @@ public struct IndexedGridBoard : IDisposable
 
     public IndexedGridBoard(ValueGridShape<int> containerShape, Allocator allocator = Allocator.Persistent)
     {
-        if (containerShape.IsEmpty) throw new ArgumentException(nameof(containerShape));
+        if (containerShape.IsEmpty()) throw new ArgumentException(nameof(containerShape));
         _grid = containerShape.Clone(allocator);
         _initializedGrid = _grid.Clone(allocator);
         _items = new NativeList<ItemSlot>(allocator);
@@ -97,7 +97,7 @@ public struct IndexedGridBoard : IDisposable
 
     public int TryAddItemAt(ImmutableGridShape shape, GridPosition pos)
     {
-        if (CanPlaceItem(shape, pos))
+        if (_grid.CanPlaceItem(shape, pos))
         {
             return AddItemAt(shape, pos);
         }
@@ -173,15 +173,6 @@ public struct IndexedGridBoard : IDisposable
         clone._items.CopyFrom(_items);
         clone._freeIndices.CopyFrom(_freeIndices);
         return clone;
-    }
-
-    private bool CanPlaceItem(ImmutableGridShape item, GridPosition pos)
-    {
-        var grid = _grid.AsReadOnly();
-        if (!grid.IsWithinBounds(item, pos))
-            return false;
-
-        return grid.CheckShapeCells(item, pos, (_, value) => value == -1);
     }
 
     public static implicit operator ReadOnly(IndexedGridBoard board) => board.AsReadOnly();

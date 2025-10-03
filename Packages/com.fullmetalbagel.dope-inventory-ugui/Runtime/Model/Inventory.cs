@@ -52,7 +52,7 @@ public struct Inventory : INativeDisposable
     public void Clear()
     {
         _grid.Clear();
-        _grid.Fill(-1);
+        _grid.FillAll(-1);
         _items.Clear();
         _freeIndices.Clear();
         _itemCount = 0;

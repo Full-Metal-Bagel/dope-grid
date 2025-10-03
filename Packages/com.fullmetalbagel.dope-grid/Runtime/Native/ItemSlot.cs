@@ -5,5 +5,5 @@ internal readonly record struct ItemSlot(ImmutableGridShape Shape, GridPosition 
     public static readonly ItemSlot Invalid = new(ImmutableGridShape.Empty, GridPosition.Invalid);
     public ImmutableGridShape Shape { get; } = Shape;
     public GridPosition Position { get; } = Position;
-    public bool IsValid => Position.IsValid || !Shape.IsEmpty;
+    public bool IsValid => Position.IsValid || !Shape.IsEmpty();
 }

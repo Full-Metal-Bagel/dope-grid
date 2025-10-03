@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace DopeGrid.Native;
 
-public readonly record struct ImmutableGridShape(int Id)
+public readonly record struct ImmutableGridShape(int Id) : IReadOnlyGridShape
 {
     private ImmutableGridShape2DList.Shapes Shapes => ImmutableGridShape2DList.s_shapes.Value;
     public static ImmutableGridShape Empty => new(0);
@@ -15,20 +15,19 @@ public readonly record struct ImmutableGridShape(int Id)
     public (int width, int height) Bound => Shapes.Bounds[Id];
     public int Width => Bound.width;
     public int Height => Bound.height;
-    public int Size => Width * Height;
+
     public ReadOnlySpanBitArray Pattern => Shapes.GetPattern(Id);
-    public int OccupiedSpaceCount => Pattern.CountBits(0, Size);
-    public int FreeSpaceCount => Size - OccupiedSpaceCount;
-    public bool IsEmpty => Width == 0 || Height == 0;
+    public int OccupiedSpaceCount => Pattern.CountBits(0, this.Size());
+    public int FreeSpaceCount => this.Size() - OccupiedSpaceCount;
+
+    public bool IsFreeCell(GridPosition pos) => !this[pos];
+
+    public bool this[GridPosition pos] => this.GetCellValue(pos);
+    public bool this[int x, int y] => this.GetCellValue(x, y);
+    public bool this[int index] => Pattern.Get(index);
 
     public ImmutableGridShape Rotate90(Allocator allocator = Allocator.Temp) => new(Shapes.GetOrCreateRotated90(Id, allocator));
     public ImmutableGridShape Flip(Allocator allocator = Allocator.Temp) => new(Shapes.GetOrCreateFlipped(Id, allocator));
-
-    public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-    public int GetIndex(int x, int y) => y * Width + x;
-
-    public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
-    public bool GetCell(int x, int y) => Pattern.Get(GetIndex(x, y));
 
     public static explicit operator GridShape.ReadOnly(ImmutableGridShape shape) => shape.ToReadOnlyGridShape();
     public GridShape.ReadOnly ToReadOnlyGridShape() => new(Width, Height, Pattern);
@@ -174,7 +173,7 @@ public static class ImmutableGridShape2DList
                 _patternBegins.Add(patternBegin);
 
                 // Calculate the actual size in bytes of the bit array
-                var sizeInBytes = (shape.Size + 7) / 8; // Convert bits to bytes
+                var sizeInBytes = (shape.Size() + 7) / 8; // Convert bits to bytes
                 var ulongCount = (sizeInBytes + sizeof(ulong) - 1) / sizeof(ulong); // Round up to ulong boundary
 
                 // Resize patterns array to accommodate new data

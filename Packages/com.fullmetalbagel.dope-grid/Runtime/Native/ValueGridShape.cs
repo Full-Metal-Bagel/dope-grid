@@ -10,8 +10,7 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
 {
     public int Width { get; }
     public int Height { get; }
-    public readonly int Size => Width * Height;
-    public readonly bool IsEmpty => Width == 0 || Height == 0;
+
     public bool IsCreated => _values.IsCreated;
     private NativeArray<T> _values;
     public NativeArray<T> Values => _values;
@@ -28,31 +27,31 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
         Width = width;
         Height = height;
         _values = new NativeArray<T>(width * height, allocator, NativeArrayOptions.UninitializedMemory);
-        Fill(defaultValue);
+        FillAll(defaultValue);
     }
 
-    public readonly int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-    public readonly int GetIndex(int x, int y) => y * Width + x;
-
-    public readonly T GetValue(GridPosition pos) => GetValue(pos.X, pos.Y);
-    public readonly T GetValue(int x, int y) => _values[GetIndex(x, y)];
-
     public void SetValue(GridPosition pos, T value) => SetValue(pos.X, pos.Y, value);
-    public void SetValue(int x, int y, T value) => _values[GetIndex(x, y)] = value;
+    public void SetValue(int x, int y, T value) => _values[this.GetIndex(x, y)] = value;
 
     public T this[int x, int y]
     {
-        readonly get => GetValue(x, y);
+        readonly get => this.GetCellValue(x, y);
         set => SetValue(x, y, value);
     }
 
     public T this[GridPosition pos]
     {
-        readonly get => GetValue(pos);
+        readonly get => this.GetCellValue(pos);
         set => SetValue(pos, value);
     }
 
-    public void Fill(T value)
+    public T this[int index]
+    {
+        readonly get => _values[index];
+        set => _values[index] = value;
+    }
+
+    public void FillAll(T value)
     {
         for (int i = 0; i < _values.Length; i++)
         {
@@ -83,11 +82,8 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
 
     public void Clear()
     {
-        Fill(default);
+        FillAll(default);
     }
-
-    public readonly bool Contains(GridPosition pos) => Contains(pos.X, pos.Y);
-    public readonly bool Contains(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
 
     public readonly ValueGridShape<T> Clone(Allocator allocator) => ((ReadOnly)this).Clone(allocator);
     public readonly void CopyTo(ValueGridShape<T> other) => ((ReadOnly)this).CopyTo(other);
@@ -104,15 +100,10 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
         {
             for (int x = 0; x < Width; x++)
             {
-                SetValue(x, y, shape.GetCell(x, y) ? trueValue : falseValue);
+                SetValue(x, y, shape.GetCellValue(x, y) ? trueValue : falseValue);
             }
         }
     }
-
-    public readonly int CountValue(T value) => ((ReadOnly)this).CountValue(value);
-    public readonly int CountWhere(Func<T, bool> predicate) => ((ReadOnly)this).CountWhere(predicate);
-    public readonly bool Any(Func<T, bool> predicate) => ((ReadOnly)this).Any(predicate);
-    public readonly bool All(Func<T, bool> predicate) => ((ReadOnly)this).All(predicate);
 
     public void Dispose()
     {
@@ -150,8 +141,6 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
     {
         public int Width { get; }
         public int Height { get; }
-        public int Size => Width * Height;
-        public bool IsEmpty => Width == 0 || Height == 0;
         public readonly NativeArray<T>.ReadOnly Values;
 
         internal ReadOnly(int width, int height, NativeArray<T>.ReadOnly values)
@@ -161,17 +150,9 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
             Values = values;
         }
 
-        public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-        public int GetIndex(int x, int y) => y * Width + x;
-
-        public T GetValue(GridPosition pos) => GetValue(pos.X, pos.Y);
-        public T GetValue(int x, int y) => Values[GetIndex(x, y)];
-
-        public T this[int x, int y] => GetValue(x, y);
-        public T this[GridPosition pos] => GetValue(pos);
-
-        public bool Contains(GridPosition pos) => Contains(pos.X, pos.Y);
-        public bool Contains(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
+        public T this[int x, int y] => this[this.GetIndex(x, y)];
+        public T this[GridPosition pos] => this[pos.X, pos.Y];
+        public T this[int index] => Values[index];
 
         public ValueGridShape<T> Clone(Allocator allocator)
         {
@@ -204,61 +185,10 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    shape.SetCell(x, y, predicate(GetValue(x, y), data));
+                    shape.SetCell(x, y, predicate(this[x, y], data));
                 }
             }
             return shape;
-        }
-
-        public int CountValue(T target)
-        {
-            return Count((v, t) => EqualityComparer<T>.Default.Equals(v, t), target);
-        }
-
-        public int CountWhere(Func<T, bool> predicate)
-        {
-            return Count((value, p) => p(value), predicate);
-        }
-
-        public int Count<TCaptureData>(Func<T, TCaptureData, bool> predicate, TCaptureData data)
-        {
-            int count = 0;
-            for (int i = 0; i < Values.Length; i++)
-            {
-                if (predicate(Values[i], data))
-                    count++;
-            }
-            return count;
-        }
-
-        public bool Any(Func<T, bool> predicate)
-        {
-            return Any((v, p) => p(v), predicate);
-        }
-
-        public bool Any<TCaptureData>(Func<T, TCaptureData, bool> predicate, TCaptureData data)
-        {
-            foreach (var t in Values)
-            {
-                if (predicate(t, data))
-                    return true;
-            }
-            return false;
-        }
-
-        public bool All(Func<T, bool> predicate)
-        {
-            return All((v, p) => p(v), predicate);
-        }
-
-        public bool All<TCaptureData>(Func<T, TCaptureData, bool> predicate, TCaptureData data)
-        {
-            foreach (var t in Values)
-            {
-                if (!predicate(t, data))
-                    return false;
-            }
-            return true;
         }
 
         public bool Equals(ReadOnly other)

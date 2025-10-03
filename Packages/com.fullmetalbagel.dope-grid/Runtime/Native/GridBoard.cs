@@ -32,7 +32,7 @@ public struct GridBoard : IDisposable
 
     public GridBoard(GridShape containerShape, Allocator allocator = Allocator.Persistent)
     {
-        if (containerShape.IsEmpty) throw new ArgumentException(nameof(containerShape));
+        if (containerShape.IsEmpty()) throw new ArgumentException(nameof(containerShape));
         _grid = containerShape.Clone(allocator);
         _initializedGrid = _grid.Clone(allocator);
         _items = new NativeList<ItemSlot>(allocator);
@@ -56,7 +56,7 @@ public struct GridBoard : IDisposable
 
     public bool IsCellOccupied(GridPosition pos)
     {
-        return _grid.GetCell(pos);
+        return _grid.GetCellValue(pos);
     }
 
     public (int index, RotationDegree rotation) TryAddItem(ImmutableGridShape item)
@@ -186,7 +186,7 @@ public struct GridBoard : IDisposable
 
         public bool IsCellOccupied(GridPosition pos)
         {
-            return _grid.GetCell(pos);
+            return _grid.GetCellValue(pos);
         }
     }
 }
