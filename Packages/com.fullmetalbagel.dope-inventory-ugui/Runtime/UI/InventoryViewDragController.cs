@@ -109,15 +109,15 @@ internal sealed class InventoryViewDragController : IDisposable
                 else
                 {
                     // Cross-inventory move - get item, remove from source, add to target
-                    // var item = sourceInventory.GetItemByInstanceId(_draggingItem.InstanceId);
-                    // if (item.IsValid)
-                    // {
-                    //     var newItem = new InventoryItem(_draggingItem.InstanceId, item.Definition, _draggingItem.Rotation, targetPos);
-                    //     if (targetInventory.TryPlaceItem(newItem))
-                    //     {
-                    //         sourceInventory.RemoveItem(_draggingItem.InstanceId);
-                    //     }
-                    // }
+                    var item = sourceInventory.GetItemByInstanceId(_draggingItem.InstanceId);
+                    if (item.IsValid)
+                    {
+                        var newItem = new InventoryItem(_draggingItem.InstanceId, item.Definition, _draggingItem.Rotation, targetPos);
+                        if (targetInventory.TryPlaceItem(newItem))
+                        {
+                            sourceInventory.RemoveItem(_draggingItem.InstanceId);
+                        }
+                    }
                 }
             }
 
