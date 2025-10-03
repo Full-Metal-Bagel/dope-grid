@@ -36,25 +36,13 @@ public readonly ref struct ReadOnlySpanBitArray
         if (bitCount == 0)
             return 0;
 
-        var byteIndex = index >> 3;
-        var bitOffset = index & 7;
-        var remaining = bitCount;
-        var shift = 0;
         ulong value = 0;
-
-        while (remaining > 0)
+        IterateBitRange(index, bitCount, ref value, static (ref ulong state, byte byteValue, byte mask, int offset, int shift) =>
         {
-            var bitsAvailable = Math.Min(SpanBitArrayUtility.BitsPerByte - bitOffset, remaining);
-            var mask = (byte)((1 << bitsAvailable) - 1);
-            var chunk = (byte)((Bytes[byteIndex] >> bitOffset) & mask);
-            value |= (ulong)chunk << shift;
-
-            remaining -= bitsAvailable;
-            shift += bitsAvailable;
-            byteIndex++;
-            bitOffset = 0;
-        }
-
+            var chunk = (byte)((byteValue >> offset) & (mask >> offset));
+            state |= (ulong)chunk << shift;
+            return true;
+        });
         return value;
     }
 
@@ -64,23 +52,17 @@ public readonly ref struct ReadOnlySpanBitArray
         if (bitCount == 0)
             return false;
 
-        var byteIndex = index >> 3;
-        var bitOffset = index & 7;
-        var remaining = bitCount;
-
-        while (remaining > 0)
+        var result = false;
+        IterateBitRange(index, bitCount, ref result, static (ref bool state, byte byteValue, byte mask, int offset, int _) =>
         {
-            var bits = Math.Min(SpanBitArrayUtility.BitsPerByte - bitOffset, remaining);
-            var mask = (byte)(((1 << bits) - 1) << bitOffset);
-            if ((Bytes[byteIndex] & mask) != 0)
-                return true;
-
-            remaining -= bits;
-            byteIndex++;
-            bitOffset = 0;
-        }
-
-        return false;
+            if ((byteValue & mask) != 0)
+            {
+                state = true;
+                return false; // Early exit
+            }
+            return true;
+        });
+        return result;
     }
 
     public bool TestAll(int index, int bitCount)
@@ -89,23 +71,17 @@ public readonly ref struct ReadOnlySpanBitArray
         if (bitCount == 0)
             return true;
 
-        var byteIndex = index >> 3;
-        var bitOffset = index & 7;
-        var remaining = bitCount;
-
-        while (remaining > 0)
+        var result = true;
+        IterateBitRange(index, bitCount, ref result, static (ref bool state, byte byteValue, byte mask, int offset, int _) =>
         {
-            var bits = Math.Min(SpanBitArrayUtility.BitsPerByte - bitOffset, remaining);
-            var mask = (byte)(((1 << bits) - 1) << bitOffset);
-            if ((Bytes[byteIndex] & mask) != mask)
-                return false;
-
-            remaining -= bits;
-            byteIndex++;
-            bitOffset = 0;
-        }
-
-        return true;
+            if ((byteValue & mask) != mask)
+            {
+                state = false;
+                return false; // Early exit
+            }
+            return true;
+        });
+        return result;
     }
 
     public int CountBits(int index, int bitCount)
@@ -114,23 +90,13 @@ public readonly ref struct ReadOnlySpanBitArray
         if (bitCount == 0)
             return 0;
 
-        var byteIndex = index >> 3;
-        var bitOffset = index & 7;
-        var remaining = bitCount;
         var total = 0;
-
-        while (remaining > 0)
+        IterateBitRange(index, bitCount, ref total, static (ref int state, byte byteValue, byte mask, int offset, int _) =>
         {
-            var bits = Math.Min(SpanBitArrayUtility.BitsPerByte - bitOffset, remaining);
-            var mask = (byte)(((1 << bits) - 1) << bitOffset);
-            var data = (Bytes[byteIndex] & mask) >> bitOffset;
-            total += SpanBitArrayUtility.PopCount((ulong)data);
-
-            remaining -= bits;
-            byteIndex++;
-            bitOffset = 0;
-        }
-
+            var data = (byteValue & mask) >> offset;
+            state += SpanBitArrayUtility.PopCount((ulong)data);
+            return true;
+        });
         return total;
     }
 
@@ -228,5 +194,29 @@ public readonly ref struct ReadOnlySpanBitArray
         // Copy any remaining bits with bit-level helper
         var tail = GetBits(srcIndex, bitsLeft);
         other.SetBits(dstIndex, tail, bitsLeft);
+    }
+
+    private delegate bool BitRangeIterator<TState>(ref TState state, byte byteValue, byte mask, int bitOffset, int shift);
+
+    private void IterateBitRange<TState>(int index, int bitCount, ref TState state, BitRangeIterator<TState> action)
+    {
+        var byteIndex = index >> 3;
+        var bitOffset = index & 7;
+        var remaining = bitCount;
+        var shift = 0;
+
+        while (remaining > 0)
+        {
+            var bits = Math.Min(SpanBitArrayUtility.BitsPerByte - bitOffset, remaining);
+            var mask = (byte)(((1 << bits) - 1) << bitOffset);
+
+            if (!action(ref state, Bytes[byteIndex], mask, bitOffset, shift))
+                return;
+
+            remaining -= bits;
+            shift += bits;
+            byteIndex++;
+            bitOffset = 0;
+        }
     }
 }

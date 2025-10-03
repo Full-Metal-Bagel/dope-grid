@@ -134,18 +134,25 @@ public class ImmutableShapeFactoryTests
         var immutableCross = Shapes.ImmutableCross();
 
         // Convert to mutable GridShape
-        using var mutableShape = new GridShape(3, 3, Allocator.Temp);
-        immutableCross.CopyTo(mutableShape);
+        var mutableShape = new GridShape(3, 3, Allocator.Temp);
+        try
+        {
+            immutableCross.CopyTo(mutableShape);
 
-        // Verify the pattern was copied correctly
-        Assert.IsFalse(mutableShape.GetCell(0, 0));
-        Assert.IsTrue(mutableShape.GetCell(1, 0));
-        Assert.IsFalse(mutableShape.GetCell(2, 0));
-        Assert.IsTrue(mutableShape.GetCell(0, 1));
-        Assert.IsTrue(mutableShape.GetCell(1, 1));
-        Assert.IsTrue(mutableShape.GetCell(2, 1));
-        Assert.IsFalse(mutableShape.GetCell(0, 2));
-        Assert.IsTrue(mutableShape.GetCell(1, 2));
-        Assert.IsFalse(mutableShape.GetCell(2, 2));
+            // Verify the pattern was copied correctly
+            Assert.IsFalse(mutableShape.GetCellValue(0, 0));
+            Assert.IsTrue(mutableShape.GetCellValue(1, 0));
+            Assert.IsFalse(mutableShape.GetCellValue(2, 0));
+            Assert.IsTrue(mutableShape.GetCellValue(0, 1));
+            Assert.IsTrue(mutableShape.GetCellValue(1, 1));
+            Assert.IsTrue(mutableShape.GetCellValue(2, 1));
+            Assert.IsFalse(mutableShape.GetCellValue(0, 2));
+            Assert.IsTrue(mutableShape.GetCellValue(1, 2));
+            Assert.IsFalse(mutableShape.GetCellValue(2, 2));
+        }
+        finally
+        {
+            mutableShape.Dispose();
+        }
     }
 }

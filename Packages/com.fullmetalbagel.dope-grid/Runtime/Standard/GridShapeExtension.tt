@@ -1,0 +1,49 @@
+<#@ template language="C#" #>
+<#@ include file="../Core/GridShapeExtension.ttinclude" #>
+
+namespace DopeGrid.Standard;
+
+internal static class math
+{
+    public static int min(int a, int b) => System.Math.Min(a, b);
+    public static int max(int a, int b) => System.Math.Max(a, b);
+    public static int tzcnt(ulong value)
+    {
+        if (value == 0) return 64;
+        int count = 0;
+        while ((value & 1) == 0)
+        {
+            value >>= 1;
+            count++;
+        }
+        return count;
+    }
+    public static int lzcnt(ulong value)
+    {
+        if (value == 0) return 64;
+        int count = 0;
+        while ((value & (1UL << 63)) == 0)
+        {
+            value <<= 1;
+            count++;
+        }
+        return count;
+    }
+}
+
+<#
+    MakeExtensionForReadOnlyGridShape(
+        ("ref GridShape", "bool"),
+        ("in GridShape.ReadOnly", "bool"),
+        ("ref ValueGridShape<T>", "T where T : System.IEquatable<T>"),
+        ("in ValueGridShape<T>.ReadOnly", "T where T : System.IEquatable<T>"),
+        ("in ImmutableGridShape", "bool")
+    );
+
+    MakeExtensionForWritableGridShape(
+        ("ref GridShape", "bool"),
+        ("ref ValueGridShape<T>", "T where T : System.IEquatable<T>")
+    );
+
+    MakeExtensionForShapes();
+#>

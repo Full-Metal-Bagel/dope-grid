@@ -32,60 +32,28 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable whe
         Array.Fill(_values, defaultValue, 0, width * height);
     }
 
-    public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-    public int GetIndex(int x, int y) => y * Width + x;
-
-    public T GetValue(GridPosition pos) => GetValue(pos.X, pos.Y);
-    public T GetValue(int x, int y) => Values[GetIndex(x, y)];
-
-    public void SetValue(GridPosition pos, T value) => SetValue(pos.X, pos.Y, value);
-    public void SetValue(int x, int y, T value) => Values[GetIndex(x, y)] = value;
-
     public T this[int x, int y]
     {
-        get => GetValue(x, y);
-        set => SetValue(x, y, value);
+        get => this.GetCellValue(x, y);
+        set => this.SetCellValue(x, y, value);
     }
 
     public T this[GridPosition pos]
     {
-        get => GetValue(pos);
-        set => SetValue(pos, value);
+        get => this.GetCellValue(pos);
+        set => this.SetCellValue(pos, value);
     }
 
-    public void Fill(T value)
+    public T this[int index]
+    {
+        get => Values[index];
+        set => Values[index] = value;
+    }
+
+    public void FillAll(T value)
     {
         Values.Fill(value);
     }
-
-    public void FillRect(int x, int y, int width, int height, T value)
-    {
-        for (int dy = 0; dy < height; dy++)
-        {
-            for (int dx = 0; dx < width; dx++)
-            {
-                var px = x + dx;
-                var py = y + dy;
-                if (px >= 0 && px < Width && py >= 0 && py < Height)
-                {
-                    SetValue(px, py, value);
-                }
-            }
-        }
-    }
-
-    public void FillRect(GridPosition pos, (int width, int height) size, T value)
-    {
-        FillRect(pos.X, pos.Y, size.width, size.height, value);
-    }
-
-    public void Clear()
-    {
-        Fill(default!);
-    }
-
-    public bool Contains(GridPosition pos) => Contains(pos.X, pos.Y);
-    public bool Contains(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
 
     public ValueGridShape<T> Clone() => AsReadOnly().Clone();
     public void CopyTo(ValueGridShape<T> other) => AsReadOnly().CopyTo(other);
@@ -102,15 +70,10 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable whe
         {
             for (int x = 0; x < Width; x++)
             {
-                SetValue(x, y, shape.GetCell(x, y) ? trueValue : falseValue);
+                this[x, y] = shape[x, y] ? trueValue : falseValue;
             }
         }
     }
-
-    public int CountValue(T value) => AsReadOnly().CountValue(value);
-    public int CountWhere(Func<T, bool> predicate) => AsReadOnly().CountWhere(predicate);
-    public bool Any(Func<T, bool> predicate) => AsReadOnly().Any(predicate);
-    public bool All(Func<T, bool> predicate) => AsReadOnly().All(predicate);
 
     public void Dispose()
     {
@@ -155,17 +118,9 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable whe
             _values = values;
         }
 
-        public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-        public int GetIndex(int x, int y) => y * Width + x;
-
-        public T GetValue(GridPosition pos) => GetValue(pos.X, pos.Y);
-        public T GetValue(int x, int y) => _values[GetIndex(x, y)];
-
-        public T this[int x, int y] => GetValue(x, y);
-        public T this[GridPosition pos] => GetValue(pos);
-
-        public bool Contains(GridPosition pos) => Contains(pos.X, pos.Y);
-        public bool Contains(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
+        public T this[int x, int y] => this.GetCellValue(x, y);
+        public T this[GridPosition pos] => this.GetCellValue(pos);
+        public T this[int index] => _values[index];
 
         public ValueGridShape<T> Clone()
         {
@@ -198,61 +153,10 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, IDisposable whe
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    shape.SetCell(x, y, predicate(GetValue(x, y), data));
+                    shape[x, y] = predicate(this[x, y], data);
                 }
             }
             return shape;
-        }
-
-        public int CountValue(T target)
-        {
-            return Count((v, t) => EqualityComparer<T>.Default.Equals(v, t), target);
-        }
-
-        public int CountWhere(Func<T, bool> predicate)
-        {
-            return Count((value, p) => p(value), predicate);
-        }
-
-        public int Count<TCaptureData>(Func<T, TCaptureData, bool> predicate, TCaptureData data)
-        {
-            int count = 0;
-            for (int i = 0; i < _values.Length; i++)
-            {
-                if (predicate(_values[i], data))
-                    count++;
-            }
-            return count;
-        }
-
-        public bool Any(Func<T, bool> predicate)
-        {
-            return Any((v, p) => p(v), predicate);
-        }
-
-        public bool Any<TCaptureData>(Func<T, TCaptureData, bool> predicate, TCaptureData data)
-        {
-            foreach (var t in _values)
-            {
-                if (predicate(t, data))
-                    return true;
-            }
-            return false;
-        }
-
-        public bool All(Func<T, bool> predicate)
-        {
-            return All((v, p) => p(v), predicate);
-        }
-
-        public bool All<TCaptureData>(Func<T, TCaptureData, bool> predicate, TCaptureData data)
-        {
-            foreach (var t in _values)
-            {
-                if (!predicate(t, data))
-                    return false;
-            }
-            return true;
         }
 
         public bool Equals(ReadOnly other)

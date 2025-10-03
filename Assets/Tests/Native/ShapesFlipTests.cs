@@ -3,7 +3,6 @@ using DopeGrid;
 using DopeGrid.Native;
 using NUnit.Framework;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 
 public class ShapesFlipTests
 {
@@ -11,12 +10,12 @@ public class ShapesFlipTests
     public void FlipHorizontal_SingleCell_MovesToOpposite()
     {
         var shape = new GridShape(3, 3, Allocator.Temp);
-        shape.SetCell(0, 1, true); // Left middle
+        shape.SetCellValue(0, 1, true); // Left middle
 
         var flipped = shape.Flip(FlipAxis.Horizontal, Allocator.Temp);
 
-        Assert.IsFalse(flipped.GetCell(0, 1));
-        Assert.IsTrue(flipped.GetCell(2, 1)); // Right middle
+        Assert.IsFalse(flipped.GetCellValue(0, 1));
+        Assert.IsTrue(flipped.GetCellValue(2, 1)); // Right middle
 
         shape.Dispose();
         flipped.Dispose();
@@ -26,12 +25,12 @@ public class ShapesFlipTests
     public void FlipVertical_SingleCell_MovesToOpposite()
     {
         var shape = new GridShape(3, 3, Allocator.Temp);
-        shape.SetCell(1, 0, true); // Top middle
+        shape.SetCellValue(1, 0, true); // Top middle
 
         var flipped = shape.Flip(FlipAxis.Vertical, Allocator.Temp);
 
-        Assert.IsFalse(flipped.GetCell(1, 0));
-        Assert.IsTrue(flipped.GetCell(1, 2)); // Bottom middle
+        Assert.IsFalse(flipped.GetCellValue(1, 0));
+        Assert.IsTrue(flipped.GetCellValue(1, 2)); // Bottom middle
 
         shape.Dispose();
         flipped.Dispose();
@@ -42,16 +41,16 @@ public class ShapesFlipTests
     {
         var shape = new GridShape(3, 3, Allocator.Temp);
         // Create vertical line in middle
-        shape.SetCell(1, 0, true);
-        shape.SetCell(1, 1, true);
-        shape.SetCell(1, 2, true);
+        shape.SetCellValue(1, 0, true);
+        shape.SetCellValue(1, 1, true);
+        shape.SetCellValue(1, 2, true);
 
         var flipped = shape.Flip(FlipAxis.Horizontal, Allocator.Temp);
 
         // Middle column should stay the same
-        Assert.IsTrue(flipped.GetCell(1, 0));
-        Assert.IsTrue(flipped.GetCell(1, 1));
-        Assert.IsTrue(flipped.GetCell(1, 2));
+        Assert.IsTrue(flipped.GetCellValue(1, 0));
+        Assert.IsTrue(flipped.GetCellValue(1, 1));
+        Assert.IsTrue(flipped.GetCellValue(1, 2));
 
         shape.Dispose();
         flipped.Dispose();
@@ -62,16 +61,16 @@ public class ShapesFlipTests
     {
         var shape = new GridShape(3, 3, Allocator.Temp);
         // Create horizontal line in middle
-        shape.SetCell(0, 1, true);
-        shape.SetCell(1, 1, true);
-        shape.SetCell(2, 1, true);
+        shape.SetCellValue(0, 1, true);
+        shape.SetCellValue(1, 1, true);
+        shape.SetCellValue(2, 1, true);
 
         var flipped = shape.Flip(FlipAxis.Vertical, Allocator.Temp);
 
         // Middle row should stay the same
-        Assert.IsTrue(flipped.GetCell(0, 1));
-        Assert.IsTrue(flipped.GetCell(1, 1));
-        Assert.IsTrue(flipped.GetCell(2, 1));
+        Assert.IsTrue(flipped.GetCellValue(0, 1));
+        Assert.IsTrue(flipped.GetCellValue(1, 1));
+        Assert.IsTrue(flipped.GetCellValue(2, 1));
 
         shape.Dispose();
         flipped.Dispose();
@@ -82,26 +81,26 @@ public class ShapesFlipTests
     {
         var shape = new GridShape(3, 3, Allocator.Temp);
         // Create L shape
-        shape.SetCell(0, 0, true);
-        shape.SetCell(0, 1, true);
-        shape.SetCell(0, 2, true);
-        shape.SetCell(1, 2, true);
-        shape.SetCell(2, 2, true);
+        shape.SetCellValue(0, 0, true);
+        shape.SetCellValue(0, 1, true);
+        shape.SetCellValue(0, 2, true);
+        shape.SetCellValue(1, 2, true);
+        shape.SetCellValue(2, 2, true);
 
         var flipped = shape.Flip(FlipAxis.Horizontal, Allocator.Temp);
 
         // Should create mirrored L
-        Assert.IsTrue(flipped.GetCell(2, 0));
-        Assert.IsTrue(flipped.GetCell(2, 1));
-        Assert.IsTrue(flipped.GetCell(2, 2));
-        Assert.IsTrue(flipped.GetCell(1, 2));
-        Assert.IsTrue(flipped.GetCell(0, 2));
+        Assert.IsTrue(flipped.GetCellValue(2, 0));
+        Assert.IsTrue(flipped.GetCellValue(2, 1));
+        Assert.IsTrue(flipped.GetCellValue(2, 2));
+        Assert.IsTrue(flipped.GetCellValue(1, 2));
+        Assert.IsTrue(flipped.GetCellValue(0, 2));
 
         // Check empty cells
-        Assert.IsFalse(flipped.GetCell(0, 0));
-        Assert.IsFalse(flipped.GetCell(0, 1));
-        Assert.IsFalse(flipped.GetCell(1, 0));
-        Assert.IsFalse(flipped.GetCell(1, 1));
+        Assert.IsFalse(flipped.GetCellValue(0, 0));
+        Assert.IsFalse(flipped.GetCellValue(0, 1));
+        Assert.IsFalse(flipped.GetCellValue(1, 0));
+        Assert.IsFalse(flipped.GetCellValue(1, 1));
 
         shape.Dispose();
         flipped.Dispose();
@@ -112,26 +111,26 @@ public class ShapesFlipTests
     {
         var shape = new GridShape(3, 3, Allocator.Temp);
         // Create T shape
-        shape.SetCell(0, 0, true);
-        shape.SetCell(1, 0, true);
-        shape.SetCell(2, 0, true);
-        shape.SetCell(1, 1, true);
-        shape.SetCell(1, 2, true);
+        shape.SetCellValue(0, 0, true);
+        shape.SetCellValue(1, 0, true);
+        shape.SetCellValue(2, 0, true);
+        shape.SetCellValue(1, 1, true);
+        shape.SetCellValue(1, 2, true);
 
         var flipped = shape.Flip(FlipAxis.Vertical, Allocator.Temp);
 
         // Should create inverted T
-        Assert.IsTrue(flipped.GetCell(0, 2));
-        Assert.IsTrue(flipped.GetCell(1, 2));
-        Assert.IsTrue(flipped.GetCell(2, 2));
-        Assert.IsTrue(flipped.GetCell(1, 1));
-        Assert.IsTrue(flipped.GetCell(1, 0));
+        Assert.IsTrue(flipped.GetCellValue(0, 2));
+        Assert.IsTrue(flipped.GetCellValue(1, 2));
+        Assert.IsTrue(flipped.GetCellValue(2, 2));
+        Assert.IsTrue(flipped.GetCellValue(1, 1));
+        Assert.IsTrue(flipped.GetCellValue(1, 0));
 
         // Check empty cells
-        Assert.IsFalse(flipped.GetCell(0, 0));
-        Assert.IsFalse(flipped.GetCell(2, 0));
-        Assert.IsFalse(flipped.GetCell(0, 1));
-        Assert.IsFalse(flipped.GetCell(2, 1));
+        Assert.IsFalse(flipped.GetCellValue(0, 0));
+        Assert.IsFalse(flipped.GetCellValue(2, 0));
+        Assert.IsFalse(flipped.GetCellValue(0, 1));
+        Assert.IsFalse(flipped.GetCellValue(2, 1));
 
         shape.Dispose();
         flipped.Dispose();
@@ -142,16 +141,16 @@ public class ShapesFlipTests
     {
         var shape = new GridShape(3, 3, Allocator.Temp);
         // Create diagonal from top-left to bottom-right
-        shape.SetCell(0, 0, true);
-        shape.SetCell(1, 1, true);
-        shape.SetCell(2, 2, true);
+        shape.SetCellValue(0, 0, true);
+        shape.SetCellValue(1, 1, true);
+        shape.SetCellValue(2, 2, true);
 
         var flipped = shape.Flip(FlipAxis.Horizontal, Allocator.Temp);
 
         // Should create diagonal from top-right to bottom-left
-        Assert.IsTrue(flipped.GetCell(2, 0));
-        Assert.IsTrue(flipped.GetCell(1, 1));
-        Assert.IsTrue(flipped.GetCell(0, 2));
+        Assert.IsTrue(flipped.GetCellValue(2, 0));
+        Assert.IsTrue(flipped.GetCellValue(1, 1));
+        Assert.IsTrue(flipped.GetCellValue(0, 2));
 
         shape.Dispose();
         flipped.Dispose();
@@ -162,11 +161,11 @@ public class ShapesFlipTests
     {
         var shape = new GridShape(4, 4, Allocator.Temp);
         // Create an asymmetric pattern
-        shape.SetCell(0, 0, true);
-        shape.SetCell(1, 0, true);
-        shape.SetCell(0, 1, true);
-        shape.SetCell(2, 2, true);
-        shape.SetCell(3, 3, true);
+        shape.SetCellValue(0, 0, true);
+        shape.SetCellValue(1, 0, true);
+        shape.SetCellValue(0, 1, true);
+        shape.SetCellValue(2, 2, true);
+        shape.SetCellValue(3, 3, true);
 
         var flippedOnce = shape.Flip(FlipAxis.Horizontal, Allocator.Temp);
         var flippedTwice = flippedOnce.Flip(FlipAxis.Horizontal, Allocator.Temp);
@@ -174,7 +173,7 @@ public class ShapesFlipTests
         // Should be identical to original
         for (var y = 0; y < 4; y++)
         for (var x = 0; x < 4; x++)
-            Assert.AreEqual(shape.GetCell(x, y), flippedTwice.GetCell(x, y),
+            Assert.AreEqual(shape.GetCellValue(x, y), flippedTwice.GetCellValue(x, y),
                 $"Cell ({x},{y}) doesn't match");
 
         shape.Dispose();
@@ -186,16 +185,33 @@ public class ShapesFlipTests
     public void FlipBits_DirectMethod_WorksCorrectly()
     {
         var shape = new GridShape(3, 3, Allocator.Temp);
-        shape.SetCell(0, 0, true);
-        shape.SetCell(1, 1, true);
+        try
+        {
+            shape.SetCellValue(0, 0, true);
+            shape.SetCellValue(1, 1, true);
 
-        var output = new SpanBitArray(new byte[2].AsSpan(), 9);
-        var result = shape.AsReadOnly().FlipBits(FlipAxis.Horizontal, output);
+            var output = new SpanBitArray(new byte[2].AsSpan(), 9);
+            output.SetAll(false); // Ensure the buffer is clean
 
-        Assert.IsTrue(output.Get(2)); // (2, 0)
-        Assert.IsTrue(output.Get(4)); // (1, 1)
+            shape.AsReadOnly().FlipBits(FlipAxis.Horizontal, output);
 
-        shape.Dispose();
+            // Flipped cells
+            Assert.IsTrue(output.Get(2)); // (2, 0)
+            Assert.IsTrue(output.Get(4)); // (1, 1)
+
+            // Ensure other cells are false
+            Assert.IsFalse(output.Get(0));
+            Assert.IsFalse(output.Get(1));
+            Assert.IsFalse(output.Get(3));
+            Assert.IsFalse(output.Get(5));
+            Assert.IsFalse(output.Get(6));
+            Assert.IsFalse(output.Get(7));
+            Assert.IsFalse(output.Get(8));
+        }
+        finally
+        {
+            shape.Dispose();
+        }
     }
 
     [Test]
@@ -220,7 +236,7 @@ public class ShapesFlipTests
         var shape = new GridShape(3, 3, Allocator.Temp);
         for (var y = 0; y < 3; y++)
         for (var x = 0; x < 3; x++)
-            shape.SetCell(x, y, true);
+            shape.SetCellValue(x, y, true);
 
         var flippedH = shape.Flip(FlipAxis.Horizontal, Allocator.Temp);
         var flippedV = shape.Flip(FlipAxis.Vertical, Allocator.Temp);
@@ -237,15 +253,15 @@ public class ShapesFlipTests
     public void Flip_RectangularShape_MaintainsDimensions()
     {
         var shape = new GridShape(5, 3, Allocator.Temp);
-        shape.SetCell(0, 0, true);
-        shape.SetCell(4, 2, true);
+        shape.SetCellValue(0, 0, true);
+        shape.SetCellValue(4, 2, true);
 
         var flipped = shape.Flip(FlipAxis.Horizontal, Allocator.Temp);
 
         Assert.AreEqual(5, flipped.Width);
         Assert.AreEqual(3, flipped.Height);
-        Assert.IsTrue(flipped.GetCell(4, 0));
-        Assert.IsTrue(flipped.GetCell(0, 2));
+        Assert.IsTrue(flipped.GetCellValue(4, 0));
+        Assert.IsTrue(flipped.GetCellValue(0, 2));
 
         shape.Dispose();
         flipped.Dispose();

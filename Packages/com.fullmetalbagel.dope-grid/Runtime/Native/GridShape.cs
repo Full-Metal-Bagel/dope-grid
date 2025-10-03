@@ -5,7 +5,7 @@ using Unity.Jobs;
 
 namespace DopeGrid.Native;
 
-public struct GridShape : IEquatable<GridShape>, INativeDisposable
+public struct GridShape : IReadOnlyGridShape, IEquatable<GridShape>, INativeDisposable
 {
     public int Width { get; }
     public int Height { get; }
@@ -15,9 +15,8 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
     internal SpanBitArray Bits => new(_bits.AsSpan(), Size);
     private NativeArray<byte> _bits;
 
-    public readonly int OccupiedSpaceCount => ReadOnlyBits.CountBits(0, Size);
-    public readonly int FreeSpaceCount => Size - OccupiedSpaceCount;
-    public readonly bool IsEmpty => Width == 0 || Height == 0;
+    public readonly int OccupiedSpaceCount => ((ReadOnly)this).OccupiedSpaceCount;
+    public readonly int FreeSpaceCount => ((ReadOnly)this).FreeSpaceCount;
     public bool IsCreated => _bits.IsCreated;
 
     public GridShape(int width, int height, Allocator allocator)
@@ -28,53 +27,27 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
         _bits = new NativeArray<byte>(SpanBitArrayUtility.ByteCount(bitLength), allocator, NativeArrayOptions.ClearMemory);
     }
 
-    public readonly int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-    public readonly int GetIndex(int x, int y) => y * Width + x;
-
-    public readonly bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
-    public readonly bool GetCell(int x, int y) => ReadOnlyBits.Get(GetIndex(x, y));
-
-    public void SetCell(GridPosition pos, bool value) => SetCell(pos.X, pos.Y, value);
-    public void SetCell(int x, int y, bool value) => Bits.Set(GetIndex(x, y), value);
-
     public bool this[int x, int y]
     {
-        readonly get => GetCell(x, y);
-        set => SetCell(x, y, value);
+        get => this.GetCellValue(x, y);
+        set => this.SetCellValue(x, y, value);
     }
 
     public bool this[GridPosition pos]
     {
-        readonly get => GetCell(pos);
-        set => SetCell(pos, value);
+        get => this.GetCellValue(pos);
+        set => this.SetCellValue(pos, value);
     }
 
-    public GridShape Fill(bool value)
+    public bool this[int index]
+    {
+        readonly get => ReadOnlyBits.Get(index);
+        set => Bits.Set(index, value);
+    }
+
+    public void FillAll(bool value)
     {
         Bits.SetAll(value);
-        return this;
-    }
-
-    public GridShape FillRect(int x, int y, int width, int height, bool value = true)
-    {
-        for (int dy = 0; dy < height; dy++)
-        {
-            for (int dx = 0; dx < width; dx++)
-            {
-                var px = x + dx;
-                var py = y + dy;
-                if (px >= 0 && px < Width && py >= 0 && py < Height)
-                {
-                    SetCell(px, py, value);
-                }
-            }
-        }
-        return this;
-    }
-
-    public GridShape FillRect(GridPosition pos, int width, int height, bool value = true)
-    {
-        return FillRect(pos.X, pos.Y, width, height, value);
     }
 
     public void Clear()
@@ -119,9 +92,8 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
         public int Height { get; }
         public ReadOnlySpanBitArray Bits { get; }
 
-        public int Size => Width * Height;
-        public int OccupiedSpaceCount => Bits.CountBits(0, Size);
-        public int FreeSpaceCount => Size - OccupiedSpaceCount;
+        public int OccupiedSpaceCount => Bits.CountBits(0, Bits.BitLength);
+        public int FreeSpaceCount => this.Size() - OccupiedSpaceCount;
 
         internal ReadOnly(int width, int height, ReadOnlySpanBitArray bits)
         {
@@ -130,11 +102,9 @@ public struct GridShape : IEquatable<GridShape>, INativeDisposable
             Bits = bits;
         }
 
-        public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-        public int GetIndex(int x, int y) => y * Width + x;
-
-        public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
-        public bool GetCell(int x, int y) => Bits.Get(GetIndex(x, y));
+        public bool this[int x, int y] => this.GetCellValue(x, y);
+        public bool this[GridPosition pos] => this.GetCellValue(pos);
+        public bool this[int index] => Bits.Get(index);
 
         public GridShape Clone(Allocator allocator)
         {

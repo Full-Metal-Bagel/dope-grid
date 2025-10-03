@@ -1,0 +1,24 @@
+<#@ template language="C#" #>
+<#@ include file="../Core/GridShapeExtension.ttinclude" #>
+
+using Unity.Collections;
+using Unity.Mathematics;
+
+namespace DopeGrid.Native;
+
+<#
+    MakeExtensionForReadOnlyGridShape(
+        ("ref GridShape", "bool"),
+        ("in GridShape.ReadOnly", "bool"),
+        ("ref ValueGridShape<T>", "T where T : unmanaged, System.IEquatable<T>"),
+        ("in ValueGridShape<T>.ReadOnly", "T where T : unmanaged, System.IEquatable<T>"),
+        ("in ImmutableGridShape", "bool")
+    );
+
+    MakeExtensionForWritableGridShape(
+        ("ref GridShape", "bool"),
+        ("ref ValueGridShape<T>", "T where T : unmanaged, System.IEquatable<T>")
+    );
+
+    MakeExtensionForShapes();
+#>

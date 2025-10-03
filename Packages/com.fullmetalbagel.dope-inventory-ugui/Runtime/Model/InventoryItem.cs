@@ -1,6 +1,5 @@
 using System;
 using DopeGrid.Native;
-using Unity.Mathematics;
 
 namespace DopeGrid.Inventory;
 
@@ -13,7 +12,7 @@ public readonly record struct InventoryItemInstanceId(ulong Id)
     public static explicit operator InventoryItemInstanceId(ulong id) => new(id);
 }
 
-public readonly record struct InventoryItem(InventoryItemInstanceId InstanceId, ItemDefinition Definition, RotationDegree Rotation, int2 Position)
+public readonly record struct InventoryItem(InventoryItemInstanceId InstanceId, ItemDefinition Definition, RotationDegree Rotation, GridPosition Position)
 {
     public static InventoryItem Invalid => new(InventoryItemInstanceId.Invalid, default, RotationDegree.None, default);
 
@@ -25,5 +24,5 @@ public readonly record struct InventoryItem(InventoryItemInstanceId InstanceId, 
     public Guid DefinitionId => Definition.Id;
     public ImmutableGridShape Shape => Definition.Shape.GetRotatedShape(Rotation);
     public RotationDegree Rotation { get; } = Rotation;
-    public int2 Position { get; } = Position;
+    public GridPosition Position { get; } = Position;
 }

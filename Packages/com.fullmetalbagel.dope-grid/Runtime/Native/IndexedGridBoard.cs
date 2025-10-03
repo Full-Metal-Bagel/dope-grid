@@ -3,34 +3,34 @@ using Unity.Collections;
 
 namespace DopeGrid.Native;
 
-public struct GridBoard : IDisposable
+public struct IndexedGridBoard : IDisposable
 {
-    private GridShape _grid;
-    public GridShape.ReadOnly CurrentGrid => _grid;
+    private ValueGridShape<int> _grid; // Stores item index at each cell (-1 for empty)
+    public readonly ValueGridShape<int>.ReadOnly Grid => _grid;
 
-    private GridShape _initializedGrid;
-    public GridShape.ReadOnly InitializedGrid => _initializedGrid;
+    private ValueGridShape<int> _initializedGrid;
+    public readonly ValueGridShape<int>.ReadOnly InitializedGrid => _initializedGrid;
 
     private NativeList<ItemSlot> _items; // Stable array - indices never change
     private NativeList<int> _freeIndices; // Stack of freed item indices
     private int _itemCount;
 
-    public int Width => _initializedGrid.Width;
-    public int Height => _initializedGrid.Height;
+    public readonly int Width => _initializedGrid.Width;
+    public readonly int Height => _initializedGrid.Height;
 
-    public int ItemCount => _itemCount;
-    public int FreeSpace => _grid.FreeSpaceCount;
+    public readonly int ItemCount => _itemCount;
+    public readonly int FreeSpace => Grid.CountValue(-1);
 
-    public GridBoard(int width, int height, Allocator allocator = Allocator.Persistent)
+    public IndexedGridBoard(int width, int height, Allocator allocator = Allocator.Persistent)
     {
-        _grid = new GridShape(width, height, allocator);
+        _grid = new ValueGridShape<int>(width, height, -1, allocator);
         _initializedGrid = _grid.Clone(allocator);
         _items = new NativeList<ItemSlot>(allocator);
         _freeIndices = new NativeList<int>(allocator);
         _itemCount = 0;
     }
 
-    public GridBoard(GridShape containerShape, Allocator allocator = Allocator.Persistent)
+    public IndexedGridBoard(ValueGridShape<int> containerShape, Allocator allocator = Allocator.Persistent)
     {
         if (containerShape.IsEmpty()) throw new ArgumentException(nameof(containerShape));
         _grid = containerShape.Clone(allocator);
@@ -42,26 +42,32 @@ public struct GridBoard : IDisposable
 
     public ImmutableGridShape GetItemShape(int index)
     {
-        if (index < 0 || index >= _items.Length || !_items[index].IsValid)
+        if (index < 0 || index >= _items.Length)
             return ImmutableGridShape.Empty;
         return _items[index].Shape;
     }
 
     public GridPosition GetItemPosition(int index)
     {
-        if (index < 0 || index >= _items.Length || !_items[index].IsValid)
+        if (index < 0 || index >= _items.Length)
             return GridPosition.Invalid;
         return _items[index].Position;
     }
 
+    public int GetItemIndexAt(GridPosition pos)
+    {
+        if (!_grid.Contains(pos)) return -1;
+        return _grid[pos];
+    }
+
     public bool IsCellOccupied(GridPosition pos)
     {
-        return _grid.GetCellValue(pos);
+        return GetItemIndexAt(pos) >= 0;
     }
 
     public (int index, RotationDegree rotation) TryAddItem(ImmutableGridShape item)
     {
-        var (pos, rotation) = _grid.FindFirstFitWithFreeRotation(item, freeValue: false);
+        var (pos, rotation) = Grid.FindFirstFitWithFreeRotation(item, freeValue: -1);
         if (pos.IsValid)
         {
             var index = AddItemAt(item.GetRotatedShape(rotation), pos);
@@ -73,7 +79,7 @@ public struct GridBoard : IDisposable
 
     public int TryAddItemAt(ImmutableGridShape shape, GridPosition pos)
     {
-        if (_grid.CanPlaceItem(shape, pos, freeValue: false))
+        if (_grid.CanPlaceItem(shape, pos, freeValue: -1))
         {
             return AddItemAt(shape, pos);
         }
@@ -96,7 +102,8 @@ public struct GridBoard : IDisposable
             _items.Add(ItemSlot.Invalid); // Placeholder
         }
 
-        _grid.PlaceItem(shape, pos, true);
+        // Place item on grid with its index
+        _grid.FillShape(shape, pos, itemIndex);
         _items[itemIndex] = new ItemSlot(shape, pos);
         _itemCount++;
 
@@ -108,7 +115,9 @@ public struct GridBoard : IDisposable
         if (index >= 0 && index < _items.Length && _items[index].IsValid)
         {
             var slot = _items[index];
-            _grid.RemoveItem(slot.Shape, slot.Position, freeValue: false);
+
+            // Clear item from grid (set to -1)
+            _grid.FillShape(slot.Shape, slot.Position, -1);
 
             // Mark slot as free and add to free list
             _items[index] = ItemSlot.Invalid;
@@ -119,7 +128,7 @@ public struct GridBoard : IDisposable
 
     public void Clear()
     {
-        InitializedGrid.CopyTo(_grid);
+        _initializedGrid.CopyTo(_grid);
         _items.Clear();
         _freeIndices.Clear();
         _itemCount = 0;
@@ -133,11 +142,11 @@ public struct GridBoard : IDisposable
         _freeIndices.Dispose();
     }
 
-    public GridBoard Clone(Allocator allocator)
+    public IndexedGridBoard Clone(Allocator allocator)
     {
-        var clone = new GridBoard
+        var clone = new IndexedGridBoard
         {
-            _initializedGrid = InitializedGrid.Clone(allocator),
+            _initializedGrid = _initializedGrid.Clone(allocator),
             _grid = _grid.Clone(allocator),
             _items = new NativeList<ItemSlot>(_items.Capacity, allocator),
             _freeIndices = new NativeList<int>(_freeIndices.Capacity, allocator),
@@ -148,22 +157,22 @@ public struct GridBoard : IDisposable
         return clone;
     }
 
-    public static implicit operator ReadOnly(GridBoard board) => board.AsReadOnly();
+    public static implicit operator ReadOnly(IndexedGridBoard board) => board.AsReadOnly();
     public ReadOnly AsReadOnly() => new(_grid.AsReadOnly(), _items.AsReadOnly(), _itemCount);
 
     public readonly ref struct ReadOnly
     {
-        private readonly GridShape.ReadOnly _grid;
+        private readonly ValueGridShape<int>.ReadOnly _grid;
         private readonly NativeArray<ItemSlot>.ReadOnly _items;
         private readonly int _itemCount;
 
-        public GridShape.ReadOnly CurrentGrid => _grid;
+        public ValueGridShape<int>.ReadOnly Grid => _grid;
         public int Width => _grid.Width;
         public int Height => _grid.Height;
         public int ItemCount => _itemCount;
-        public int FreeSpace => _grid.FreeSpaceCount;
+        public int FreeSpace => _grid.CountValue(-1);
 
-        internal ReadOnly(GridShape.ReadOnly grid, NativeArray<ItemSlot>.ReadOnly items, int itemCount)
+        internal ReadOnly(ValueGridShape<int>.ReadOnly grid, NativeArray<ItemSlot>.ReadOnly items, int itemCount)
         {
             _grid = grid;
             _items = items;
@@ -172,21 +181,27 @@ public struct GridBoard : IDisposable
 
         public ImmutableGridShape GetItemShape(int index)
         {
-            if (index < 0 || index >= _items.Length || !_items[index].IsValid)
+            if (index < 0 || index >= _items.Length)
                 return ImmutableGridShape.Empty;
             return _items[index].Shape;
         }
 
         public GridPosition GetItemPosition(int index)
         {
-            if (index < 0 || index >= _items.Length || !_items[index].IsValid)
+            if (index < 0 || index >= _items.Length)
                 return GridPosition.Invalid;
             return _items[index].Position;
         }
 
+        public int GetItemIndexAt(GridPosition pos)
+        {
+            if (!_grid.Contains(pos)) return -1;
+            return _grid[pos];
+        }
+
         public bool IsCellOccupied(GridPosition pos)
         {
-            return _grid.GetCellValue(pos);
+            return GetItemIndexAt(pos) >= 0;
         }
     }
 }
