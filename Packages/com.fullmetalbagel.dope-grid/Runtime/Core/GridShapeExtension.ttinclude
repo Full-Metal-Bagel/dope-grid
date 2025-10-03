@@ -7,57 +7,66 @@ public static partial class ReadOnlyGridShapeExtension
     <#+
     foreach (var (shapeType, cellValueType) in shapes)
     {
+        // Extract ref/in modifier from shapeType
+        var modifier = "";
+        var typeName = shapeType;
+        if (shapeType.StartsWith("ref "))
+        {
+            modifier = "ref ";
+            typeName = shapeType.Substring(4);
+        }
+        else if (shapeType.StartsWith("in "))
+        {
+            modifier = "in ";
+            typeName = shapeType.Substring(3);
+        }
+
         var isGeneric = cellValueType.StartsWith("T");
         var cellTypeParam = isGeneric ? cellValueType.Split(' ')[0] : cellValueType;
         var typeConstraint = isGeneric && cellValueType.Contains(" where ") ? " " + cellValueType.Substring(cellValueType.IndexOf("where ")) : "";
         var genericConstraint = isGeneric ? $"<{cellTypeParam}>" : "";
-
-        // Shape metadata
-        var isReadOnly = shapeType.Contains(".ReadOnly");
-        var isImmutable = shapeType.Contains("Immutable");
-        var isBoolType = cellTypeParam == "bool";
     #>
 
 #region <#= shapeType #>
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int GetIndex<#= genericConstraint #>(this in <#= shapeType #> shape, GridPosition pos)<#= typeConstraint #> => GetIndex(shape, pos.X, pos.Y);
+    public static int GetIndex<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, GridPosition pos)<#= typeConstraint #> => GetIndex(<#= modifier.Trim() #> shape, pos.X, pos.Y);
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int GetIndex<#= genericConstraint #>(this in <#= shapeType #> shape, int x, int y)<#= typeConstraint #> => y * shape.Width + x;
+    public static int GetIndex<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, int x, int y)<#= typeConstraint #> => y * shape.Width + x;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static <#= cellTypeParam #> GetCellValue<#= genericConstraint #>(this in <#= shapeType #> shape, GridPosition pos)<#= typeConstraint #> => shape[pos];
+    public static <#= cellTypeParam #> GetCellValue<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, GridPosition pos)<#= typeConstraint #> => shape[pos];
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static <#= cellTypeParam #> GetCellValue<#= genericConstraint #>(this in <#= shapeType #> shape, int x, int y)<#= typeConstraint #> => GetCellValue(shape, new GridPosition(x, y));
+    public static <#= cellTypeParam #> GetCellValue<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, int x, int y)<#= typeConstraint #> => GetCellValue(<#= modifier.Trim() #> shape, new GridPosition(x, y));
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int Size<#= genericConstraint #>(this in <#= shapeType #> shape)<#= typeConstraint #> => shape.Width * shape.Height;
+    public static int Size<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape)<#= typeConstraint #> => shape.Width * shape.Height;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsEmpty<#= genericConstraint #>(this in <#= shapeType #> shape)<#= typeConstraint #> => shape.Width <= 0 || shape.Height <= 0;
+    public static bool IsEmpty<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape)<#= typeConstraint #> => shape.Width <= 0 || shape.Height <= 0;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool Contains<#= genericConstraint #>(this in <#= shapeType #> shape, GridPosition pos)<#= typeConstraint #> => Contains(shape, pos.X, pos.Y);
+    public static bool Contains<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, GridPosition pos)<#= typeConstraint #> => Contains(<#= modifier.Trim() #> shape, pos.X, pos.Y);
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool Contains<#= genericConstraint #>(this in <#= shapeType #> shape, int x, int y)<#= typeConstraint #> => x >= 0 && x < shape.Width && y >= 0 && y < shape.Height;
+    public static bool Contains<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, int x, int y)<#= typeConstraint #> => x >= 0 && x < shape.Width && y >= 0 && y < shape.Height;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int CountValue<#= genericConstraint #>(this in <#= shapeType #> shape, <#= cellTypeParam #> target)<#= typeConstraint #>
+    public static int CountValue<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, <#= cellTypeParam #> target)<#= typeConstraint #>
     {
-        return Count(shape, (v, t) => System.Collections.Generic.EqualityComparer<<#= cellTypeParam #>>.Default.Equals(v, t), target);
+        return Count(<#= modifier.Trim() #> shape, (v, t) => System.Collections.Generic.EqualityComparer<<#= cellTypeParam #>>.Default.Equals(v, t), target);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int CountWhere<#= genericConstraint #>(this in <#= shapeType #> shape, System.Func<<#= cellTypeParam #>, bool> predicate)<#= typeConstraint #>
+    public static int CountWhere<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, System.Func<<#= cellTypeParam #>, bool> predicate)<#= typeConstraint #>
     {
-        return Count(shape, (value, p) => p(value), predicate);
+        return Count(<#= modifier.Trim() #> shape, (value, p) => p(value), predicate);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int Count<#= isGeneric ? $"<{cellTypeParam}, TCaptureData>" : "<TCaptureData>" #>(this in <#= shapeType #> shape, System.Func<<#= cellTypeParam #>, TCaptureData, bool> predicate, TCaptureData data)<#= typeConstraint #>
+    public static int Count<#= isGeneric ? $"<{cellTypeParam}, TCaptureData>" : "<TCaptureData>" #>(this <#= modifier #><#= typeName #> shape, System.Func<<#= cellTypeParam #>, TCaptureData, bool> predicate, TCaptureData data)<#= typeConstraint #>
     {
         int count = 0;
         var size = shape.Width * shape.Height;
@@ -70,13 +79,13 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool Any<#= genericConstraint #>(this in <#= shapeType #> shape, System.Func<<#= cellTypeParam #>, bool> predicate)<#= typeConstraint #>
+    public static bool Any<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, System.Func<<#= cellTypeParam #>, bool> predicate)<#= typeConstraint #>
     {
-        return Any(shape, (v, p) => p(v), predicate);
+        return Any(<#= modifier.Trim() #> shape, (v, p) => p(v), predicate);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool Any<#= isGeneric ? $"<{cellTypeParam}, TCaptureData>" : "<TCaptureData>" #>(this in <#= shapeType #> shape, System.Func<<#= cellTypeParam #>, TCaptureData, bool> predicate, TCaptureData data)<#= typeConstraint #>
+    public static bool Any<#= isGeneric ? $"<{cellTypeParam}, TCaptureData>" : "<TCaptureData>" #>(this <#= modifier #><#= typeName #> shape, System.Func<<#= cellTypeParam #>, TCaptureData, bool> predicate, TCaptureData data)<#= typeConstraint #>
     {
         var size = shape.Width * shape.Height;
         for (int i = 0; i < size; i++)
@@ -88,13 +97,13 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool All<#= genericConstraint #>(this in <#= shapeType #> shape, System.Func<<#= cellTypeParam #>, bool> predicate)<#= typeConstraint #>
+    public static bool All<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, System.Func<<#= cellTypeParam #>, bool> predicate)<#= typeConstraint #>
     {
-        return All(shape, (v, p) => p(v), predicate);
+        return All(<#= modifier.Trim() #> shape, (v, p) => p(v), predicate);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool All<#= isGeneric ? $"<{cellTypeParam}, TCaptureData>" : "<TCaptureData>" #>(this in <#= shapeType #> shape, System.Func<<#= cellTypeParam #>, TCaptureData, bool> predicate, TCaptureData data)<#= typeConstraint #>
+    public static bool All<#= isGeneric ? $"<{cellTypeParam}, TCaptureData>" : "<TCaptureData>" #>(this <#= modifier #><#= typeName #> shape, System.Func<<#= cellTypeParam #>, TCaptureData, bool> predicate, TCaptureData data)<#= typeConstraint #>
     {
         var size = shape.Width * shape.Height;
         for (int i = 0; i < size; i++)
@@ -106,34 +115,34 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsTrimmed<#= genericConstraint #>(this in <#= shapeType #> shape, <#= cellTypeParam #> freeValue = default)<#= typeConstraint #>
+    public static bool IsTrimmed<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, <#= cellTypeParam #> freeValue = default)<#= typeConstraint #>
     {
         // Empty shapes are considered trimmed
         if (shape.Width == 0 || shape.Height == 0)
             return true;
 
         // A shape is trimmed when all four borders have at least one occupied cell
-        return HasOccupiedCellInRow(shape, 0, freeValue) &&                    // Top row
-               HasOccupiedCellInRow(shape, shape.Height - 1, freeValue) &&     // Bottom row
-               HasOccupiedCellInColumn(shape, 0, freeValue) &&                 // Left column
-               HasOccupiedCellInColumn(shape, shape.Width - 1, freeValue);     // Right column
+        return HasOccupiedCellInRow(<#= modifier.Trim() #> shape, 0, freeValue) &&                    // Top row
+               HasOccupiedCellInRow(<#= modifier.Trim() #> shape, shape.Height - 1, freeValue) &&     // Bottom row
+               HasOccupiedCellInColumn(<#= modifier.Trim() #> shape, 0, freeValue) &&                 // Left column
+               HasOccupiedCellInColumn(<#= modifier.Trim() #> shape, shape.Width - 1, freeValue);     // Right column
 
-        static bool HasOccupiedCellInRow(in <#= shapeType #> shape, int row, <#= cellTypeParam #> freeValue)
+        static bool HasOccupiedCellInRow(<#= modifier #><#= typeName #> shape, int row, <#= cellTypeParam #> freeValue)
         {
             for (var column = 0; column < shape.Width; column++)
             {
-                var value = shape.GetCellValue(column, row);
+                var value = GetCellValue(<#= modifier.Trim() #> shape, column, row);
                 var isFree = value.Equals(freeValue);
                 if (!isFree) return true;
             }
             return false;
         }
 
-        static bool HasOccupiedCellInColumn(in <#= shapeType #> shape, int column, <#= cellTypeParam #> freeValue)
+        static bool HasOccupiedCellInColumn(<#= modifier #><#= typeName #> shape, int column, <#= cellTypeParam #> freeValue)
         {
             for (var row = 0; row < shape.Height; row++)
             {
-                var value = shape.GetCellValue(column, row);
+                var value = GetCellValue(<#= modifier.Trim() #> shape, column, row);
                 var isFree = value.Equals(freeValue);
                 if (!isFree) return true;
             }
@@ -142,7 +151,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool CanPlaceItem<#= genericConstraint #>(this in <#= shapeType #> container, ImmutableGridShape item, GridPosition pos, <#= cellTypeParam #> freeValue = default)<#= typeConstraint #>
+    public static bool CanPlaceItem<#= genericConstraint #>(this <#= modifier #><#= typeName #> container, ImmutableGridShape item, GridPosition pos, <#= cellTypeParam #> freeValue = default)<#= typeConstraint #>
     {
         // Bounds check
         if (pos.X < 0 || pos.Y < 0 || pos.X + item.Width > container.Width || pos.Y + item.Height > container.Height)
@@ -156,7 +165,7 @@ public static partial class ReadOnlyGridShapeExtension
             if (item.GetCellValue(shapePos))
             {
                 var gridPos = new GridPosition(pos.X + sx, pos.Y + sy);
-                if (container.GetCellValue(gridPos).Equals(freeValue))
+                if (GetCellValue(<#= modifier.Trim() #> container, gridPos).Equals(freeValue))
                     return false;
             }
         }
@@ -165,14 +174,14 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation<#= genericConstraint #>(this in <#= shapeType #> container, ImmutableGridShape item)<#= typeConstraint #>
+    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation<#= genericConstraint #>(this <#= modifier #><#= typeName #> container, ImmutableGridShape item)<#= typeConstraint #>
     {
         var rotateCount = 0;
         var rotatedItem = item;
         var position = GridPosition.Invalid;
         do
         {
-            position = FindFirstFitWithFixedRotation(container, rotatedItem);
+            position = FindFirstFitWithFixedRotation(<#= modifier.Trim() #> container, rotatedItem);
             if (position.IsValid) break;
             rotatedItem = rotatedItem.Rotate90();
             rotateCount++;
@@ -192,7 +201,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool CheckShapeCells<#= isGeneric ? $"<{cellTypeParam}, TData>" : "<TData>" #>(this in <#= shapeType #> grid, ImmutableGridShape shape, GridPosition position, System.Func<GridPosition, <#= cellTypeParam #>, TData, bool> cellPredicate, TData data)<#= typeConstraint #>
+    public static bool CheckShapeCells<#= isGeneric ? $"<{cellTypeParam}, TData>" : "<TData>" #>(this <#= modifier #><#= typeName #> grid, ImmutableGridShape shape, GridPosition position, System.Func<GridPosition, <#= cellTypeParam #>, TData, bool> cellPredicate, TData data)<#= typeConstraint #>
     {
         for (int y = 0; y < shape.Height; y++)
         {
@@ -203,7 +212,7 @@ public static partial class ReadOnlyGridShapeExtension
                     var gridPos = new GridPosition(position.X + x, position.Y + y);
 
                     // Check bounds
-                    if (!grid.Contains(gridPos))
+                    if (!Contains(<#= modifier.Trim() #> grid, gridPos))
                         return false;
 
                     // Check predicate
@@ -217,17 +226,31 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static GridPosition FindFirstFitWithFixedRotation<#= genericConstraint #>(this <#= shapeType #> grid, ImmutableGridShape item, <#= cellTypeParam #> freeValue = default)<#= typeConstraint #>
+    public static GridPosition FindFirstFitWithFixedRotation<#= genericConstraint #>(this <#= modifier #><#= typeName #> grid, ImmutableGridShape item, <#= cellTypeParam #> freeValue = default)<#= typeConstraint #>
     {
         var maxY = grid.Height - item.Height + 1;
         var maxX = grid.Width - item.Width + 1;
 
         for (var y = 0; y < maxY; y++)
         for (var x = 0; x < maxX; x++)
-            if (CanPlaceItem(grid, item, new GridPosition(x, y), freeValue))
+            if (CanPlaceItem(<#= modifier.Trim() #> grid, item, new GridPosition(x, y), freeValue))
                 return new GridPosition(x, y);
 
         return GridPosition.Invalid;
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static bool IsWithinBounds<#= genericConstraint #>(this <#= modifier #><#= typeName #> grid, ImmutableGridShape shape, GridPosition position)<#= typeConstraint #>
+    {
+        return position is { X: >= 0, Y: >= 0 } &&
+               position.X + shape.Width <= grid.Width &&
+               position.Y + shape.Height <= grid.Height;
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static bool IsWithinBounds<#= genericConstraint #>(this <#= modifier #><#= typeName #> grid, ImmutableGridShape shape, int x, int y)<#= typeConstraint #>
+    {
+        return IsWithinBounds(<#= modifier.Trim() #> grid, shape, new GridPosition(x, y));
     }
 
 #endregion

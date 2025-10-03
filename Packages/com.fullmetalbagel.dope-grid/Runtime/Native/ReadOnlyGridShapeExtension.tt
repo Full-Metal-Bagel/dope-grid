@@ -1,16 +1,14 @@
 <#@ template language="C#" #>
-<#@ import namespace="System.Text" #>
-<#@ import namespace="System.Collections.Generic" #>
 <#@ include file="../Core/GridShapeExtension.ttinclude" #>
 
 namespace DopeGrid.Native;
 
 <#
     MakeExtensionForReadOnlyGridShape(
-        ("GridShape", "bool"),
-        ("GridShape.ReadOnly", "bool"),
-        ("ValueGridShape<T>", "T where T : unmanaged, System.IEquatable<T>"),
-        ("ValueGridShape<T>.ReadOnly", "T where T : unmanaged, System.IEquatable<T>"),
-        ("ImmutableGridShape", "bool")
+        ("ref GridShape", "bool"),
+        ("in GridShape.ReadOnly", "bool"),
+        ("ref ValueGridShape<T>", "T where T : unmanaged, System.IEquatable<T>"),
+        ("in ValueGridShape<T>.ReadOnly", "T where T : unmanaged, System.IEquatable<T>"),
+        ("in ImmutableGridShape", "bool")
     );
 #>

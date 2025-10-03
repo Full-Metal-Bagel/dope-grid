@@ -1,6 +1,6 @@
 ﻿
 
-namespace DopeGrid.Native;
+namespace DopeGrid.Standard;
 
 public static partial class ReadOnlyGridShapeExtension
 {
@@ -464,43 +464,43 @@ public static partial class ReadOnlyGridShapeExtension
 #region ref ValueGridShape<T>
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int GetIndex<T>(this ref ValueGridShape<T> shape, GridPosition pos) where T : unmanaged, System.IEquatable<T> => GetIndex(ref shape, pos.X, pos.Y);
+    public static int GetIndex<T>(this ref ValueGridShape<T> shape, GridPosition pos) where T : System.IEquatable<T> => GetIndex(ref shape, pos.X, pos.Y);
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int GetIndex<T>(this ref ValueGridShape<T> shape, int x, int y) where T : unmanaged, System.IEquatable<T> => y * shape.Width + x;
+    public static int GetIndex<T>(this ref ValueGridShape<T> shape, int x, int y) where T : System.IEquatable<T> => y * shape.Width + x;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static T GetCellValue<T>(this ref ValueGridShape<T> shape, GridPosition pos) where T : unmanaged, System.IEquatable<T> => shape[pos];
+    public static T GetCellValue<T>(this ref ValueGridShape<T> shape, GridPosition pos) where T : System.IEquatable<T> => shape[pos];
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static T GetCellValue<T>(this ref ValueGridShape<T> shape, int x, int y) where T : unmanaged, System.IEquatable<T> => GetCellValue(ref shape, new GridPosition(x, y));
+    public static T GetCellValue<T>(this ref ValueGridShape<T> shape, int x, int y) where T : System.IEquatable<T> => GetCellValue(ref shape, new GridPosition(x, y));
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int Size<T>(this ref ValueGridShape<T> shape) where T : unmanaged, System.IEquatable<T> => shape.Width * shape.Height;
+    public static int Size<T>(this ref ValueGridShape<T> shape) where T : System.IEquatable<T> => shape.Width * shape.Height;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsEmpty<T>(this ref ValueGridShape<T> shape) where T : unmanaged, System.IEquatable<T> => shape.Width <= 0 || shape.Height <= 0;
+    public static bool IsEmpty<T>(this ref ValueGridShape<T> shape) where T : System.IEquatable<T> => shape.Width <= 0 || shape.Height <= 0;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool Contains<T>(this ref ValueGridShape<T> shape, GridPosition pos) where T : unmanaged, System.IEquatable<T> => Contains(ref shape, pos.X, pos.Y);
+    public static bool Contains<T>(this ref ValueGridShape<T> shape, GridPosition pos) where T : System.IEquatable<T> => Contains(ref shape, pos.X, pos.Y);
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool Contains<T>(this ref ValueGridShape<T> shape, int x, int y) where T : unmanaged, System.IEquatable<T> => x >= 0 && x < shape.Width && y >= 0 && y < shape.Height;
+    public static bool Contains<T>(this ref ValueGridShape<T> shape, int x, int y) where T : System.IEquatable<T> => x >= 0 && x < shape.Width && y >= 0 && y < shape.Height;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int CountValue<T>(this ref ValueGridShape<T> shape, T target) where T : unmanaged, System.IEquatable<T>
+    public static int CountValue<T>(this ref ValueGridShape<T> shape, T target) where T : System.IEquatable<T>
     {
         return Count(ref shape, (v, t) => System.Collections.Generic.EqualityComparer<T>.Default.Equals(v, t), target);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int CountWhere<T>(this ref ValueGridShape<T> shape, System.Func<T, bool> predicate) where T : unmanaged, System.IEquatable<T>
+    public static int CountWhere<T>(this ref ValueGridShape<T> shape, System.Func<T, bool> predicate) where T : System.IEquatable<T>
     {
         return Count(ref shape, (value, p) => p(value), predicate);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int Count<T, TCaptureData>(this ref ValueGridShape<T> shape, System.Func<T, TCaptureData, bool> predicate, TCaptureData data) where T : unmanaged, System.IEquatable<T>
+    public static int Count<T, TCaptureData>(this ref ValueGridShape<T> shape, System.Func<T, TCaptureData, bool> predicate, TCaptureData data) where T : System.IEquatable<T>
     {
         int count = 0;
         var size = shape.Width * shape.Height;
@@ -513,13 +513,13 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool Any<T>(this ref ValueGridShape<T> shape, System.Func<T, bool> predicate) where T : unmanaged, System.IEquatable<T>
+    public static bool Any<T>(this ref ValueGridShape<T> shape, System.Func<T, bool> predicate) where T : System.IEquatable<T>
     {
         return Any(ref shape, (v, p) => p(v), predicate);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool Any<T, TCaptureData>(this ref ValueGridShape<T> shape, System.Func<T, TCaptureData, bool> predicate, TCaptureData data) where T : unmanaged, System.IEquatable<T>
+    public static bool Any<T, TCaptureData>(this ref ValueGridShape<T> shape, System.Func<T, TCaptureData, bool> predicate, TCaptureData data) where T : System.IEquatable<T>
     {
         var size = shape.Width * shape.Height;
         for (int i = 0; i < size; i++)
@@ -531,13 +531,13 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool All<T>(this ref ValueGridShape<T> shape, System.Func<T, bool> predicate) where T : unmanaged, System.IEquatable<T>
+    public static bool All<T>(this ref ValueGridShape<T> shape, System.Func<T, bool> predicate) where T : System.IEquatable<T>
     {
         return All(ref shape, (v, p) => p(v), predicate);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool All<T, TCaptureData>(this ref ValueGridShape<T> shape, System.Func<T, TCaptureData, bool> predicate, TCaptureData data) where T : unmanaged, System.IEquatable<T>
+    public static bool All<T, TCaptureData>(this ref ValueGridShape<T> shape, System.Func<T, TCaptureData, bool> predicate, TCaptureData data) where T : System.IEquatable<T>
     {
         var size = shape.Width * shape.Height;
         for (int i = 0; i < size; i++)
@@ -549,7 +549,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsTrimmed<T>(this ref ValueGridShape<T> shape, T freeValue = default) where T : unmanaged, System.IEquatable<T>
+    public static bool IsTrimmed<T>(this ref ValueGridShape<T> shape, T freeValue = default) where T : System.IEquatable<T>
     {
         // Empty shapes are considered trimmed
         if (shape.Width == 0 || shape.Height == 0)
@@ -585,7 +585,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool CanPlaceItem<T>(this ref ValueGridShape<T> container, ImmutableGridShape item, GridPosition pos, T freeValue = default) where T : unmanaged, System.IEquatable<T>
+    public static bool CanPlaceItem<T>(this ref ValueGridShape<T> container, ImmutableGridShape item, GridPosition pos, T freeValue = default) where T : System.IEquatable<T>
     {
         // Bounds check
         if (pos.X < 0 || pos.Y < 0 || pos.X + item.Width > container.Width || pos.Y + item.Height > container.Height)
@@ -608,7 +608,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation<T>(this ref ValueGridShape<T> container, ImmutableGridShape item) where T : unmanaged, System.IEquatable<T>
+    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation<T>(this ref ValueGridShape<T> container, ImmutableGridShape item) where T : System.IEquatable<T>
     {
         var rotateCount = 0;
         var rotatedItem = item;
@@ -635,7 +635,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool CheckShapeCells<T, TData>(this ref ValueGridShape<T> grid, ImmutableGridShape shape, GridPosition position, System.Func<GridPosition, T, TData, bool> cellPredicate, TData data) where T : unmanaged, System.IEquatable<T>
+    public static bool CheckShapeCells<T, TData>(this ref ValueGridShape<T> grid, ImmutableGridShape shape, GridPosition position, System.Func<GridPosition, T, TData, bool> cellPredicate, TData data) where T : System.IEquatable<T>
     {
         for (int y = 0; y < shape.Height; y++)
         {
@@ -660,7 +660,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static GridPosition FindFirstFitWithFixedRotation<T>(this ref ValueGridShape<T> grid, ImmutableGridShape item, T freeValue = default) where T : unmanaged, System.IEquatable<T>
+    public static GridPosition FindFirstFitWithFixedRotation<T>(this ref ValueGridShape<T> grid, ImmutableGridShape item, T freeValue = default) where T : System.IEquatable<T>
     {
         var maxY = grid.Height - item.Height + 1;
         var maxX = grid.Width - item.Width + 1;
@@ -674,7 +674,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsWithinBounds<T>(this ref ValueGridShape<T> grid, ImmutableGridShape shape, GridPosition position) where T : unmanaged, System.IEquatable<T>
+    public static bool IsWithinBounds<T>(this ref ValueGridShape<T> grid, ImmutableGridShape shape, GridPosition position) where T : System.IEquatable<T>
     {
         return position is { X: >= 0, Y: >= 0 } &&
                position.X + shape.Width <= grid.Width &&
@@ -682,7 +682,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsWithinBounds<T>(this ref ValueGridShape<T> grid, ImmutableGridShape shape, int x, int y) where T : unmanaged, System.IEquatable<T>
+    public static bool IsWithinBounds<T>(this ref ValueGridShape<T> grid, ImmutableGridShape shape, int x, int y) where T : System.IEquatable<T>
     {
         return IsWithinBounds(ref grid, shape, new GridPosition(x, y));
     }
@@ -692,43 +692,43 @@ public static partial class ReadOnlyGridShapeExtension
 #region in ValueGridShape<T>.ReadOnly
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int GetIndex<T>(this in ValueGridShape<T>.ReadOnly shape, GridPosition pos) where T : unmanaged, System.IEquatable<T> => GetIndex(in shape, pos.X, pos.Y);
+    public static int GetIndex<T>(this in ValueGridShape<T>.ReadOnly shape, GridPosition pos) where T : System.IEquatable<T> => GetIndex(in shape, pos.X, pos.Y);
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int GetIndex<T>(this in ValueGridShape<T>.ReadOnly shape, int x, int y) where T : unmanaged, System.IEquatable<T> => y * shape.Width + x;
+    public static int GetIndex<T>(this in ValueGridShape<T>.ReadOnly shape, int x, int y) where T : System.IEquatable<T> => y * shape.Width + x;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static T GetCellValue<T>(this in ValueGridShape<T>.ReadOnly shape, GridPosition pos) where T : unmanaged, System.IEquatable<T> => shape[pos];
+    public static T GetCellValue<T>(this in ValueGridShape<T>.ReadOnly shape, GridPosition pos) where T : System.IEquatable<T> => shape[pos];
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static T GetCellValue<T>(this in ValueGridShape<T>.ReadOnly shape, int x, int y) where T : unmanaged, System.IEquatable<T> => GetCellValue(in shape, new GridPosition(x, y));
+    public static T GetCellValue<T>(this in ValueGridShape<T>.ReadOnly shape, int x, int y) where T : System.IEquatable<T> => GetCellValue(in shape, new GridPosition(x, y));
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int Size<T>(this in ValueGridShape<T>.ReadOnly shape) where T : unmanaged, System.IEquatable<T> => shape.Width * shape.Height;
+    public static int Size<T>(this in ValueGridShape<T>.ReadOnly shape) where T : System.IEquatable<T> => shape.Width * shape.Height;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsEmpty<T>(this in ValueGridShape<T>.ReadOnly shape) where T : unmanaged, System.IEquatable<T> => shape.Width <= 0 || shape.Height <= 0;
+    public static bool IsEmpty<T>(this in ValueGridShape<T>.ReadOnly shape) where T : System.IEquatable<T> => shape.Width <= 0 || shape.Height <= 0;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool Contains<T>(this in ValueGridShape<T>.ReadOnly shape, GridPosition pos) where T : unmanaged, System.IEquatable<T> => Contains(in shape, pos.X, pos.Y);
+    public static bool Contains<T>(this in ValueGridShape<T>.ReadOnly shape, GridPosition pos) where T : System.IEquatable<T> => Contains(in shape, pos.X, pos.Y);
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool Contains<T>(this in ValueGridShape<T>.ReadOnly shape, int x, int y) where T : unmanaged, System.IEquatable<T> => x >= 0 && x < shape.Width && y >= 0 && y < shape.Height;
+    public static bool Contains<T>(this in ValueGridShape<T>.ReadOnly shape, int x, int y) where T : System.IEquatable<T> => x >= 0 && x < shape.Width && y >= 0 && y < shape.Height;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int CountValue<T>(this in ValueGridShape<T>.ReadOnly shape, T target) where T : unmanaged, System.IEquatable<T>
+    public static int CountValue<T>(this in ValueGridShape<T>.ReadOnly shape, T target) where T : System.IEquatable<T>
     {
         return Count(in shape, (v, t) => System.Collections.Generic.EqualityComparer<T>.Default.Equals(v, t), target);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int CountWhere<T>(this in ValueGridShape<T>.ReadOnly shape, System.Func<T, bool> predicate) where T : unmanaged, System.IEquatable<T>
+    public static int CountWhere<T>(this in ValueGridShape<T>.ReadOnly shape, System.Func<T, bool> predicate) where T : System.IEquatable<T>
     {
         return Count(in shape, (value, p) => p(value), predicate);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static int Count<T, TCaptureData>(this in ValueGridShape<T>.ReadOnly shape, System.Func<T, TCaptureData, bool> predicate, TCaptureData data) where T : unmanaged, System.IEquatable<T>
+    public static int Count<T, TCaptureData>(this in ValueGridShape<T>.ReadOnly shape, System.Func<T, TCaptureData, bool> predicate, TCaptureData data) where T : System.IEquatable<T>
     {
         int count = 0;
         var size = shape.Width * shape.Height;
@@ -741,13 +741,13 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool Any<T>(this in ValueGridShape<T>.ReadOnly shape, System.Func<T, bool> predicate) where T : unmanaged, System.IEquatable<T>
+    public static bool Any<T>(this in ValueGridShape<T>.ReadOnly shape, System.Func<T, bool> predicate) where T : System.IEquatable<T>
     {
         return Any(in shape, (v, p) => p(v), predicate);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool Any<T, TCaptureData>(this in ValueGridShape<T>.ReadOnly shape, System.Func<T, TCaptureData, bool> predicate, TCaptureData data) where T : unmanaged, System.IEquatable<T>
+    public static bool Any<T, TCaptureData>(this in ValueGridShape<T>.ReadOnly shape, System.Func<T, TCaptureData, bool> predicate, TCaptureData data) where T : System.IEquatable<T>
     {
         var size = shape.Width * shape.Height;
         for (int i = 0; i < size; i++)
@@ -759,13 +759,13 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool All<T>(this in ValueGridShape<T>.ReadOnly shape, System.Func<T, bool> predicate) where T : unmanaged, System.IEquatable<T>
+    public static bool All<T>(this in ValueGridShape<T>.ReadOnly shape, System.Func<T, bool> predicate) where T : System.IEquatable<T>
     {
         return All(in shape, (v, p) => p(v), predicate);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool All<T, TCaptureData>(this in ValueGridShape<T>.ReadOnly shape, System.Func<T, TCaptureData, bool> predicate, TCaptureData data) where T : unmanaged, System.IEquatable<T>
+    public static bool All<T, TCaptureData>(this in ValueGridShape<T>.ReadOnly shape, System.Func<T, TCaptureData, bool> predicate, TCaptureData data) where T : System.IEquatable<T>
     {
         var size = shape.Width * shape.Height;
         for (int i = 0; i < size; i++)
@@ -777,7 +777,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsTrimmed<T>(this in ValueGridShape<T>.ReadOnly shape, T freeValue = default) where T : unmanaged, System.IEquatable<T>
+    public static bool IsTrimmed<T>(this in ValueGridShape<T>.ReadOnly shape, T freeValue = default) where T : System.IEquatable<T>
     {
         // Empty shapes are considered trimmed
         if (shape.Width == 0 || shape.Height == 0)
@@ -813,7 +813,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool CanPlaceItem<T>(this in ValueGridShape<T>.ReadOnly container, ImmutableGridShape item, GridPosition pos, T freeValue = default) where T : unmanaged, System.IEquatable<T>
+    public static bool CanPlaceItem<T>(this in ValueGridShape<T>.ReadOnly container, ImmutableGridShape item, GridPosition pos, T freeValue = default) where T : System.IEquatable<T>
     {
         // Bounds check
         if (pos.X < 0 || pos.Y < 0 || pos.X + item.Width > container.Width || pos.Y + item.Height > container.Height)
@@ -836,7 +836,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation<T>(this in ValueGridShape<T>.ReadOnly container, ImmutableGridShape item) where T : unmanaged, System.IEquatable<T>
+    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation<T>(this in ValueGridShape<T>.ReadOnly container, ImmutableGridShape item) where T : System.IEquatable<T>
     {
         var rotateCount = 0;
         var rotatedItem = item;
@@ -863,7 +863,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool CheckShapeCells<T, TData>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, GridPosition position, System.Func<GridPosition, T, TData, bool> cellPredicate, TData data) where T : unmanaged, System.IEquatable<T>
+    public static bool CheckShapeCells<T, TData>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, GridPosition position, System.Func<GridPosition, T, TData, bool> cellPredicate, TData data) where T : System.IEquatable<T>
     {
         for (int y = 0; y < shape.Height; y++)
         {
@@ -888,7 +888,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static GridPosition FindFirstFitWithFixedRotation<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape item, T freeValue = default) where T : unmanaged, System.IEquatable<T>
+    public static GridPosition FindFirstFitWithFixedRotation<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape item, T freeValue = default) where T : System.IEquatable<T>
     {
         var maxY = grid.Height - item.Height + 1;
         var maxX = grid.Width - item.Width + 1;
@@ -902,7 +902,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsWithinBounds<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, GridPosition position) where T : unmanaged, System.IEquatable<T>
+    public static bool IsWithinBounds<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, GridPosition position) where T : System.IEquatable<T>
     {
         return position is { X: >= 0, Y: >= 0 } &&
                position.X + shape.Width <= grid.Width &&
@@ -910,7 +910,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsWithinBounds<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, int x, int y) where T : unmanaged, System.IEquatable<T>
+    public static bool IsWithinBounds<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, int x, int y) where T : System.IEquatable<T>
     {
         return IsWithinBounds(in grid, shape, new GridPosition(x, y));
     }
