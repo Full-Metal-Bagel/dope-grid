@@ -13,7 +13,7 @@ public static class Shapes
     public static GridShape Single(Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape(1, 1, allocator);
-        shape.SetCell(0, 0, true);
+        shape.SetCellValue(0, 0, true);
         return shape;
     }
 
@@ -22,7 +22,7 @@ public static class Shapes
     {
         var shape = new GridShape(length, 1, allocator);
         for (var i = 0; i < length; i++)
-            shape.SetCell(i, 0, true);
+            shape.SetCellValue(i, 0, true);
         return shape;
     }
 
@@ -32,7 +32,7 @@ public static class Shapes
         var shape = new GridShape(size, size, allocator);
         for (var y = 0; y < size; y++)
         for (var x = 0; x < size; x++)
-            shape.SetCell(x, y, true);
+            shape.SetCellValue(x, y, true);
         return shape;
     }
 
@@ -40,9 +40,9 @@ public static class Shapes
     public static GridShape LShape(Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape(2, 2, allocator);
-        shape.SetCell(0, 0, true);
-        shape.SetCell(0, 1, true);
-        shape.SetCell(1, 1, true);
+        shape.SetCellValue(0, 0, true);
+        shape.SetCellValue(0, 1, true);
+        shape.SetCellValue(1, 1, true);
         return shape;
     }
 
@@ -50,10 +50,10 @@ public static class Shapes
     public static GridShape TShape(Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape(3, 2, allocator);
-        shape.SetCell(0, 0, true);
-        shape.SetCell(1, 0, true);
-        shape.SetCell(2, 0, true);
-        shape.SetCell(1, 1, true);
+        shape.SetCellValue(0, 0, true);
+        shape.SetCellValue(1, 0, true);
+        shape.SetCellValue(2, 0, true);
+        shape.SetCellValue(1, 1, true);
         return shape;
     }
 
@@ -61,11 +61,11 @@ public static class Shapes
     public static GridShape Cross(Allocator allocator = Allocator.Temp)
     {
         var shape = new GridShape(3, 3, allocator);
-        shape.SetCell(1, 0, true);
-        shape.SetCell(0, 1, true);
-        shape.SetCell(1, 1, true);
-        shape.SetCell(2, 1, true);
-        shape.SetCell(1, 2, true);
+        shape.SetCellValue(1, 0, true);
+        shape.SetCellValue(0, 1, true);
+        shape.SetCellValue(1, 1, true);
+        shape.SetCellValue(2, 1, true);
+        shape.SetCellValue(1, 2, true);
         return shape;
     }
 

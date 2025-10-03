@@ -4,7 +4,7 @@ namespace DopeGrid.Native;
 
 public static partial class ReadOnlyGridShapeExtension
 {
-
+    
 #region ref GridShape
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -14,7 +14,7 @@ public static partial class ReadOnlyGridShapeExtension
     public static int GetIndex(this ref GridShape shape, int x, int y) => y * shape.Width + x;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool GetCellValue(this ref GridShape shape, GridPosition pos) => shape[pos];
+    public static bool GetCellValue(this ref GridShape shape, GridPosition pos) => shape[shape.GetIndex(pos)];
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
     public static bool GetCellValue(this ref GridShape shape, int x, int y) => GetCellValue(ref shape, new GridPosition(x, y));
@@ -232,7 +232,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
 #endregion
-
+    
 #region in GridShape.ReadOnly
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -242,7 +242,7 @@ public static partial class ReadOnlyGridShapeExtension
     public static int GetIndex(this in GridShape.ReadOnly shape, int x, int y) => y * shape.Width + x;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool GetCellValue(this in GridShape.ReadOnly shape, GridPosition pos) => shape[pos];
+    public static bool GetCellValue(this in GridShape.ReadOnly shape, GridPosition pos) => shape[shape.GetIndex(pos)];
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
     public static bool GetCellValue(this in GridShape.ReadOnly shape, int x, int y) => GetCellValue(in shape, new GridPosition(x, y));
@@ -460,7 +460,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
 #endregion
-
+    
 #region ref ValueGridShape<T>
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -470,7 +470,7 @@ public static partial class ReadOnlyGridShapeExtension
     public static int GetIndex<T>(this ref ValueGridShape<T> shape, int x, int y) where T : unmanaged, System.IEquatable<T> => y * shape.Width + x;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static T GetCellValue<T>(this ref ValueGridShape<T> shape, GridPosition pos) where T : unmanaged, System.IEquatable<T> => shape[pos];
+    public static T GetCellValue<T>(this ref ValueGridShape<T> shape, GridPosition pos) where T : unmanaged, System.IEquatable<T> => shape[shape.GetIndex(pos)];
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
     public static T GetCellValue<T>(this ref ValueGridShape<T> shape, int x, int y) where T : unmanaged, System.IEquatable<T> => GetCellValue(ref shape, new GridPosition(x, y));
@@ -688,7 +688,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
 #endregion
-
+    
 #region in ValueGridShape<T>.ReadOnly
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -698,7 +698,7 @@ public static partial class ReadOnlyGridShapeExtension
     public static int GetIndex<T>(this in ValueGridShape<T>.ReadOnly shape, int x, int y) where T : unmanaged, System.IEquatable<T> => y * shape.Width + x;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static T GetCellValue<T>(this in ValueGridShape<T>.ReadOnly shape, GridPosition pos) where T : unmanaged, System.IEquatable<T> => shape[pos];
+    public static T GetCellValue<T>(this in ValueGridShape<T>.ReadOnly shape, GridPosition pos) where T : unmanaged, System.IEquatable<T> => shape[shape.GetIndex(pos)];
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
     public static T GetCellValue<T>(this in ValueGridShape<T>.ReadOnly shape, int x, int y) where T : unmanaged, System.IEquatable<T> => GetCellValue(in shape, new GridPosition(x, y));
@@ -916,7 +916,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
 #endregion
-
+    
 #region in ImmutableGridShape
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -926,7 +926,7 @@ public static partial class ReadOnlyGridShapeExtension
     public static int GetIndex(this in ImmutableGridShape shape, int x, int y) => y * shape.Width + x;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool GetCellValue(this in ImmutableGridShape shape, GridPosition pos) => shape[pos];
+    public static bool GetCellValue(this in ImmutableGridShape shape, GridPosition pos) => shape[shape.GetIndex(pos)];
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
     public static bool GetCellValue(this in ImmutableGridShape shape, int x, int y) => GetCellValue(in shape, new GridPosition(x, y));
@@ -1148,11 +1148,11 @@ public static partial class ReadOnlyGridShapeExtension
 
 public static partial class WritableGridShapeExtension
 {
-
+    
 #region ref GridShape
 
     public static void SetCellValue(this ref GridShape shape, GridPosition pos, bool value) => shape.SetCellValue(pos.X, pos.Y, value);
-    public static void SetCellValue(this ref GridShape shape, int x, int y, bool value) => shape[x, y] = value;
+    public static void SetCellValue(this ref GridShape shape, int x, int y, bool value) => shape[shape.GetIndex(x, y)] = value;
 
     public static void FillAll(this ref GridShape shape, bool value)
     {
@@ -1171,7 +1171,7 @@ public static partial class WritableGridShapeExtension
                 var py = y + dy;
                 if (px >= 0 && px < shape.Width && py >= 0 && py < shape.Height)
                 {
-                    shape[px, py] = value;
+                    shape.SetCellValue(px, py, value);
                 }
             }
         }
@@ -1180,6 +1180,27 @@ public static partial class WritableGridShapeExtension
     public static void FillRect(this ref GridShape shape, GridPosition pos, int width, int height, bool value)
     {
         FillRect(ref shape, pos.X, pos.Y, width, height, value);
+    }
+
+    public static void FillShape(this ref GridShape grid, ImmutableGridShape shape, GridPosition pos, bool value)
+    {
+        // Check bounds to prevent out of range access
+        var maxX = System.Math.Min(shape.Width, grid.Width - pos.X);
+        var maxY = System.Math.Min(shape.Height, grid.Height - pos.Y);
+        var startX = System.Math.Max(0, -pos.X);
+        var startY = System.Math.Max(0, -pos.Y);
+
+        // Fill only the cells where the shape has true values
+        for (int y = startY; y < maxY; y++)
+        {
+            for (int x = startX; x < maxX; x++)
+            {
+                if (shape[x, y])
+                {
+                    SetCellValue(ref grid, pos.X + x, pos.Y + y, value);
+                }
+            }
+        }
     }
 
     public static void Clear(this ref GridShape shape)
@@ -1216,11 +1237,11 @@ public static partial class WritableGridShapeExtension
     }
 
 #endregion
-
+    
 #region ref ValueGridShape<T>
 
     public static void SetCellValue<T>(this ref ValueGridShape<T> shape, GridPosition pos, T value) where T : unmanaged, System.IEquatable<T> => shape.SetCellValue(pos.X, pos.Y, value);
-    public static void SetCellValue<T>(this ref ValueGridShape<T> shape, int x, int y, T value) where T : unmanaged, System.IEquatable<T> => shape[x, y] = value;
+    public static void SetCellValue<T>(this ref ValueGridShape<T> shape, int x, int y, T value) where T : unmanaged, System.IEquatable<T> => shape[shape.GetIndex(x, y)] = value;
 
     public static void FillAll<T>(this ref ValueGridShape<T> shape, T value) where T : unmanaged, System.IEquatable<T>
     {
@@ -1248,6 +1269,27 @@ public static partial class WritableGridShapeExtension
     public static void FillRect<T>(this ref ValueGridShape<T> shape, GridPosition pos, int width, int height, T value) where T : unmanaged, System.IEquatable<T>
     {
         FillRect(ref shape, pos.X, pos.Y, width, height, value);
+    }
+
+    public static void FillShape<T>(this ref ValueGridShape<T> grid, ImmutableGridShape shape, GridPosition pos, T value) where T : unmanaged, System.IEquatable<T>
+    {
+        // Check bounds to prevent out of range access
+        var maxX = System.Math.Min(shape.Width, grid.Width - pos.X);
+        var maxY = System.Math.Min(shape.Height, grid.Height - pos.Y);
+        var startX = System.Math.Max(0, -pos.X);
+        var startY = System.Math.Max(0, -pos.Y);
+
+        // Fill only the cells where the shape has true values
+        for (int y = startY; y < maxY; y++)
+        {
+            for (int x = startX; x < maxX; x++)
+            {
+                if (shape[x, y])
+                {
+                    SetCellValue(ref grid, pos.X + x, pos.Y + y, value);
+                }
+            }
+        }
     }
 
     public static void Clear<T>(this ref ValueGridShape<T> shape) where T : unmanaged, System.IEquatable<T>

@@ -36,7 +36,7 @@ public static partial class ReadOnlyGridShapeExtension
     public static int GetIndex<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, int x, int y)<#= typeConstraint #> => y * shape.Width + x;
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static <#= cellTypeParam #> GetCellValue<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, GridPosition pos)<#= typeConstraint #> => shape[pos];
+    public static <#= cellTypeParam #> GetCellValue<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, GridPosition pos)<#= typeConstraint #> => shape[shape.GetIndex(pos)];
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
     public static <#= cellTypeParam #> GetCellValue<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, int x, int y)<#= typeConstraint #> => GetCellValue(<#= modifier.Trim() #> shape, new GridPosition(x, y));
@@ -295,7 +295,7 @@ public static partial class WritableGridShapeExtension
 #region <#= shapeType #>
 
     public static void SetCellValue<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, GridPosition pos, <#= cellTypeParam #> value)<#= typeConstraint #> => shape.SetCellValue(pos.X, pos.Y, value);
-    public static void SetCellValue<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, int x, int y, <#= cellTypeParam #> value)<#= typeConstraint #> => shape[x, y] = value;
+    public static void SetCellValue<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, int x, int y, <#= cellTypeParam #> value)<#= typeConstraint #> => shape[shape.GetIndex(x, y)] = value;
 
     public static void FillAll<#= genericConstraint #>(this <#= modifier #><#= typeName #> shape, <#= cellTypeParam #> value)<#= typeConstraint #>
     {
@@ -340,7 +340,7 @@ public static partial class WritableGridShapeExtension
             {
                 if (shape[x, y])
                 {
-                    grid.SetCellValue(<#= modifier.Trim() #> grid, pos.X + x, pos.Y + y, value);
+                    SetCellValue(<#= modifier.Trim() #> grid, pos.X + x, pos.Y + y, value);
                 }
             }
         }

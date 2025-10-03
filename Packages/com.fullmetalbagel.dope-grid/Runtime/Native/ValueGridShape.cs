@@ -27,19 +27,19 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
         Width = width;
         Height = height;
         _values = new NativeArray<T>(width * height, allocator, NativeArrayOptions.UninitializedMemory);
-        FillAll(defaultValue);
+        this.FillAll(defaultValue);
     }
 
     public T this[int x, int y]
     {
         get => this.GetCellValue(x, y);
-        set => SetValue(x, y, value);
+        set => this.SetCellValue(x, y, value);
     }
 
     public T this[GridPosition pos]
     {
         get => this.GetCellValue(pos);
-        set => SetValue(pos, value);
+        set => this.SetCellValue(pos, value);
     }
 
     public T this[int index]
@@ -63,7 +63,7 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
         {
             for (int x = 0; x < Width; x++)
             {
-                SetValue(x, y, shape.GetCellValue(x, y) ? trueValue : falseValue);
+                this.SetCellValue(x, y, shape.GetCellValue(x, y) ? trueValue : falseValue);
             }
         }
     }
@@ -148,7 +148,7 @@ public struct ValueGridShape<T> : IEquatable<ValueGridShape<T>>, INativeDisposab
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    shape.SetCell(x, y, predicate(this[x, y], data));
+                    shape.SetCellValue(x, y, predicate(this[x, y], data));
                 }
             }
             return shape;

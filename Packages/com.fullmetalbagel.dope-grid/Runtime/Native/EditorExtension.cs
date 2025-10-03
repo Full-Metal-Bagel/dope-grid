@@ -17,7 +17,7 @@ public static class EditorExtension
                 var index = y * editorShape.Width + x;
                 if (index < editorShape.Shape.Length)
                 {
-                    shape.SetCell(x, y, editorShape.Shape[index]);
+                    shape[x, y] = editorShape.Shape[index];
                 }
             }
         }

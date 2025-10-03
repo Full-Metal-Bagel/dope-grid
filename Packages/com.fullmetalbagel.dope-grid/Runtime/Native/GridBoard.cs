@@ -96,7 +96,7 @@ public struct GridBoard : IDisposable
             _items.Add(ItemSlot.Invalid); // Placeholder
         }
 
-        _grid.PlaceItem(shape, pos);
+        _grid.PlaceItem(shape, pos, true);
         _items[itemIndex] = new ItemSlot(shape, pos);
         _itemCount++;
 

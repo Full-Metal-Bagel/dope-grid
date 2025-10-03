@@ -30,13 +30,13 @@ public struct GridShape : IReadOnlyGridShape, IEquatable<GridShape>, INativeDisp
     public bool this[int x, int y]
     {
         get => this.GetCellValue(x, y);
-        set => SetCell(x, y, value);
+        set => this.SetCellValue(x, y, value);
     }
 
     public bool this[GridPosition pos]
     {
         get => this.GetCellValue(pos);
-        set => SetCell(pos, value);
+        set => this.SetCellValue(pos, value);
     }
 
     public bool this[int index]
