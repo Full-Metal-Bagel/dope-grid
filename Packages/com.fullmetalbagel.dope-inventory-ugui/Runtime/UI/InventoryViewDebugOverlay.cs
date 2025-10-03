@@ -107,7 +107,7 @@ namespace DopeGrid.Inventory
                 {
                     for (int x = 0; x < shape.Width; x++)
                     {
-                        if (!shape.GetCell(x, y)) continue;
+                        if (!shape[x, y]) continue;
                         var text = _itemTexts[index++];
                         var rt = (RectTransform)text.transform;
                         rt.sizeDelta = cellSize;

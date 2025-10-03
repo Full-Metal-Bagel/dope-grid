@@ -20,7 +20,7 @@ public struct GridShape : IEquatable<GridShape>, IDisposable
     public bool IsEmpty => Width == 0 || Height == 0;
     public bool IsCreated => _bits != null;
 
-    public GridShape(int width, int height)
+    public GridShape(int width, int height, Allocator allocator = Allocator.Temp)
     {
         Width = width;
         Height = height;
@@ -31,47 +31,27 @@ public struct GridShape : IEquatable<GridShape>, IDisposable
         Array.Clear(_bits, 0, _byteCount);
     }
 
-    public void SetCell(GridPosition pos, bool value) => SetCell(pos.X, pos.Y, value);
-    public void SetCell(int x, int y, bool value) => Bits.Set(GetIndex(x, y), value);
-
     public bool this[int x, int y]
     {
-        get => GetCell(x, y);
-        set => SetCell(x, y, value);
+        get => this.GetCellValue(x, y);
+        set => this.SetCellValue(x, y, value);
     }
 
     public bool this[GridPosition pos]
     {
-        get => GetCell(pos);
-        set => SetCell(pos, value);
+        get => this.GetCellValue(pos);
+        set => this.SetCellValue(pos, value);
     }
 
-    public GridShape Fill(bool value)
+    public bool this[int index]
+    {
+        get => ReadOnlyBits.Get(index);
+        set => Bits.Set(index, value);
+    }
+
+    public void FillAll(bool value)
     {
         Bits.SetAll(value);
-        return this;
-    }
-
-    public GridShape FillRect(int x, int y, int width, int height, bool value = true)
-    {
-        for (int dy = 0; dy < height; dy++)
-        {
-            for (int dx = 0; dx < width; dx++)
-            {
-                var px = x + dx;
-                var py = y + dy;
-                if (px >= 0 && px < Width && py >= 0 && py < Height)
-                {
-                    SetCell(px, py, value);
-                }
-            }
-        }
-        return this;
-    }
-
-    public GridShape FillRect(GridPosition pos, (int width, int height) size, bool value = true)
-    {
-        return FillRect(pos.X, pos.Y, size.width, size.height, value);
     }
 
     public void Clear()
@@ -132,7 +112,11 @@ public struct GridShape : IEquatable<GridShape>, IDisposable
         {
         }
 
-        public GridShape Clone()
+        public bool this[int x, int y] => this.GetCellValue(x, y);
+        public bool this[GridPosition pos] => this.GetCellValue(pos);
+        public bool this[int index] => Bits.Get(index);
+
+        public GridShape Clone(Allocator allocator =  Allocator.Temp)
         {
             var clone = new GridShape(Width, Height);
             CopyTo(clone);

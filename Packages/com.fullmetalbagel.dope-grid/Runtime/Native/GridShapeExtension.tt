@@ -1,6 +1,9 @@
 <#@ template language="C#" #>
 <#@ include file="../Core/GridShapeExtension.ttinclude" #>
 
+using Unity.Collections;
+using Unity.Mathematics;
+
 namespace DopeGrid.Native;
 
 <#
@@ -16,4 +19,6 @@ namespace DopeGrid.Native;
         ("ref GridShape", "bool"),
         ("ref ValueGridShape<T>", "T where T : unmanaged, System.IEquatable<T>")
     );
+
+    MakeExtensionForShapes();
 #>

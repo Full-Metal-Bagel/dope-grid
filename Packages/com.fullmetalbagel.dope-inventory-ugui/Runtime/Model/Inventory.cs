@@ -51,7 +51,6 @@ public struct Inventory : INativeDisposable
 
     public void Clear()
     {
-        _grid.Clear();
         _grid.FillAll(-1);
         _items.Clear();
         _freeIndices.Clear();
@@ -220,7 +219,7 @@ public struct Inventory : INativeDisposable
         public bool IsEmpty => ItemCount == 0;
 
         public int FreeSpaceCount => _grid.CountValue(-1);
-        public int OccupiedSpaceCount => _grid.Size - FreeSpaceCount;
+        public int OccupiedSpaceCount => _grid.Size() - FreeSpaceCount;
 
         internal ReadOnly(ValueGridShape<int>.ReadOnly grid, NativeArray<InventoryItem>.ReadOnly items)
         {

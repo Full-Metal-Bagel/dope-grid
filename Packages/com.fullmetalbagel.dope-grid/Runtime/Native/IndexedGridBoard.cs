@@ -67,37 +67,19 @@ public struct IndexedGridBoard : IDisposable
 
     public (int index, RotationDegree rotation) TryAddItem(ImmutableGridShape item)
     {
-        // Try all rotations to find first fit
-        var rotateCount = 0;
-        var rotatedItem = item;
-        GridPosition position;
-        do
+        var (pos, rotation) = Grid.FindFirstFitWithFreeRotation(item, freeValue: -1);
+        if (pos.IsValid)
         {
-            position = _grid.FindFirstFitWithFixedRotation(rotatedItem);
-            if (position.IsValid)
-            {
-                var index = AddItemAt(rotatedItem, position);
-                var rotation = rotateCount switch
-                {
-                    0 => RotationDegree.None,
-                    1 => RotationDegree.Clockwise90,
-                    2 => RotationDegree.Clockwise180,
-                    3 => RotationDegree.Clockwise270,
-                    _ => throw new NotImplementedException()
-                };
-                return (index, rotation);
-            }
-            rotatedItem = rotatedItem.Rotate90();
-            rotateCount++;
+            var index = AddItemAt(item.GetRotatedShape(rotation), pos);
+            return (index, rotation);
         }
-        while (rotatedItem != item);
 
         return (-1, RotationDegree.None);
     }
 
     public int TryAddItemAt(ImmutableGridShape shape, GridPosition pos)
     {
-        if (_grid.CanPlaceItem(shape, pos))
+        if (_grid.CanPlaceItem(shape, pos, freeValue: -1))
         {
             return AddItemAt(shape, pos);
         }

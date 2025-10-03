@@ -32,7 +32,7 @@ public class StandardGridBoardExtensionTests
     public void FindFirstFit_ReturnsNegativeWhenNoFit()
     {
         using var container = new GridShape(2, 2);
-        container.Fill(true);
+        container.FillAll(true);
 
         using var item = Shapes.Single();
         var pos = container.FindFirstFit(item.AsReadOnly());
@@ -134,7 +134,7 @@ public class StandardGridBoardExtensionTests
     public void RemoveItem_OnlyRemovesShapeCells()
     {
         using var container = new GridShape(5, 5);
-        container.Fill(true);
+        container.FillAll(true);
 
         using var item = Shapes.LShape();
 

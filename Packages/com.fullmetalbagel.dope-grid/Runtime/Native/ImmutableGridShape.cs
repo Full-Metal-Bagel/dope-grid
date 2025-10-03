@@ -84,7 +84,7 @@ public static class ImmutableGridShape2DList
 
     public static ImmutableGridShape GetOrCreateImmutable(this in GridShape.ReadOnly shape)
     {
-        if (!shape.IsTrimmed()) throw new ArgumentException("shape is not trimmed", nameof(shape));
+        if (!shape.IsTrimmed(freeValue: false)) throw new ArgumentException("shape is not trimmed", nameof(shape));
         return new ImmutableGridShape(s_shapes.Value.GetOrCreateShape(shape));
     }
 

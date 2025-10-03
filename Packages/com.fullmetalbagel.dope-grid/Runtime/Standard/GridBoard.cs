@@ -73,23 +73,24 @@ public struct GridBoard : IDisposable
 
     public bool IsCellOccupied(GridPosition pos)
     {
-        return _grid.GetCell(pos);
+        return _grid.GetCellValue(pos);
     }
 
-    public int TryAddItem(ImmutableGridShape item)
+    public (int index, RotationDegree rotation) TryAddItem(ImmutableGridShape item)
     {
-        var pos = _grid.FindFirstFit(item);
-        if (pos.X >= 0)
+        var (pos, rotation) = _grid.FindFirstFitWithFreeRotation(item, freeValue: false);
+        if (pos.IsValid)
         {
-            return AddItemAt(item, pos);
+            var index = AddItemAt(item.GetRotatedShape(rotation), pos);
+            return (index, rotation);
         }
 
-        return -1;
+        return (-1, RotationDegree.None);
     }
 
     public int TryAddItemAt(ImmutableGridShape shape, GridPosition pos)
     {
-        if (_grid.CanPlaceItem(shape, pos))
+        if (_grid.CanPlaceItem(shape, pos, freeValue: false))
         {
             return AddItemAt(shape, pos);
         }
@@ -111,7 +112,7 @@ public struct GridBoard : IDisposable
             _items.Add(ItemSlot.Invalid); // Placeholder
         }
 
-        _grid.PlaceItem(shape, pos);
+        _grid.PlaceItem(shape, pos, value: true);
         _items[itemIndex] = new ItemSlot(shape, pos);
         _itemCount++;
 
@@ -123,7 +124,7 @@ public struct GridBoard : IDisposable
         if (index >= 0 && index < _items.Count && _items[index].IsValid)
         {
             var slot = _items[index];
-            _grid.RemoveItem(slot.Shape, slot.Position);
+            _grid.RemoveItem(slot.Shape, slot.Position, freeValue: false);
 
             // Mark slot as free and add to free list
             _items[index] = ItemSlot.Invalid;

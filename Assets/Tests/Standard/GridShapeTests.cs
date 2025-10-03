@@ -84,13 +84,13 @@ public class StandardGridShapeTests
     {
         using var grid = new GridShape(3, 3);
 
-        grid.Fill(true);
+        grid.FillAll(true);
 
         for (var y = 0; y < 3; y++)
         for (var x = 0; x < 3; x++)
             Assert.IsTrue(grid.GetCell((x, y)));
 
-        grid.Fill(false);
+        grid.FillAll(false);
 
         for (var y = 0; y < 3; y++)
         for (var x = 0; x < 3; x++)

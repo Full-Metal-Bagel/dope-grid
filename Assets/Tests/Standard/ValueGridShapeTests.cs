@@ -61,7 +61,7 @@ public class StandardValueGridShapeTests
     {
         using var grid = new ValueGridShape<int>(3, 3);
 
-        grid.Fill(7);
+        grid.FillAll(7);
 
         for (int y = 0; y < 3; y++)
         for (int x = 0; x < 3; x++)
@@ -87,7 +87,7 @@ public class StandardValueGridShapeTests
     public void Clear_ResetsToDefault()
     {
         using var grid = new ValueGridShape<int>(3, 3);
-        grid.Fill(5);
+        grid.FillAll(5);
 
         grid.Clear();
 

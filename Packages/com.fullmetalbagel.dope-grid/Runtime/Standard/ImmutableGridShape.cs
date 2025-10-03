@@ -22,14 +22,8 @@ public readonly record struct ImmutableGridShape(int Id)
     public ImmutableGridShape Rotate90() => new(Shapes.GetOrCreateRotated90(Id));
     public ImmutableGridShape Flip() => new(Shapes.GetOrCreateFlipped(Id));
 
-    public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-    public int GetIndex(int x, int y) => y * Width + x;
-
-    public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
-    public bool GetCell(int x, int y) => Pattern.Get(GetIndex(x, y));
-
-    public bool this[GridPosition pos] => GetCell(pos);
-    public bool this[int x, int y] => GetCell(x, y);
+    public bool this[GridPosition pos] => this.GetCellValue(pos);
+    public bool this[int x, int y] => this.GetCellValue(x, y);
     public bool this[int index] => Pattern.Get(index);
 
     public static implicit operator GridShape.ReadOnly(ImmutableGridShape shape) => shape.ToReadOnlyGridShape();
@@ -50,7 +44,7 @@ public static class ImmutableGridShapeExtensions
 
     public static ImmutableGridShape GetOrCreateImmutable(this in GridShape.ReadOnly shape)
     {
-        if (!shape.IsTrimmed()) throw new ArgumentException("shape is not trimmed", nameof(shape));
+        if (!shape.IsTrimmed(freeValue: false)) throw new ArgumentException("shape is not trimmed", nameof(shape));
         return new ImmutableGridShape(ImmutableGridShapeRepository.Instance.GetOrCreateShape(shape));
     }
 }
@@ -90,7 +84,7 @@ internal class ImmutableGridShapeRepository
     {
         var bound = _bounds[id];
         var pattern = GetPattern(id);
-        return new GridShape.ReadOnly(bound, pattern);
+        return new GridShape.ReadOnly(bound.width, bound.height, pattern);
     }
 
     [Pure, MustUseReturnValue]

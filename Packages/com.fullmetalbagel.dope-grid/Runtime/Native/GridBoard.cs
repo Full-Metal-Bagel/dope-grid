@@ -61,7 +61,7 @@ public struct GridBoard : IDisposable
 
     public (int index, RotationDegree rotation) TryAddItem(ImmutableGridShape item)
     {
-        var (pos, rotation) = _grid.FindFirstFitWithFreeRotation(item);
+        var (pos, rotation) = _grid.FindFirstFitWithFreeRotation(item, freeValue: false);
         if (pos.IsValid)
         {
             var index = AddItemAt(item.GetRotatedShape(rotation), pos);
@@ -73,7 +73,7 @@ public struct GridBoard : IDisposable
 
     public int TryAddItemAt(ImmutableGridShape shape, GridPosition pos)
     {
-        if (_grid.CanPlaceItem(shape, pos))
+        if (_grid.CanPlaceItem(shape, pos, freeValue: false))
         {
             return AddItemAt(shape, pos);
         }
@@ -108,7 +108,7 @@ public struct GridBoard : IDisposable
         if (index >= 0 && index < _items.Length && _items[index].IsValid)
         {
             var slot = _items[index];
-            _grid.RemoveItem(slot.Shape, slot.Position);
+            _grid.RemoveItem(slot.Shape, slot.Position, freeValue: false);
 
             // Mark slot as free and add to free list
             _items[index] = ItemSlot.Invalid;

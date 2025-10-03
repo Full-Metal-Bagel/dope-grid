@@ -1,5 +1,8 @@
 ﻿
 
+using Unity.Collections;
+using Unity.Mathematics;
+
 namespace DopeGrid.Native;
 
 public static partial class ReadOnlyGridShapeExtension
@@ -93,7 +96,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsTrimmed(this ref GridShape shape, bool freeValue = default)
+    public static bool IsTrimmed(this ref GridShape shape, bool freeValue)
     {
         // Empty shapes are considered trimmed
         if (shape.Width == 0 || shape.Height == 0)
@@ -129,7 +132,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool CanPlaceItem(this ref GridShape container, ImmutableGridShape item, GridPosition pos, bool freeValue = default)
+    public static bool CanPlaceItem(this ref GridShape container, ImmutableGridShape item, GridPosition pos, bool freeValue)
     {
         // Bounds check
         if (pos.X < 0 || pos.Y < 0 || pos.X + item.Width > container.Width || pos.Y + item.Height > container.Height)
@@ -152,14 +155,14 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation(this ref GridShape container, ImmutableGridShape item)
+    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation(this ref GridShape container, ImmutableGridShape item, bool freeValue)
     {
         var rotateCount = 0;
         var rotatedItem = item;
         var position = GridPosition.Invalid;
         do
         {
-            position = FindFirstFitWithFixedRotation(ref container, rotatedItem);
+            position = FindFirstFitWithFixedRotation(ref container, rotatedItem, freeValue);
             if (position.IsValid) break;
             rotatedItem = rotatedItem.Rotate90();
             rotateCount++;
@@ -176,6 +179,12 @@ public static partial class ReadOnlyGridShapeExtension
         };
 
         return (position, rotation);
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static bool CheckShapeCells(this ref GridShape grid, ImmutableGridShape shape, GridPosition position, System.Func<GridPosition, bool, bool> cellPredicate)
+    {
+        return CheckShapeCells(ref grid, shape, position, static (pos, value, pred) => pred(pos, value), cellPredicate);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -204,7 +213,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static GridPosition FindFirstFitWithFixedRotation(this ref GridShape grid, ImmutableGridShape item, bool freeValue = default)
+    public static GridPosition FindFirstFitWithFixedRotation(this ref GridShape grid, ImmutableGridShape item, bool freeValue)
     {
         var maxY = grid.Height - item.Height + 1;
         var maxX = grid.Width - item.Width + 1;
@@ -321,7 +330,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsTrimmed(this in GridShape.ReadOnly shape, bool freeValue = default)
+    public static bool IsTrimmed(this in GridShape.ReadOnly shape, bool freeValue)
     {
         // Empty shapes are considered trimmed
         if (shape.Width == 0 || shape.Height == 0)
@@ -357,7 +366,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool CanPlaceItem(this in GridShape.ReadOnly container, ImmutableGridShape item, GridPosition pos, bool freeValue = default)
+    public static bool CanPlaceItem(this in GridShape.ReadOnly container, ImmutableGridShape item, GridPosition pos, bool freeValue)
     {
         // Bounds check
         if (pos.X < 0 || pos.Y < 0 || pos.X + item.Width > container.Width || pos.Y + item.Height > container.Height)
@@ -380,14 +389,14 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation(this in GridShape.ReadOnly container, ImmutableGridShape item)
+    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation(this in GridShape.ReadOnly container, ImmutableGridShape item, bool freeValue)
     {
         var rotateCount = 0;
         var rotatedItem = item;
         var position = GridPosition.Invalid;
         do
         {
-            position = FindFirstFitWithFixedRotation(in container, rotatedItem);
+            position = FindFirstFitWithFixedRotation(in container, rotatedItem, freeValue);
             if (position.IsValid) break;
             rotatedItem = rotatedItem.Rotate90();
             rotateCount++;
@@ -404,6 +413,12 @@ public static partial class ReadOnlyGridShapeExtension
         };
 
         return (position, rotation);
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static bool CheckShapeCells(this in GridShape.ReadOnly grid, ImmutableGridShape shape, GridPosition position, System.Func<GridPosition, bool, bool> cellPredicate)
+    {
+        return CheckShapeCells(in grid, shape, position, static (pos, value, pred) => pred(pos, value), cellPredicate);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -432,7 +447,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static GridPosition FindFirstFitWithFixedRotation(this in GridShape.ReadOnly grid, ImmutableGridShape item, bool freeValue = default)
+    public static GridPosition FindFirstFitWithFixedRotation(this in GridShape.ReadOnly grid, ImmutableGridShape item, bool freeValue)
     {
         var maxY = grid.Height - item.Height + 1;
         var maxX = grid.Width - item.Width + 1;
@@ -549,7 +564,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsTrimmed<T>(this ref ValueGridShape<T> shape, T freeValue = default) where T : unmanaged, System.IEquatable<T>
+    public static bool IsTrimmed<T>(this ref ValueGridShape<T> shape, T freeValue) where T : unmanaged, System.IEquatable<T>
     {
         // Empty shapes are considered trimmed
         if (shape.Width == 0 || shape.Height == 0)
@@ -585,7 +600,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool CanPlaceItem<T>(this ref ValueGridShape<T> container, ImmutableGridShape item, GridPosition pos, T freeValue = default) where T : unmanaged, System.IEquatable<T>
+    public static bool CanPlaceItem<T>(this ref ValueGridShape<T> container, ImmutableGridShape item, GridPosition pos, T freeValue) where T : unmanaged, System.IEquatable<T>
     {
         // Bounds check
         if (pos.X < 0 || pos.Y < 0 || pos.X + item.Width > container.Width || pos.Y + item.Height > container.Height)
@@ -608,14 +623,14 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation<T>(this ref ValueGridShape<T> container, ImmutableGridShape item) where T : unmanaged, System.IEquatable<T>
+    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation<T>(this ref ValueGridShape<T> container, ImmutableGridShape item, T freeValue) where T : unmanaged, System.IEquatable<T>
     {
         var rotateCount = 0;
         var rotatedItem = item;
         var position = GridPosition.Invalid;
         do
         {
-            position = FindFirstFitWithFixedRotation(ref container, rotatedItem);
+            position = FindFirstFitWithFixedRotation(ref container, rotatedItem, freeValue);
             if (position.IsValid) break;
             rotatedItem = rotatedItem.Rotate90();
             rotateCount++;
@@ -632,6 +647,12 @@ public static partial class ReadOnlyGridShapeExtension
         };
 
         return (position, rotation);
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static bool CheckShapeCells<T>(this ref ValueGridShape<T> grid, ImmutableGridShape shape, GridPosition position, System.Func<GridPosition, T, bool> cellPredicate) where T : unmanaged, System.IEquatable<T>
+    {
+        return CheckShapeCells(ref grid, shape, position, static (pos, value, pred) => pred(pos, value), cellPredicate);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -660,7 +681,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static GridPosition FindFirstFitWithFixedRotation<T>(this ref ValueGridShape<T> grid, ImmutableGridShape item, T freeValue = default) where T : unmanaged, System.IEquatable<T>
+    public static GridPosition FindFirstFitWithFixedRotation<T>(this ref ValueGridShape<T> grid, ImmutableGridShape item, T freeValue) where T : unmanaged, System.IEquatable<T>
     {
         var maxY = grid.Height - item.Height + 1;
         var maxX = grid.Width - item.Width + 1;
@@ -777,7 +798,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsTrimmed<T>(this in ValueGridShape<T>.ReadOnly shape, T freeValue = default) where T : unmanaged, System.IEquatable<T>
+    public static bool IsTrimmed<T>(this in ValueGridShape<T>.ReadOnly shape, T freeValue) where T : unmanaged, System.IEquatable<T>
     {
         // Empty shapes are considered trimmed
         if (shape.Width == 0 || shape.Height == 0)
@@ -813,7 +834,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool CanPlaceItem<T>(this in ValueGridShape<T>.ReadOnly container, ImmutableGridShape item, GridPosition pos, T freeValue = default) where T : unmanaged, System.IEquatable<T>
+    public static bool CanPlaceItem<T>(this in ValueGridShape<T>.ReadOnly container, ImmutableGridShape item, GridPosition pos, T freeValue) where T : unmanaged, System.IEquatable<T>
     {
         // Bounds check
         if (pos.X < 0 || pos.Y < 0 || pos.X + item.Width > container.Width || pos.Y + item.Height > container.Height)
@@ -836,14 +857,14 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation<T>(this in ValueGridShape<T>.ReadOnly container, ImmutableGridShape item) where T : unmanaged, System.IEquatable<T>
+    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation<T>(this in ValueGridShape<T>.ReadOnly container, ImmutableGridShape item, T freeValue) where T : unmanaged, System.IEquatable<T>
     {
         var rotateCount = 0;
         var rotatedItem = item;
         var position = GridPosition.Invalid;
         do
         {
-            position = FindFirstFitWithFixedRotation(in container, rotatedItem);
+            position = FindFirstFitWithFixedRotation(in container, rotatedItem, freeValue);
             if (position.IsValid) break;
             rotatedItem = rotatedItem.Rotate90();
             rotateCount++;
@@ -860,6 +881,12 @@ public static partial class ReadOnlyGridShapeExtension
         };
 
         return (position, rotation);
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static bool CheckShapeCells<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape shape, GridPosition position, System.Func<GridPosition, T, bool> cellPredicate) where T : unmanaged, System.IEquatable<T>
+    {
+        return CheckShapeCells(in grid, shape, position, static (pos, value, pred) => pred(pos, value), cellPredicate);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -888,7 +915,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static GridPosition FindFirstFitWithFixedRotation<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape item, T freeValue = default) where T : unmanaged, System.IEquatable<T>
+    public static GridPosition FindFirstFitWithFixedRotation<T>(this in ValueGridShape<T>.ReadOnly grid, ImmutableGridShape item, T freeValue) where T : unmanaged, System.IEquatable<T>
     {
         var maxY = grid.Height - item.Height + 1;
         var maxX = grid.Width - item.Width + 1;
@@ -1005,7 +1032,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool IsTrimmed(this in ImmutableGridShape shape, bool freeValue = default)
+    public static bool IsTrimmed(this in ImmutableGridShape shape, bool freeValue)
     {
         // Empty shapes are considered trimmed
         if (shape.Width == 0 || shape.Height == 0)
@@ -1041,7 +1068,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static bool CanPlaceItem(this in ImmutableGridShape container, ImmutableGridShape item, GridPosition pos, bool freeValue = default)
+    public static bool CanPlaceItem(this in ImmutableGridShape container, ImmutableGridShape item, GridPosition pos, bool freeValue)
     {
         // Bounds check
         if (pos.X < 0 || pos.Y < 0 || pos.X + item.Width > container.Width || pos.Y + item.Height > container.Height)
@@ -1064,14 +1091,14 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation(this in ImmutableGridShape container, ImmutableGridShape item)
+    public static (GridPosition position, RotationDegree rotation) FindFirstFitWithFreeRotation(this in ImmutableGridShape container, ImmutableGridShape item, bool freeValue)
     {
         var rotateCount = 0;
         var rotatedItem = item;
         var position = GridPosition.Invalid;
         do
         {
-            position = FindFirstFitWithFixedRotation(in container, rotatedItem);
+            position = FindFirstFitWithFixedRotation(in container, rotatedItem, freeValue);
             if (position.IsValid) break;
             rotatedItem = rotatedItem.Rotate90();
             rotateCount++;
@@ -1088,6 +1115,12 @@ public static partial class ReadOnlyGridShapeExtension
         };
 
         return (position, rotation);
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static bool CheckShapeCells(this in ImmutableGridShape grid, ImmutableGridShape shape, GridPosition position, System.Func<GridPosition, bool, bool> cellPredicate)
+    {
+        return CheckShapeCells(in grid, shape, position, static (pos, value, pred) => pred(pos, value), cellPredicate);
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
@@ -1116,7 +1149,7 @@ public static partial class ReadOnlyGridShapeExtension
     }
 
     [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
-    public static GridPosition FindFirstFitWithFixedRotation(this in ImmutableGridShape grid, ImmutableGridShape item, bool freeValue = default)
+    public static GridPosition FindFirstFitWithFixedRotation(this in ImmutableGridShape grid, ImmutableGridShape item, bool freeValue)
     {
         var maxY = grid.Height - item.Height + 1;
         var maxX = grid.Width - item.Width + 1;
@@ -1203,11 +1236,6 @@ public static partial class WritableGridShapeExtension
         }
     }
 
-    public static void Clear(this ref GridShape shape)
-    {
-        FillAll(ref shape, default);
-    }
-
     public static void PlaceItem(this ref GridShape container, ImmutableGridShape item, GridPosition pos, bool value)
     {
         for (var sy = 0; sy < item.Height; sy++)
@@ -1222,7 +1250,7 @@ public static partial class WritableGridShapeExtension
         }
     }
 
-    public static void RemoveItem(this ref GridShape container, ImmutableGridShape item, GridPosition pos, bool freeValue = default)
+    public static void RemoveItem(this ref GridShape container, ImmutableGridShape item, GridPosition pos, bool freeValue)
     {
         for (var sy = 0; sy < item.Height; sy++)
         for (var sx = 0; sx < item.Width; sx++)
@@ -1292,11 +1320,6 @@ public static partial class WritableGridShapeExtension
         }
     }
 
-    public static void Clear<T>(this ref ValueGridShape<T> shape) where T : unmanaged, System.IEquatable<T>
-    {
-        FillAll(ref shape, default);
-    }
-
     public static void PlaceItem<T>(this ref ValueGridShape<T> container, ImmutableGridShape item, GridPosition pos, T value) where T : unmanaged, System.IEquatable<T>
     {
         for (var sy = 0; sy < item.Height; sy++)
@@ -1311,7 +1334,7 @@ public static partial class WritableGridShapeExtension
         }
     }
 
-    public static void RemoveItem<T>(this ref ValueGridShape<T> container, ImmutableGridShape item, GridPosition pos, T freeValue = default) where T : unmanaged, System.IEquatable<T>
+    public static void RemoveItem<T>(this ref ValueGridShape<T> container, ImmutableGridShape item, GridPosition pos, T freeValue) where T : unmanaged, System.IEquatable<T>
     {
         for (var sy = 0; sy < item.Height; sy++)
         for (var sx = 0; sx < item.Width; sx++)
@@ -1328,3 +1351,366 @@ public static partial class WritableGridShapeExtension
 #endregion
     }
 
+public static partial class Shapes
+{
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1720:Identifier contains type name")]
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static GridShape Single(Allocator allocator = Allocator.Temp)
+    {
+        var shape = new GridShape(1, 1, allocator);
+        shape.SetCellValue(0, 0, true);
+        return shape;
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static GridShape Line(int length, Allocator allocator = Allocator.Temp)
+    {
+        var shape = new GridShape(length, 1, allocator);
+        for (var i = 0; i < length; i++)
+            shape.SetCellValue(i, 0, true);
+        return shape;
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static GridShape Square(int size, Allocator allocator = Allocator.Temp)
+    {
+        var shape = new GridShape(size, size, allocator);
+        for (var y = 0; y < size; y++)
+        for (var x = 0; x < size; x++)
+            shape.SetCellValue(x, y, true);
+        return shape;
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static GridShape LShape(Allocator allocator = Allocator.Temp)
+    {
+        var shape = new GridShape(2, 2, allocator);
+        shape.SetCellValue(0, 0, true);
+        shape.SetCellValue(0, 1, true);
+        shape.SetCellValue(1, 1, true);
+        return shape;
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static GridShape TShape(Allocator allocator = Allocator.Temp)
+    {
+        var shape = new GridShape(3, 2, allocator);
+        shape.SetCellValue(0, 0, true);
+        shape.SetCellValue(1, 0, true);
+        shape.SetCellValue(2, 0, true);
+        shape.SetCellValue(1, 1, true);
+        return shape;
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static GridShape Cross(Allocator allocator = Allocator.Temp)
+    {
+        var shape = new GridShape(3, 3, allocator);
+        shape.SetCellValue(1, 0, true);
+        shape.SetCellValue(0, 1, true);
+        shape.SetCellValue(1, 1, true);
+        shape.SetCellValue(2, 1, true);
+        shape.SetCellValue(1, 2, true);
+        return shape;
+    }
+
+    // Immutable shape factory methods
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static ImmutableGridShape ImmutableSingle()
+    {
+        using var shape = Single(Allocator.Temp);
+        return shape.GetOrCreateImmutable();
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static ImmutableGridShape ImmutableLine(int length)
+    {
+        using var shape = Line(length, Allocator.Temp);
+        return shape.GetOrCreateImmutable();
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static ImmutableGridShape ImmutableSquare(int size)
+    {
+        using var shape = Square(size, Allocator.Temp);
+        return shape.GetOrCreateImmutable();
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static ImmutableGridShape ImmutableLShape()
+    {
+        using var shape = LShape(Allocator.Temp);
+        return shape.GetOrCreateImmutable();
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static ImmutableGridShape ImmutableTShape()
+    {
+        using var shape = TShape(Allocator.Temp);
+        return shape.GetOrCreateImmutable();
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static ImmutableGridShape ImmutableCross()
+    {
+        using var shape = Cross(Allocator.Temp);
+        return shape.GetOrCreateImmutable();
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static GridShape Rotate(this GridShape shape, RotationDegree degree, Allocator allocator = Allocator.Temp)
+    {
+        return shape.AsReadOnly().Rotate(degree, allocator);
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static GridShape Rotate(this in GridShape.ReadOnly shape, RotationDegree degree, Allocator allocator = Allocator.Temp)
+    {
+        var dimensions = shape.GetRotatedDimensions(degree);
+        var rotated = new GridShape(dimensions.width, dimensions.height, allocator);
+        shape.RotateBits(degree, rotated.Bits);
+        return rotated;
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static (int width, int height) GetRotatedDimensions(this in GridShape.ReadOnly shape, RotationDegree degree)
+    {
+        return degree switch
+        {
+            RotationDegree.None => (shape.Width, shape.Height),
+            RotationDegree.Clockwise90 => (shape.Height, shape.Width),
+            RotationDegree.Clockwise180 => (shape.Width, shape.Height),
+            RotationDegree.Clockwise270 => (shape.Height, shape.Width),
+            _ => throw new System.NotImplementedException()
+        };
+    }
+
+    public static GridShape.ReadOnly RotateBits(this in GridShape.ReadOnly shape, RotationDegree degree, SpanBitArray output)
+    {
+        var width = shape.Width;
+        var height = shape.Height;
+        var newBound = GetRotatedDimensions(shape, degree);
+
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                if (!shape[x, y]) continue;
+
+                (int rotatedX, int rotatedY) = degree switch
+                {
+                    RotationDegree.Clockwise90 =>
+                        // (x,y) -> (height-1-y, x)
+                        (height - 1 - y, x),
+                    RotationDegree.Clockwise180 =>
+                        // (x,y) -> (width-1-x, height-1-y)
+                        (width - 1 - x, height - 1 - y),
+                    RotationDegree.Clockwise270 =>
+                        // (x,y) -> (y, width-1-x)
+                        (y, width - 1 - x),
+                    _ => throw new System.ArgumentException($"Invalid rotation degree: {degree}")
+                };
+
+                var index = rotatedY * newBound.width + rotatedX;
+                output.Set(index, true);
+            }
+        }
+        return new GridShape.ReadOnly(newBound.width, newBound.height, output.AsReadOnly());
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static GridShape Flip(this GridShape shape, FlipAxis axis, Allocator allocator = Allocator.Temp)
+    {
+        return shape.AsReadOnly().Flip(axis, allocator);
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static GridShape Flip(this in GridShape.ReadOnly shape, FlipAxis axis, Allocator allocator = Allocator.Temp)
+    {
+        var flipped = new GridShape(shape.Width, shape.Height, allocator);
+        shape.FlipBits(axis, flipped.Bits);
+        return flipped;
+    }
+
+    public static GridShape.ReadOnly FlipBits(this in GridShape.ReadOnly shape, FlipAxis axis, SpanBitArray output)
+    {
+        var width = shape.Width;
+        var height = shape.Height;
+        var bits = shape.Bits;
+
+        // Use direct bit operations for better performance
+        for (var y = 0; y < height; y++)
+        {
+            var rowStart = y * width;
+
+            for (var x = 0; x < width; x++)
+            {
+                var sourceIndex = rowStart + x;
+                if (!bits.Get(sourceIndex)) continue;
+
+                var (flippedX, flippedY) = axis switch
+                {
+                    FlipAxis.Horizontal => (width - 1 - x, y),
+                    FlipAxis.Vertical => (x, height - 1 - y),
+                    _ => throw new System.ArgumentException($"Invalid flip axis: {axis}")
+                };
+
+                var destIndex = flippedY * width + flippedX;
+                output.Set(destIndex, true);
+            }
+        }
+
+        return new GridShape.ReadOnly(width, height, output.AsReadOnly());
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static GridShape Trim(this in GridShape.ReadOnly shape, Allocator allocator = Allocator.Temp)
+    {
+        // Handle empty shapes
+        if (shape.Width == 0 || shape.Height == 0)
+            return new GridShape(0, 0, allocator);
+
+        // If already trimmed, create a copy with the same cells
+        if (shape.IsTrimmed(freeValue: false))
+            return shape.Clone(allocator);
+
+        var bits = shape.Bits;
+        var width = shape.Width;
+        var height = shape.Height;
+
+        // Find bounds using direct bit operations
+        var minY = -1;
+        var maxY = -1;
+
+        // Find first and last occupied rows
+        for (var y = 0; y < height; y++)
+        {
+            var rowStart = y * width;
+            if (bits.TestAny(rowStart, width))
+            {
+                if (minY == -1) minY = y;
+                maxY = y;
+            }
+        }
+
+        // No occupied cells found
+        if (minY == -1)
+            return new GridShape(0, 0, allocator);
+
+        // Find left and right bounds
+        var minX = width;
+        var maxX = -1;
+
+        for (var y = minY; y <= maxY; y++)
+        {
+            var rowStart = y * width;
+            var remaining = width;
+            var offset = 0;
+
+            while (remaining > 0)
+            {
+                var chunkSize = math.min(remaining, 64);
+                var chunk = bits.GetBits(rowStart + offset, chunkSize);
+
+                if (chunk != 0)
+                {
+                    var trailingZeros = math.tzcnt(chunk);
+                    if (trailingZeros < chunkSize)
+                        minX = math.min(minX, offset + trailingZeros);
+
+                    var leadingZeros = math.lzcnt(chunk);
+                    var highestBit = 63 - leadingZeros;
+                    maxX = math.max(maxX, offset + highestBit);
+
+                    if (minX == 0 && maxX == width - 1)
+                        break;
+                }
+
+                remaining -= chunkSize;
+                offset += chunkSize;
+            }
+
+            if (minX == 0 && maxX == width - 1)
+                break;
+        }
+
+        // Calculate new dimensions
+        var newWidth = maxX - minX + 1;
+        var newHeight = maxY - minY + 1;
+        var trimmed = new GridShape(newWidth, newHeight, allocator);
+
+        // Copy each occupied row segment into the output without per-cell writes
+        var destBits = trimmed.Bits;
+
+        for (var row = 0; row < newHeight; row++)
+        {
+            var srcIndex = (minY + row) * width + minX;
+            var destIndex = row * newWidth;
+
+            var remaining = newWidth;
+            var offset = 0;
+
+            while (remaining > 0)
+            {
+                var chunkSize = math.min(remaining, 64);
+                var chunk = bits.GetBits(srcIndex + offset, chunkSize);
+
+                if (chunk != 0)
+                {
+                    destBits.SetBits(destIndex + offset, chunk, chunkSize);
+                }
+
+                remaining -= chunkSize;
+                offset += chunkSize;
+            }
+        }
+
+        return trimmed;
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static ImmutableGridShape GetRotatedShape(this ImmutableGridShape shape, RotationDegree rotation)
+    {
+        return rotation switch
+        {
+            RotationDegree.None => shape,
+            RotationDegree.Clockwise90 => shape.Rotate90(),
+            RotationDegree.Clockwise180 => shape.Rotate90().Rotate90(),
+            RotationDegree.Clockwise270 => shape.Rotate90().Rotate90().Rotate90(),
+            _ => throw new System.ArgumentOutOfRangeException(nameof(rotation), rotation, null)
+        };
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static GridShape ToGridShape(this EditorGridShape editorShape, Allocator allocator = Allocator.Temp)
+    {
+        var shape = new GridShape(editorShape.Width, editorShape.Height, allocator);
+
+        for (int y = 0; y < editorShape.Height; y++)
+        {
+            for (int x = 0; x < editorShape.Width; x++)
+            {
+                var index = y * editorShape.Width + x;
+                if (index < editorShape.Shape.Length)
+                {
+                    shape[x, y] = editorShape.Shape[index];
+                }
+            }
+        }
+
+        return shape;
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static GridShape ToTrimmedGridShape(this EditorGridShape editorShape, Allocator allocator = Allocator.Temp)
+    {
+        var shape = editorShape.ToGridShape(Allocator.Temp);
+        return shape.AsReadOnly().Trim();
+    }
+
+    [JetBrains.Annotations.Pure, JetBrains.Annotations.MustUseReturnValue]
+    public static ImmutableGridShape ToImmutableGridShape(this EditorGridShape editorShape)
+    {
+        return editorShape.ToTrimmedGridShape(Allocator.Temp).GetOrCreateImmutable();
+    }
+}
