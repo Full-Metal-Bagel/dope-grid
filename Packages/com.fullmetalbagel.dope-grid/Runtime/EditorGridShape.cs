@@ -1,5 +1,7 @@
+#if UNITY_2022_3_OR_NEWER
+
 using System;
-using UnityEngine;
+using JetBrains.Annotations;
 
 namespace DopeGrid;
 
@@ -13,7 +15,43 @@ public class EditorGridShapeReferenceImageAttribute : Attribute
 [Serializable]
 public struct EditorGridShape
 {
-    [field: SerializeField] public int Width { get; private set; }
-    [field: SerializeField] public int Height { get; private set; }
-    [field: SerializeField] public bool[] Shape { get; private set; }
+    [field: UnityEngine.SerializeField] public int Width { get; private set; }
+    [field: UnityEngine.SerializeField] public int Height { get; private set; }
+    [field: UnityEngine.SerializeField] public bool[] Shape { get; private set; }
+
+    [Pure, MustUseReturnValue]
+    public GridShape ToGridShape()
+    {
+        var shape = new GridShape(Width, Height);
+
+        for (int y = 0; y < Height; y++)
+        for (int x = 0; x < Width; x++)
+        {
+            var index = y * Width + x;
+            if (index < Shape.Length)
+            {
+                shape[x, y] = Shape[index];
+            }
+        }
+
+        return shape;
+    }
+
+    [Pure, MustUseReturnValue]
+    public GridShape ToTrimmedGridShape()
+    {
+        using var shape = ToGridShape();
+        var (_, _, width, height) = shape.GetTrimmedBound(default(bool));
+        var trimmedShape = new GridShape(width, height);
+        shape.Trim(trimmedShape, default(bool));
+        return trimmedShape;
+    }
+
+    [Pure, MustUseReturnValue]
+    public ImmutableGridShape ToImmutableGridShape()
+    {
+        return ToTrimmedGridShape().GetOrCreateImmutable();
+    }
 }
+
+#endif

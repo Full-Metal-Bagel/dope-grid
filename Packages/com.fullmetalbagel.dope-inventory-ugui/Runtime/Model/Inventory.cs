@@ -1,39 +1,34 @@
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using DopeGrid.Native;
 using JetBrains.Annotations;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
-using Unity.Jobs;
 using Unity.Mathematics;
 
 namespace DopeGrid.Inventory;
 
-public struct Inventory : INativeDisposable
+public struct Inventory
 {
     private ValueGridShape<int> _grid;
     public ValueGridShape<int> Grid => _grid;
 
-    private NativeList<InventoryItem> _items;
-    public NativeList<InventoryItem> Items => _items;
+    private List<InventoryItem> _items;
+    public IReadOnlyList<InventoryItem> Items => _items;
 
-    private NativeHashMap<ulong/*instance id*/, int/*item index*/> _itemMap;
+    private Dictionary<ulong/*instance id*/, int/*item index*/> _itemMap;
 
     public int Width => _grid.Width;
     public int Height => _grid.Height;
-    public int ItemCount => _items.IsCreated ? _items.Length : 0;
+    public int ItemCount => _items.Count;
     public bool IsEmpty => ItemCount == 0;
-    public bool IsCreated => _items.IsCreated;
 
-    public Inventory(int width, int height, Allocator allocator)
+    public Inventory(int width, int height)
     {
-        _grid = new ValueGridShape<int>(width, height, -1, allocator); // -1 means empty cell
-        _items = new NativeList<InventoryItem>(width * height, allocator);
-        _itemMap = new NativeHashMap<ulong, int>(width * height, allocator);
+        _grid = new ValueGridShape<int>(width, height, -1); // -1 means empty cell
+        _items = new List<InventoryItem>(width * height);
+        _itemMap = new Dictionary<ulong, int>(width * height);
     }
 
     public InventoryItem this[int index] => _items[index];
-    [MustDisposeResource]
-    public NativeArray<InventoryItem>.Enumerator Enumerator() => _items.GetEnumerator();
 
     public readonly bool IsSame(in Inventory other) => ((ReadOnly)this).IsSame(other);
     public readonly InventoryItem GetItemAt(int2 position) => ((ReadOnly)this).GetItemAt(position);
@@ -82,16 +77,16 @@ public struct Inventory : INativeDisposable
 
     private void PlaceItem(in InventoryItem inventoryItem)
     {
-        var itemIndex = _items.Length;
+        var itemIndex = _items.Count;
         _items.Add(inventoryItem);
-        _itemMap.Add(inventoryItem.InstanceId, itemIndex);
+        _itemMap[inventoryItem.InstanceId] = itemIndex;
         PlaceItemOnGrid(inventoryItem.Shape, inventoryItem.Position, itemIndex);
     }
 
     public bool RemoveItem(InventoryItemInstanceId id)
     {
         var itemIndex = GetItemIndex(id);
-        if (itemIndex < 0 || itemIndex >= _items.Length)
+        if (itemIndex < 0 || itemIndex >= _items.Count)
             return false;
 
         var item = _items[itemIndex];
@@ -101,7 +96,7 @@ public struct Inventory : INativeDisposable
         RemoveItemFromGrid(shape, item.Position);
 
         // If not the last item, we need to update the grid for the swapped item
-        if (itemIndex < _items.Length - 1)
+        if (itemIndex < _items.Count - 1)
         {
             var lastItem = _items[^1];
             _grid.FillShape(lastItem.Shape, lastItem.Position, itemIndex);
@@ -109,7 +104,12 @@ public struct Inventory : INativeDisposable
         }
 
         // Remove from items list using swap and remove
-        _items.RemoveAtSwapBack(itemIndex);
+        var lastIdx = _items.Count - 1;
+        if (itemIndex != lastIdx)
+        {
+            _items[itemIndex] = _items[lastIdx];
+        }
+        _items.RemoveAt(lastIdx);
         _itemMap.Remove(item.InstanceId);
         return true;
     }
@@ -117,7 +117,7 @@ public struct Inventory : INativeDisposable
     public bool TryMoveItem(InventoryItemInstanceId id, int2 newPosition)
     {
         var itemIndex = GetItemIndex(id);
-        if (itemIndex < 0 || itemIndex >= _items.Length) return false;
+        if (itemIndex < 0 || itemIndex >= _items.Count) return false;
 
         var item = _items[itemIndex];
         return TryMoveItemInternal(itemIndex, item, newPosition, item.Rotation);
@@ -164,42 +164,27 @@ public struct Inventory : INativeDisposable
         _grid.FillShape(shape, position, -1);
     }
 
-    public void Dispose()
-    {
-        if (_items.IsCreated)
-        {
-            _grid.Dispose();
-            _items.Dispose();
-            _itemMap.Dispose();
-        }
-    }
-
-    public JobHandle Dispose(JobHandle inputDeps)
-    {
-        return _items.IsCreated ?
-            JobHandle.CombineDependencies(_grid.Dispose(inputDeps), _items.Dispose(inputDeps), _itemMap.Dispose(inputDeps)) :
-            inputDeps;
-    }
+    public void Dispose() { _grid.Dispose(); }
 
     public static implicit operator ReadOnly(Inventory inventory) => inventory.AsReadOnly();
-    public ReadOnly AsReadOnly() => new(_grid.AsReadOnly(), _items.AsReadOnly(), _itemMap.AsReadOnly());
+    public ReadOnly AsReadOnly() => new(_grid.AsReadOnly(), _items, _itemMap);
 
     [SuppressMessage("Design", "CA1716:Identifiers should not match keywords")]
     public readonly ref struct ReadOnly
     {
         private readonly ValueGridShape<int>.ReadOnly _grid;
-        private readonly NativeArray<InventoryItem>.ReadOnly _items;
-        private readonly NativeHashMap<ulong/*instance id*/, int/*item index*/>.ReadOnly _itemMap;
+        private readonly IReadOnlyList<InventoryItem> _items;
+        private readonly Dictionary<ulong, int> _itemMap;
 
         public ValueGridShape<int>.ReadOnly Grid => _grid;
-        public NativeArray<InventoryItem>.ReadOnly Items => _items;
+        public IReadOnlyList<InventoryItem> Items => _items;
 
         public int Width => _grid.Width;
         public int Height => _grid.Height;
-        public int ItemCount => _items.Length;
-        public bool IsEmpty => _items.Length == 0;
+        public int ItemCount => _items.Count;
+        public bool IsEmpty => _items.Count == 0;
 
-        internal ReadOnly(ValueGridShape<int>.ReadOnly grid, NativeArray<InventoryItem>.ReadOnly items, NativeHashMap<ulong, int>.ReadOnly itemMap)
+        internal ReadOnly(ValueGridShape<int>.ReadOnly grid, List<InventoryItem> items, Dictionary<ulong, int> itemMap)
         {
             _grid = grid;
             _items = items;
@@ -207,13 +192,8 @@ public struct Inventory : INativeDisposable
         }
 
         public InventoryItem this[int index] => _items[index];
-        [MustDisposeResource]
-        public NativeArray<InventoryItem>.ReadOnly.Enumerator Enumerator() => _items.GetEnumerator();
 
-        public unsafe bool IsSame(in ReadOnly other)
-        {
-            return _items.GetUnsafeReadOnlyPtr() == other._items.GetUnsafeReadOnlyPtr();
-        }
+        public bool IsSame(in ReadOnly other) => _itemMap == other._itemMap;
 
         public InventoryItem GetItemAt(int2 position)
         {

@@ -3,8 +3,12 @@ namespace DopeGrid;
 public readonly record struct GridPosition(int X, int Y)
 {
     public static readonly GridPosition Zero = new(0, 0);
+    public static readonly GridPosition Invalid = new(-1, -1);
     public int X { get; } = X;
     public int Y { get; } = Y;
+
+    public bool IsValid => !IsInvalid;
+    public bool IsInvalid => this == Invalid;
 
     public static implicit operator (int x, int y)(GridPosition pos) => (pos.X, pos.Y);
     public static implicit operator GridPosition((int x, int y) tuple) => new(tuple.x, tuple.y);

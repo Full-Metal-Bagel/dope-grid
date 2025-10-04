@@ -1,5 +1,5 @@
+using System.Numerics;
 using JetBrains.Annotations;
-using UnityEngine;
 
 namespace DopeGrid;
 
@@ -52,15 +52,15 @@ public static class RotationDegreeExtensions
     [Pure, MustUseReturnValue]
     public static Vector2 GetRotationOffset(this RotationDegree rotation, Vector2 size)
     {
-        var w = size.x;
-        var h = size.y;
+        var w = size.X;
+        var h = size.Y;
         return rotation switch
         {
-            RotationDegree.None => Vector2.zero,
+            RotationDegree.None => Vector2.Zero,
             RotationDegree.Clockwise90 => new Vector2(h, 0f),
             RotationDegree.Clockwise180 => new Vector2(w, -h),
             RotationDegree.Clockwise270 => new Vector2(0f, -w),
-            _ => Vector2.zero
+            _ => Vector2.Zero
         };
     }
 
@@ -68,14 +68,20 @@ public static class RotationDegreeExtensions
     public static Vector2 CalculateRotatedSize(this RotationDegree rotation, Vector2 size)
     {
         return rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
-            ? new Vector2(size.y, size.x)
+            ? new Vector2(size.Y, size.X)
             : size;
     }
 
-    public static void ApplyToRectTransform(this RotationDegree rotation, RectTransform transform, Vector2 size)
+    [Pure, MustUseReturnValue]
+    public static (int width, int height) CalculateRotatedSize(this RotationDegree rotation, int width, int height)
     {
-        var angleZ = rotation.GetZRotation();
-        transform.sizeDelta = rotation.CalculateRotatedSize(size);
-        transform.localEulerAngles = new Vector3(0f, 0f, angleZ);
+        return rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270 ? (height, width) : (width, height);
     }
+    //
+    // public static void ApplyToRectTransform(this RotationDegree rotation, RectTransform transform, Vector2 size)
+    // {
+    //     var angleZ = rotation.GetZRotation();
+    //     transform.sizeDelta = rotation.CalculateRotatedSize(size);
+    //     transform.localEulerAngles = new Vector3(0f, 0f, angleZ);
+    // }
 }

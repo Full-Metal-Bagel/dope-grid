@@ -210,8 +210,17 @@ dotnet_diagnostic.SYSLIB1054.severity = warning
 # CA1018: Mark attributes with AttributeUsageAttribute
 dotnet_diagnostic.CA1018.severity = warning
 
+# CA1034: Do not nest type. Alternatively, change its accessibility so that it is not externally visible.
+dotnet_diagnostic.CA1034.severity = suggestion
+
+# CA1043: Use Integral Or String Argument For Indexers
+dotnet_diagnostic.CA1043.severity = suggestion
+
 # CA1047: Do not declare protected member in sealed type
 dotnet_diagnostic.CA1047.severity = warning
+
+# CA1065: Exceptions should not be raised in this type of method. If this exception instance might be raised, change this method's logic so it no longer raises an exception.
+dotnet_diagnostic.CA1065.severity = suggestion
 
 # CA1305: Specify IFormatProvider
 dotnet_diagnostic.CA1305.severity = warning
@@ -230,6 +239,9 @@ dotnet_diagnostic.CA1512.severity = warning
 
 # CA1513: Use ObjectDisposedException throw helper
 dotnet_diagnostic.CA1513.severity = warning
+
+# CA1716:Identifiers should not match keywords
+dotnet_diagnostic.CA1716.severity = suggestion
 
 # CA1725: Parameter names should match base declaration
 dotnet_diagnostic.CA1725.severity = suggestion

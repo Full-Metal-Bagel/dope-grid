@@ -1,53 +1,58 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
 using JetBrains.Annotations;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
-namespace DopeGrid.Native;
+namespace DopeGrid;
 
-public readonly record struct ImmutableGridShape(int Id)
+public readonly record struct ImmutableGridShape(int Id) : IReadOnlyGridShape<bool>
 {
-    private ImmutableGridShape2DList.Shapes Shapes => ImmutableGridShape2DList.s_shapes.Value;
+    private static ImmutableGridShape2DList.Shapes Shapes => ImmutableGridShape2DList.s_shapes.Value;
     public static ImmutableGridShape Empty => new(0);
 
     public int Id { get; } = Id;
     public (int width, int height) Bound => Shapes.Bounds[Id];
     public int Width => Bound.width;
     public int Height => Bound.height;
+
+    public bool this[int x, int y] => Pattern.Get(this.GetIndex(x, y));
+    public bool IsOccupied(int x, int y) => this[x, y];
+
     public int Size => Width * Height;
     public ReadOnlySpanBitArray Pattern => Shapes.GetPattern(Id);
-    public int OccupiedSpaceCount => Pattern.CountBits(0, Size);
-    public int FreeSpaceCount => Size - OccupiedSpaceCount;
-    public bool IsEmpty => Width == 0 || Height == 0;
+    public int OccupiedSpaceCount() => Pattern.CountBits(0, Size);
+    public int FreeSpaceCount() => Size - OccupiedSpaceCount();
 
-    public ImmutableGridShape Rotate90(Allocator allocator = Allocator.Temp) => new(Shapes.GetOrCreateRotated90(Id, allocator));
-    public ImmutableGridShape Flip(Allocator allocator = Allocator.Temp) => new(Shapes.GetOrCreateFlipped(Id, allocator));
+    [Pure, MustUseReturnValue]
+    public ImmutableGridShape Flip() => new(Shapes.GetOrCreateFlipped(Id));
 
-    public int GetIndex(GridPosition pos) => GetIndex(pos.X, pos.Y);
-    public int GetIndex(int x, int y) => y * Width + x;
+    [Pure, MustUseReturnValue]
+    public ImmutableGridShape Rotate90() => new(Shapes.GetOrCreateRotated90(Id));
 
-    public bool GetCell(GridPosition pos) => GetCell(pos.X, pos.Y);
-    public bool GetCell(int x, int y) => Pattern.Get(GetIndex(x, y));
-
-    public static implicit operator GridShape.ReadOnly(ImmutableGridShape shape) => shape.ToReadOnlyGridShape();
-    public GridShape.ReadOnly ToReadOnlyGridShape() => new(Width, Height, Pattern);
-
-    public void CopyTo(GridShape other)
+    [Pure, MustUseReturnValue]
+    public ImmutableGridShape GetRotatedShape(RotationDegree rotation)
     {
-        ToReadOnlyGridShape().CopyTo(other);
+        return rotation switch
+        {
+            RotationDegree.None => this,
+            RotationDegree.Clockwise90 => Rotate90(),
+            RotationDegree.Clockwise180 => Rotate90().Rotate90(),
+            RotationDegree.Clockwise270 => Rotate90().Rotate90().Rotate90(),
+            _ => throw new ArgumentOutOfRangeException(nameof(rotation), rotation, null)
+        };
     }
 }
 
 public static class ImmutableGridShape2DList
 {
-    internal static Lazy<Shapes> s_shapes = new(() => new Shapes(Allocator.Persistent));
+    internal static Lazy<Shapes> s_shapes = new(() => new Shapes(), LazyThreadSafetyMode.ExecutionAndPublication);
 
+#if UNITY_2022_3_OR_NEWER
     static ImmutableGridShape2DList()
     {
         // Register cleanup for runtime
-        Application.quitting -= Cleanup;
-        Application.quitting += Cleanup;
+        UnityEngine.Application.quitting -= Cleanup;
+        UnityEngine.Application.quitting += Cleanup;
 
 #if UNITY_EDITOR
         // Register cleanup for editor
@@ -74,9 +79,10 @@ public static class ImmutableGridShape2DList
         if (s_shapes.IsValueCreated)
         {
             s_shapes.Value.Dispose();
-            s_shapes = new Lazy<Shapes>(() => new Shapes(Allocator.Persistent));
+            s_shapes = new Lazy<Shapes>(() => new Shapes());
         }
     }
+#endif
 
     public static ImmutableGridShape GetOrCreateImmutable(this GridShape shape)
     {
@@ -89,62 +95,45 @@ public static class ImmutableGridShape2DList
         return new ImmutableGridShape(s_shapes.Value.GetOrCreateShape(shape));
     }
 
-    internal unsafe struct Shapes : IDisposable
+    internal sealed class Shapes : IDisposable
     {
-        private NativeList<ulong> _patterns;
-        public NativeArray<ulong>.ReadOnly Patterns => _patterns.AsReadOnly();
-
-        private NativeList<int> _patternBegins;
-        public NativeArray<int>.ReadOnly PatternBegins => _patternBegins.AsReadOnly();
-
-        private NativeList<(int width, int height)> _bounds;
-        public NativeArray<(int width, int height)>.ReadOnly Bounds => _bounds.AsReadOnly();
-
-        private NativeList<int> _rotate90Indices; // the shape index after rotate 90 in clockwise
-        public NativeArray<int>.ReadOnly Rotate90Indices => _rotate90Indices.AsReadOnly();
-
-        private NativeList<int> _flipIndices;
-        public NativeArray<int>.ReadOnly FlipIndices => _flipIndices.AsReadOnly();
+        private readonly List<byte[]> _patterns;
+        private readonly List<(int width, int height)> _bounds;
+        public IReadOnlyList<(int width, int height)> Bounds => _bounds;
+        private readonly List<int> _rotate90Indices; // shape index after rotate 90
+        private readonly List<int> _flipIndices; // shape index after flip
 
         private readonly object _locker = new();
 
-        public Shapes(Allocator allocator)
+        public Shapes()
         {
-            _patterns = new(1024, allocator);
-            _patternBegins = new(128, allocator);
-            _bounds = new(128, allocator);
-            _rotate90Indices = new(128, allocator); // the shape index after rotate 90 in clockwise
-            _flipIndices = new(128, allocator);
-
-            _patternBegins.Add(0);
-            _bounds.Add((0, 0));
-            _rotate90Indices.Add(0);
-            _flipIndices.Add(0);
+            // id 0 reserved for empty
+            _patterns = new List<byte[]>(capacity: 128) { Array.Empty<byte>() };
+            _bounds = new List<(int width, int height)>(capacity: 128) { (0, 0) };
+            _rotate90Indices = new List<int>(capacity: 128) { 0 };
+            _flipIndices = new List<int>(capacity: 128) { 0 };
         }
 
         [Pure, MustUseReturnValue]
         public GridShape.ReadOnly GetReadOnlyShape(int id)
         {
             var bound = _bounds[id];
-            var pattern = GetPattern(id);
-            return new GridShape.ReadOnly(bound.width, bound.height, pattern);
+            return new GridShape.ReadOnly(bound.width, bound.height, _patterns[id]);
         }
 
         [Pure, MustUseReturnValue]
         public SpanBitArray GetPattern(int id)
         {
-            var begin = _patternBegins[id];
             var size = _bounds[id];
-            var ptr = UnsafeUtility.AddressOf(ref _patterns.ElementAt(begin));
             var bitLength = size.width * size.height;
-            var span = new Span<byte>(ptr, SpanBitArrayUtility.ByteCount(bitLength));
-            return new SpanBitArray(span, bitLength);
+            var data = _patterns[id];
+            return new SpanBitArray(data.AsSpan(), bitLength);
         }
 
         [Pure, MustUseReturnValue]
         public int FindExistingShape(in GridShape.ReadOnly shape)
         {
-            for (var i = 0; i < _bounds.Length; i++)
+            for (var i = 0; i < _bounds.Count; i++)
             {
                 var bound = _bounds[i];
                 if (bound.width != shape.Width || bound.height != shape.Height)
@@ -164,25 +153,14 @@ public static class ImmutableGridShape2DList
                 var id = FindExistingShape(shape);
                 if (id >= 0) return id;
 
-                id = _bounds.Length;
+                id = _bounds.Count;
 
-                // Add bounds first so GetPattern can access it
                 _bounds.Add((shape.Width, shape.Height));
 
-                // Store pattern
-                var patternBegin = _patterns.Length;
-                _patternBegins.Add(patternBegin);
-
-                // Calculate the actual size in bytes of the bit array
-                var sizeInBytes = (shape.Size + 7) / 8; // Convert bits to bytes
-                var ulongCount = (sizeInBytes + sizeof(ulong) - 1) / sizeof(ulong); // Round up to ulong boundary
-
-                // Resize patterns array to accommodate new data
-                _patterns.Resize(_patterns.Length + ulongCount, NativeArrayOptions.ClearMemory);
-
-                // Direct memory copy from shape's bit array to patterns
-                var pattern = GetPattern(id);
-                shape.Bits.CopyTo(pattern);
+                var bytes = new byte[SpanBitArrayUtility.ByteCount(shape.Size)];
+                var dest = new SpanBitArray(bytes.AsSpan(), shape.Size);
+                shape.Bits.CopyTo(dest);
+                _patterns.Add(bytes);
 
                 _rotate90Indices.Add(-1);
                 _flipIndices.Add(-1);
@@ -190,26 +168,28 @@ public static class ImmutableGridShape2DList
             }
         }
 
-        public int GetOrCreateRotated90(int id, Allocator allocator = Allocator.Temp)
+        public int GetOrCreateRotated90(int id)
         {
             var rotatedId = _rotate90Indices[id];
             if (rotatedId < 0)
             {
                 var shape = GetReadOnlyShape(id);
-                using var rotatedShape = shape.Rotate(RotationDegree.Clockwise90, allocator);
+                using var rotatedShape = new GridShape(shape.Height, shape.Width);
+                shape.RotateShape(RotationDegree.Clockwise90, rotatedShape, default(bool));
                 rotatedId = GetOrCreateShape(rotatedShape);
                 _rotate90Indices[id] = rotatedId;
             }
             return rotatedId;
         }
 
-        public int GetOrCreateFlipped(int id, Allocator allocator = Allocator.Temp)
+        public int GetOrCreateFlipped(int id)
         {
             var flippedId = _flipIndices[id];
             if (flippedId < 0)
             {
                 var shape = GetReadOnlyShape(id);
-                using var flippedShape = shape.Flip(FlipAxis.Horizontal, allocator);
+                using var flippedShape = new GridShape(shape.Width, shape.Height);
+                shape.FlipShape(FlipAxis.Horizontal, flippedShape, default(bool));
                 flippedId = GetOrCreateShape(flippedShape);
                 _flipIndices[id] = flippedId;
                 _flipIndices[flippedId] = id;
@@ -219,11 +199,10 @@ public static class ImmutableGridShape2DList
 
         public void Dispose()
         {
-            _patterns.Dispose();
-            _patternBegins.Dispose();
-            _bounds.Dispose();
-            _rotate90Indices.Dispose();
-            _flipIndices.Dispose();
+            _patterns.Clear();
+            _bounds.Clear();
+            _rotate90Indices.Clear();
+            _flipIndices.Clear();
         }
     }
 }
