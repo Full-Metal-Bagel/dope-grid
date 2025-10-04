@@ -9,58 +9,44 @@ public class StandardGridBoardExtensionTests
     {
         var container = new GridShape(5, 5);
         var item = Shapes.Square(2);
-        try
-        {
-            var pos = container.FindFirstFitWithFixedRotation(item.GetOrCreateImmutable(), freeValue: false);
+        var immutableItem = item.GetOrCreateImmutable();
 
-            Assert.AreEqual(GridPosition.Zero, pos);
-        }
-        finally
-        {
-            container.Dispose();
-            item.Dispose();
-        }
+        var pos = ReadOnlyGridShapeExtension.FindFirstFitWithFixedRotation(ref container, immutableItem, freeValue: false);
+
+        Assert.AreEqual(GridPosition.Zero, pos);
+        item.Dispose();
+        container.Dispose();
     }
 
     [Test]
     public void FindFirstFit_SkipsOccupiedAreas()
     {
         var container = new GridShape(5, 5);
+        container.FillRect(0, 0, 2, 2, true);
+
         var item = Shapes.Square(2);
-        try
-        {
-            container.FillRect(0, 0, 2, 2, true);
+        var immutableItem = item.GetOrCreateImmutable();
+        var pos = ReadOnlyGridShapeExtension.FindFirstFitWithFixedRotation(ref container, immutableItem, freeValue: false);
 
-            var pos = container.FindFirstFitWithFixedRotation(item.GetOrCreateImmutable(), freeValue: false);
-
-            Assert.AreNotEqual((0, 0), pos);
-            Assert.IsTrue(pos.X >= 0 && pos.Y >= 0);
-        }
-        finally
-        {
-            container.Dispose();
-            item.Dispose();
-        }
+        Assert.AreNotEqual(new GridPosition(0, 0), pos);
+        Assert.IsTrue(pos.X >= 0 && pos.Y >= 0);
+        item.Dispose();
+        container.Dispose();
     }
 
     [Test]
     public void FindFirstFit_ReturnsNegativeWhenNoFit()
     {
         var container = new GridShape(2, 2);
+        container.FillAll(true);
+
         var item = Shapes.Single();
-        try
-        {
-            container.FillAll(true);
+        var immutableItem = item.GetOrCreateImmutable();
+        var pos = ReadOnlyGridShapeExtension.FindFirstFitWithFixedRotation(ref container, immutableItem, freeValue: false);
 
-            var pos = container.FindFirstFitWithFixedRotation(item.GetOrCreateImmutable(), freeValue: false);
-
-            Assert.AreEqual(new GridPosition(-1, -1), pos);
-        }
-        finally
-        {
-            container.Dispose();
-            item.Dispose();
-        }
+        Assert.AreEqual(new GridPosition(-1, -1), pos);
+        item.Dispose();
+        container.Dispose();
     }
 
     [Test]
@@ -68,17 +54,13 @@ public class StandardGridBoardExtensionTests
     {
         var container = new GridShape(3, 3);
         var item = Shapes.Square(5);
-        try
-        {
-            var pos = container.FindFirstFitWithFixedRotation(item.GetOrCreateImmutable(), freeValue: false);
+        var immutableItem = item.GetOrCreateImmutable();
 
-            Assert.AreEqual(new GridPosition(-1, -1), pos);
-        }
-        finally
-        {
-            container.Dispose();
-            item.Dispose();
-        }
+        var pos = ReadOnlyGridShapeExtension.FindFirstFitWithFixedRotation(ref container, immutableItem, freeValue: false);
+
+        Assert.AreEqual(new GridPosition(-1, -1), pos);
+        item.Dispose();
+        container.Dispose();
     }
 
     [Test]
@@ -86,17 +68,13 @@ public class StandardGridBoardExtensionTests
     {
         var container = new GridShape(5, 5);
         var item = Shapes.Square(2);
-        try
-        {
-            Assert.IsTrue(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(1, 1), freeValue: false));
-            Assert.IsTrue(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(0, 0), freeValue: false));
-            Assert.IsTrue(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(3, 3), freeValue: false));
-        }
-        finally
-        {
-            container.Dispose();
-            item.Dispose();
-        }
+        var immutableItem = item.GetOrCreateImmutable();
+
+        Assert.IsTrue(ReadOnlyGridShapeExtension.CanPlaceItem(ref container, immutableItem, new GridPosition(1, 1), freeValue: false));
+        Assert.IsTrue(ReadOnlyGridShapeExtension.CanPlaceItem(ref container, immutableItem, new GridPosition(0, 0), freeValue: false));
+        Assert.IsTrue(ReadOnlyGridShapeExtension.CanPlaceItem(ref container, immutableItem, new GridPosition(3, 3), freeValue: false));
+        item.Dispose();
+        container.Dispose();
     }
 
     [Test]
@@ -104,36 +82,28 @@ public class StandardGridBoardExtensionTests
     {
         var container = new GridShape(5, 5);
         var item = Shapes.Square(2);
-        try
-        {
-            Assert.IsFalse(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(4, 4), freeValue: false));
-            Assert.IsFalse(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(5, 0), freeValue: false));
-            Assert.IsFalse(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(-1, 0), freeValue: false));
-        }
-        finally
-        {
-            container.Dispose();
-            item.Dispose();
-        }
+        var immutableItem = item.GetOrCreateImmutable();
+
+        Assert.IsFalse(ReadOnlyGridShapeExtension.CanPlaceItem(ref container, immutableItem, new GridPosition(4, 4), freeValue: false));
+        Assert.IsFalse(ReadOnlyGridShapeExtension.CanPlaceItem(ref container, immutableItem, new GridPosition(5, 0), freeValue: false));
+        Assert.IsFalse(ReadOnlyGridShapeExtension.CanPlaceItem(ref container, immutableItem, new GridPosition(-1, 0), freeValue: false));
+        item.Dispose();
+        container.Dispose();
     }
 
     [Test]
     public void CanPlaceItem_ReturnsFalseForOccupiedSpace()
     {
         var container = new GridShape(5, 5);
-        var item = Shapes.Square(2);
-        try
-        {
-            container[2, 2] = true;
+        container[2, 2] = true;
 
-            Assert.IsFalse(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(1, 1), freeValue: false));
-            Assert.IsTrue(container.CanPlaceItem(item.GetOrCreateImmutable(), new GridPosition(3, 3), freeValue: false));
-        }
-        finally
-        {
-            container.Dispose();
-            item.Dispose();
-        }
+        var item = Shapes.Square(2);
+        var immutableItem = item.GetOrCreateImmutable();
+
+        Assert.IsFalse(ReadOnlyGridShapeExtension.CanPlaceItem(ref container, immutableItem, new GridPosition(1, 1), freeValue: false));
+        Assert.IsTrue(ReadOnlyGridShapeExtension.CanPlaceItem(ref container, immutableItem, new GridPosition(3, 3), freeValue: false));
+        item.Dispose();
+        container.Dispose();
     }
 
     [Test]
@@ -141,21 +111,17 @@ public class StandardGridBoardExtensionTests
     {
         var container = new GridShape(5, 5);
         var item = Shapes.LShape();
-        try
-        {
-            container.PlaceItem(item.GetOrCreateImmutable(), new GridPosition(1, 1), value: true);
+        var immutableItem = item.GetOrCreateImmutable();
 
-            Assert.IsTrue(container[1, 1]);
-            Assert.IsTrue(container[1, 2]);
-            Assert.IsTrue(container[2, 2]);
-            Assert.IsFalse(container[2, 1]);
-            Assert.IsFalse(container[0, 0]);
-        }
-        finally
-        {
-            container.Dispose();
-            item.Dispose();
-        }
+        WritableGridShapeExtension.PlaceItem(ref container, immutableItem, new GridPosition(1, 1), true);
+
+        Assert.IsTrue(container.GetCellValue(1, 1));
+        Assert.IsTrue(container.GetCellValue(1, 2));
+        Assert.IsTrue(container.GetCellValue(2, 2));
+        Assert.IsFalse(container.GetCellValue(2, 1));
+        Assert.IsFalse(container.GetCellValue(0, 0));
+        item.Dispose();
+        container.Dispose();
     }
 
     [Test]
@@ -163,21 +129,17 @@ public class StandardGridBoardExtensionTests
     {
         var container = new GridShape(5, 5);
         var item = Shapes.LShape();
-        try
-        {
-            container.PlaceItem(item.GetOrCreateImmutable(), new GridPosition(2, 2), value: true);
+        var immutableItem = item.GetOrCreateImmutable();
 
-            // L-shape at (2,2): (2,2), (2,3), (3,3)
-            Assert.IsTrue(container[2, 2]);
-            Assert.IsTrue(container[2, 3]);
-            Assert.IsTrue(container[3, 3]);
-            Assert.IsFalse(container[3, 2]);
-        }
-        finally
-        {
-            container.Dispose();
-            item.Dispose();
-        }
+        WritableGridShapeExtension.PlaceItem(ref container, immutableItem, new GridPosition(2, 2), true);
+
+        // L-shape at (2,2): (2,2), (2,3), (3,3)
+        Assert.IsTrue(container.GetCellValue(2, 2));
+        Assert.IsTrue(container.GetCellValue(2, 3));
+        Assert.IsTrue(container.GetCellValue(3, 3));
+        Assert.IsFalse(container.GetCellValue(3, 2));
+        item.Dispose();
+        container.Dispose();
     }
 
     [Test]
@@ -185,47 +147,109 @@ public class StandardGridBoardExtensionTests
     {
         var container = new GridShape(5, 5);
         var item = Shapes.Square(2);
-        try
-        {
-            container.PlaceItem(item.GetOrCreateImmutable(), new GridPosition(1, 1), value: true);
-            container.RemoveItem(item.GetOrCreateImmutable(), new GridPosition(1, 1), freeValue: false);
+        var immutableItem = item.GetOrCreateImmutable();
 
-            Assert.IsFalse(container[1, 1]);
-            Assert.IsFalse(container[2, 1]);
-            Assert.IsFalse(container[1, 2]);
-            Assert.IsFalse(container[2, 2]);
-        }
-        finally
-        {
-            container.Dispose();
-            item.Dispose();
-        }
+        WritableGridShapeExtension.PlaceItem(ref container, immutableItem, new GridPosition(1, 1), true);
+        WritableGridShapeExtension.RemoveItem(ref container, immutableItem, new GridPosition(1, 1), freeValue: false);
+
+        Assert.IsFalse(container.GetCellValue(1, 1));
+        Assert.IsFalse(container.GetCellValue(2, 1));
+        Assert.IsFalse(container.GetCellValue(1, 2));
+        Assert.IsFalse(container.GetCellValue(2, 2));
+        item.Dispose();
+        container.Dispose();
     }
 
     [Test]
     public void RemoveItem_OnlyRemovesShapeCells()
     {
         var container = new GridShape(5, 5);
+        container.FillAll(true);
+
         var item = Shapes.LShape();
-        try
-        {
-            container.FillAll(true);
+        var immutableItem = item.GetOrCreateImmutable();
 
-            container.RemoveItem(item.GetOrCreateImmutable(), new GridPosition(2, 2), freeValue: false);
+        WritableGridShapeExtension.RemoveItem(ref container, immutableItem, new GridPosition(2, 2), freeValue: false);
 
-            // L-shape cells should be removed
-            Assert.IsFalse(container[2, 2]);
-            Assert.IsFalse(container[2, 3]);
-            Assert.IsFalse(container[3, 3]);
-            // Other cells should remain
-            Assert.IsTrue(container[3, 2]);
-            Assert.IsTrue(container[0, 0]);
-        }
-        finally
+        // L-shape cells should be removed
+        Assert.IsFalse(container.GetCellValue(2, 2));
+        Assert.IsFalse(container.GetCellValue(2, 3));
+        Assert.IsFalse(container.GetCellValue(3, 3));
+        // Other cells should remain
+        Assert.IsTrue(container.GetCellValue(3, 2));
+        Assert.IsTrue(container.GetCellValue(0, 0));
+        item.Dispose();
+        container.Dispose();
+    }
+
+    [Test]
+    public void PlaceMultipleShapes_PlacesAllThatFit()
+    {
+        var container = new GridShape(10, 10);
+
+        var items = new[]
         {
-            container.Dispose();
-            item.Dispose();
+            Shapes.Square(2).GetOrCreateImmutable(),
+            Shapes.Single().GetOrCreateImmutable(),
+            Shapes.Line(3).GetOrCreateImmutable()
+        };
+
+        var positions = new GridPosition[items.Length];
+
+        // Place items manually
+        var placed = 0;
+        for (var i = 0; i < items.Length; i++)
+        {
+            var position = ReadOnlyGridShapeExtension.FindFirstFitWithFixedRotation(ref container, items[i], freeValue: false);
+            if (position.IsValid)
+            {
+                WritableGridShapeExtension.PlaceItem(ref container, items[i], position, true);
+                positions[i] = position;
+                placed++;
+            }
         }
+
+        Assert.AreEqual(3, placed);
+
+        // Verify all items were placed
+        for (int i = 0; i < placed; i++)
+        {
+            Assert.IsTrue(positions[i].X >= 0);
+            Assert.IsTrue(positions[i].Y >= 0);
+        }
+
+        container.Dispose();
+    }
+
+    [Test]
+    public void PlaceMultipleShapes_StopsWhenContainerFull()
+    {
+        var container = new GridShape(2, 2);
+
+        var items = new[]
+        {
+            Shapes.Square(2).GetOrCreateImmutable(),
+            Shapes.Single().GetOrCreateImmutable()  // Won't fit after first item
+        };
+
+        var positions = new GridPosition[items.Length];
+
+        // Place items manually
+        var placed = 0;
+        for (var i = 0; i < items.Length; i++)
+        {
+            var position = ReadOnlyGridShapeExtension.FindFirstFitWithFixedRotation(ref container, items[i], freeValue: false);
+            if (position.IsValid)
+            {
+                WritableGridShapeExtension.PlaceItem(ref container, items[i], position, true);
+                positions[i] = position;
+                placed++;
+            }
+        }
+
+        Assert.AreEqual(1, placed);
+
+        container.Dispose();
     }
 
     [Test]
@@ -233,21 +257,17 @@ public class StandardGridBoardExtensionTests
     {
         var container = new GridShape(5, 5);
         var tShape = Shapes.TShape();
-        try
-        {
-            // T-shape: XXX
-            //           X
-            Assert.IsTrue(container.CanPlaceItem(tShape.GetOrCreateImmutable(), new GridPosition(0, 0), freeValue: false));
-            Assert.IsTrue(container.CanPlaceItem(tShape.GetOrCreateImmutable(), new GridPosition(2, 3), freeValue: false));
+        var immutableTShape = tShape.GetOrCreateImmutable();
 
-            container[1, 0] = true;
-            Assert.IsFalse(container.CanPlaceItem(tShape.GetOrCreateImmutable(), new GridPosition(0, 0), freeValue: false));
-        }
-        finally
-        {
-            container.Dispose();
-            tShape.Dispose();
-        }
+        // T-shape: XXX
+        //           X
+        Assert.IsTrue(ReadOnlyGridShapeExtension.CanPlaceItem(ref container, immutableTShape, new GridPosition(0, 0), freeValue: false));
+        Assert.IsTrue(ReadOnlyGridShapeExtension.CanPlaceItem(ref container, immutableTShape, new GridPosition(2, 3), freeValue: false));
+
+        container[1, 0] = true;
+        Assert.IsFalse(ReadOnlyGridShapeExtension.CanPlaceItem(ref container, immutableTShape, new GridPosition(0, 0), freeValue: false));
+        tShape.Dispose();
+        container.Dispose();
     }
 
     [Test]
@@ -256,22 +276,18 @@ public class StandardGridBoardExtensionTests
         var container = new GridShape(5, 5);
         var original = container.Clone();
         var item = Shapes.Cross();
-        try
-        {
-            container.PlaceItem(item.GetOrCreateImmutable(), new GridPosition(1, 1), value: true);
-            container.RemoveItem(item.GetOrCreateImmutable(), new GridPosition(1, 1), freeValue: false);
+        var immutableItem = item.GetOrCreateImmutable();
 
-            for (int y = 0; y < 5; y++)
-            for (int x = 0; x < 5; x++)
-            {
-                Assert.AreEqual(original[x, y], container[x, y]);
-            }
-        }
-        finally
+        WritableGridShapeExtension.PlaceItem(ref container, immutableItem, new GridPosition(1, 1), true);
+        WritableGridShapeExtension.RemoveItem(ref container, immutableItem, new GridPosition(1, 1), freeValue: false);
+
+        for (int y = 0; y < 5; y++)
+        for (int x = 0; x < 5; x++)
         {
-            container.Dispose();
-            original.Dispose();
-            item.Dispose();
+        Assert.AreEqual(original.GetCellValue(x, y), container.GetCellValue(x, y));
         }
+        item.Dispose();
+        original.Dispose();
+        container.Dispose();
     }
 }

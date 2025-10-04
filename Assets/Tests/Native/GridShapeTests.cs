@@ -1,3 +1,4 @@
+using DopeGrid;
 using DopeGrid.Native;
 using NUnit.Framework;
 using Unity.Collections;
@@ -16,7 +17,7 @@ public class GridShapeTests
 
         for (var y = 0; y < 5; y++)
         for (var x = 0; x < 5; x++)
-            Assert.IsFalse(grid.GetCellValue(x, y));
+            Assert.IsFalse(grid[x, y]);
 
         grid.Dispose();
     }
@@ -26,15 +27,15 @@ public class GridShapeTests
     {
         var grid = new GridShape(3, 3, Allocator.Temp);
 
-        grid.SetCellValue(0, 0, true);
-        grid.SetCellValue(1, 1, true);
-        grid.SetCellValue(2, 2, true);
+        grid[0, 0] = true;
+        grid[1, 1] = true;
+        grid[2, 2] = true;
 
-        Assert.IsTrue(grid.GetCellValue(0, 0));
-        Assert.IsTrue(grid.GetCellValue(1, 1));
-        Assert.IsTrue(grid.GetCellValue(2, 2));
-        Assert.IsFalse(grid.GetCellValue(0, 1));
-        Assert.IsFalse(grid.GetCellValue(1, 0));
+        Assert.IsTrue(grid[0, 0]);
+        Assert.IsTrue(grid[1, 1]);
+        Assert.IsTrue(grid[2, 2]);
+        Assert.IsFalse(grid[0, 1]);
+        Assert.IsFalse(grid[1, 0]);
 
         grid.Dispose();
     }
@@ -44,16 +45,16 @@ public class GridShapeTests
     {
         var grid = new GridShape(4, 4, Allocator.Temp);
 
-        grid.SetCellValue(0, 0, true);
-        grid.SetCellValue(1, 1, true);
-        grid.SetCellValue(2, 2, true);
-        grid.SetCellValue(3, 3, true);
+        grid[0, 0] = true;
+        grid[1, 1] = true;
+        grid[2, 2] = true;
+        grid[3, 3] = true;
 
         grid.Clear();
 
         for (var y = 0; y < 4; y++)
         for (var x = 0; x < 4; x++)
-            Assert.IsFalse(grid.GetCellValue(x, y));
+            Assert.IsFalse(grid[x, y]);
 
         grid.Dispose();
     }
@@ -62,9 +63,9 @@ public class GridShapeTests
     public void Clone_CreatesIdenticalCopy()
     {
         var original = new GridShape(3, 4, Allocator.Temp);
-        original.SetCellValue(0, 0, true);
-        original.SetCellValue(1, 2, true);
-        original.SetCellValue(2, 3, true);
+        original[0, 0] = true;
+        original[1, 2] = true;
+        original[2, 3] = true;
 
         var clone = original.Clone(Allocator.Temp);
 
@@ -74,7 +75,7 @@ public class GridShapeTests
         for (var y = 0; y < original.Height; y++)
         for (var x = 0; x < original.Width; x++)
         {
-            Assert.AreEqual(original.GetCellValue(x, y), clone.GetCellValue(x, y));
+            Assert.AreEqual(original[x, y], clone[x, y]);
         }
 
         original.Dispose();
@@ -85,17 +86,17 @@ public class GridShapeTests
     public void Clone_ModificationsDoNotAffectOriginal()
     {
         var original = new GridShape(3, 3, Allocator.Temp);
-        original.SetCellValue(1, 1, true);
+        original[1, 1] = true;
 
         var clone = original.Clone(Allocator.Temp);
-        clone.SetCellValue(0, 0, true);
-        clone.SetCellValue(1, 1, false);
+        clone[0, 0] = true;
+        clone[1, 1] = false;
 
-        Assert.IsTrue(original.GetCellValue(1, 1));
-        Assert.IsFalse(original.GetCellValue(0, 0));
+        Assert.IsTrue(original[1, 1]);
+        Assert.IsFalse(original[0, 0]);
 
-        Assert.IsFalse(clone.GetCellValue(1, 1));
-        Assert.IsTrue(clone.GetCellValue(0, 0));
+        Assert.IsFalse(clone[1, 1]);
+        Assert.IsTrue(clone[0, 0]);
 
         original.Dispose();
         clone.Dispose();
@@ -106,10 +107,10 @@ public class GridShapeTests
     {
         var grid = new GridShape(5, 3, Allocator.Temp);
 
-        Assert.AreEqual(0, grid.GetIndex(0, 0));
-        Assert.AreEqual(4, grid.GetIndex(4, 0));
-        Assert.AreEqual(5, grid.GetIndex(0, 1));
-        Assert.AreEqual(14, grid.GetIndex(4, 2));
+        Assert.AreEqual(0, grid.GetIndex(new GridPosition(0, 0)));
+        Assert.AreEqual(4, grid.GetIndex(new GridPosition(4, 0)));
+        Assert.AreEqual(5, grid.GetIndex(new GridPosition(0, 1)));
+        Assert.AreEqual(14, grid.GetIndex(new GridPosition(4, 2)));
 
         grid.Dispose();
     }

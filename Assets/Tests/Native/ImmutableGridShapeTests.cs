@@ -1,3 +1,4 @@
+using DopeGrid;
 using System.Collections.Generic;
 using DopeGrid.Native;
 using NUnit.Framework;
@@ -21,7 +22,7 @@ public class ImmutableGridShapeTests
     public void GetOrCreateImmutable_SingleCell()
     {
         var shape = new GridShape(1, 1, Allocator.Temp);
-        shape.SetCellValue(0, 0, true);
+        shape[0, 0] = true;
 
         var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
@@ -202,11 +203,6 @@ public class ImmutableGridShapeTests
         var shape = Shapes.Cross(Allocator.Temp);
         var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
-        GridShape.ReadOnly readOnly = (GridShape.ReadOnly)immutable;
-
-        Assert.AreEqual(immutable.Width, readOnly.Width);
-        Assert.AreEqual(immutable.Height, readOnly.Height);
-
         // Explicit method call
         var explicit_readonly = immutable.ToReadOnlyGridShape();
         Assert.AreEqual(immutable.Width, explicit_readonly.Width);
@@ -240,7 +236,7 @@ public class ImmutableGridShapeTests
     {
         // Create a shape with empty border
         var shape = new GridShape(5, 5, Allocator.Temp);
-        shape.SetCellValue(2, 2, true); // Single cell in center
+        shape[2, 2] = true; // Single cell in center
 
         // This should throw because shape is not trimmed
         Assert.Throws<System.ArgumentException>(() =>
@@ -263,8 +259,8 @@ public class ImmutableGridShapeTests
     public void Pattern_AccessibleAndCorrect()
     {
         var shape = new GridShape(2, 2, Allocator.Temp);
-        shape.SetCellValue(0, 0, true);
-        shape.SetCellValue(1, 1, true);
+        shape[0, 0] = true;
+        shape[1, 1] = true;
 
         var trimmedShape = shape.AsReadOnly().Trim(Allocator.Temp);
         var immutable = trimmedShape.AsReadOnly().GetOrCreateImmutable();
@@ -343,7 +339,7 @@ public class ImmutableGridShapeTests
             {
                 if ((i & (1 << (bit % 32))) != 0 || bit == 0)
                 {
-                    shape.SetCellValue(bit % size, bit / size, true);
+                    shape[bit % size, bit / size] = true;
                 }
             }
 
@@ -368,10 +364,10 @@ public class ImmutableGridShapeTests
     {
         var shape = new GridShape(3, 3, Allocator.Temp);
         // Create an asymmetric pattern
-        shape.SetCellValue(0, 0, true);
-        shape.SetCellValue(1, 0, true);
-        shape.SetCellValue(0, 1, true);
-        shape.SetCellValue(2, 2, true);
+        shape[0, 0] = true;
+        shape[1, 0] = true;
+        shape[0, 1] = true;
+        shape[2, 2] = true;
 
         var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
         var immutable = trimmed.AsReadOnly().GetOrCreateImmutable();
@@ -417,11 +413,11 @@ public class ImmutableGridShapeTests
         {
             var shape = new GridShape(5, 5, Allocator.Temp);
             // Complex pattern
-            shape.SetCellValue(1, 1, true);
-            shape.SetCellValue(2, 1, true);
-            shape.SetCellValue(3, 1, true);
-            shape.SetCellValue(2, 2, true);
-            shape.SetCellValue(2, 3, true);
+            shape[1, 1] = true;
+            shape[2, 1] = true;
+            shape[3, 1] = true;
+            shape[2, 2] = true;
+            shape[2, 3] = true;
 
             var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
             ids[i] = trimmed.AsReadOnly().GetOrCreateImmutable().Id;
@@ -454,7 +450,7 @@ public class ImmutableGridShapeTests
             {
                 if ((pattern & (1 << bit)) != 0)
                 {
-                    shape.SetCellValue(bit % 2, bit / 2, true);
+                    shape[bit % 2, bit / 2] = true;
                 }
             }
 
@@ -545,13 +541,13 @@ public class ImmutableGridShapeTests
     {
         // Create a complex asymmetric shape
         var shape = new GridShape(4, 3, Allocator.Temp);
-        shape.SetCellValue(0, 0, true);
-        shape.SetCellValue(1, 0, true);
-        shape.SetCellValue(2, 0, true);
-        shape.SetCellValue(0, 1, true);
-        shape.SetCellValue(2, 1, true);
-        shape.SetCellValue(2, 2, true);
-        shape.SetCellValue(3, 2, true);
+        shape[0, 0] = true;
+        shape[1, 0] = true;
+        shape[2, 0] = true;
+        shape[0, 1] = true;
+        shape[2, 1] = true;
+        shape[2, 2] = true;
+        shape[3, 2] = true;
 
         var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
         var original = trimmed.AsReadOnly().GetOrCreateImmutable();
@@ -611,7 +607,7 @@ public class ImmutableGridShapeTests
             var shape = new GridShape(size, 1, Allocator.Temp);
             for (int i = 0; i < size; i++)
             {
-                shape.SetCellValue(i, 0, true);
+                shape[i, 0] = true;
             }
 
             var immutable = shape.AsReadOnly().GetOrCreateImmutable();
@@ -632,7 +628,7 @@ public class ImmutableGridShapeTests
             {
                 if ((x + y) % 3 == 0 || (x * y) % 5 == 0)
                 {
-                    largeShape.SetCellValue(x, y, true);
+                    largeShape[x, y] = true;
                 }
             }
         }

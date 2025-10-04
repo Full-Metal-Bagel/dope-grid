@@ -1,3 +1,4 @@
+using DopeGrid;
 using System;
 using DopeGrid.Native;
 using NUnit.Framework;
@@ -22,8 +23,8 @@ public class ImmutableGridShapeJobDebugTests
             {
                 // Step 1: Just create a simple GridShape
                 var shape = new GridShape(2, 2, Allocator.Temp);
-                shape.SetCellValue(0, 0, true);
-                shape.SetCellValue(1, 1, true);
+                shape[0, 0] = true;
+                shape[1, 1] = true;
 
                 Result[0] = 1; // Success marker
 
@@ -72,7 +73,7 @@ public class ImmutableGridShapeJobDebugTests
             try
             {
                 var shape = new GridShape(3, 3, Allocator.Temp);
-                shape.SetCellValue(1, 1, true);
+                shape[1, 1] = true;
 
                 // Try to trim the shape
                 var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
@@ -128,8 +129,8 @@ public class ImmutableGridShapeJobDebugTests
             try
             {
                 var shape = new GridShape(2, 2, Allocator.Temp);
-                shape.SetCellValue(0, 0, true);
-                shape.SetCellValue(1, 1, true);
+                shape[0, 0] = true;
+                shape[1, 1] = true;
 
                 var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
 
@@ -190,7 +191,7 @@ public class ImmutableGridShapeJobDebugTests
             try
             {
                 var shape = new GridShape(2, 2, Allocator.Temp);
-                shape.SetCellValue(0, 0, true);
+                shape[0, 0] = true;
 
                 Result[0] = 1;
 
@@ -240,7 +241,7 @@ public class ImmutableGridShapeJobDebugTests
             try
             {
                 var shape = new GridShape(2, 2, Allocator.Temp);
-                shape.SetCellValue(0, 0, true);
+                shape[0, 0] = true;
 
                 var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
                 var immutable = trimmed.AsReadOnly().GetOrCreateImmutable();
@@ -301,7 +302,7 @@ public class ImmutableGridShapeJobDebugTests
             try
             {
                 var shape = new GridShape(2, 2, Allocator.Temp);
-                shape.SetCellValue(index % 2, index / 2 % 2, true);
+                shape[index % 2, index / 2 % 2] = true;
 
                 var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
                 var immutable = trimmed.AsReadOnly().GetOrCreateImmutable();
@@ -419,8 +420,8 @@ public class ImmutableGridShapeJobDebugTests
                 var shape = new ImmutableGridShape(BaseShapeId);
 
                 // These might fail if they access static fields
-                var rotated = shape.Rotate90(Allocator.Temp);
-                var flipped = shape.Flip(Allocator.Temp);
+                var rotated = shape.Rotate90();
+                var flipped = shape.Flip();
 
                 Result[0] = rotated.Id;
                 Result[1] = flipped.Id;
@@ -442,8 +443,8 @@ public class ImmutableGridShapeJobDebugTests
         var immutable = shape.AsReadOnly().GetOrCreateImmutable();
 
         // Pre-create transformations to ensure they exist
-        var preRotated = immutable.Rotate90(Allocator.Temp);
-        var preFlipped = immutable.Flip(Allocator.Temp);
+        var preRotated = immutable.Rotate90();
+        var preFlipped = immutable.Flip();
 
         shape.Dispose();
 

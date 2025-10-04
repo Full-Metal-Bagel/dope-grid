@@ -1,3 +1,4 @@
+using DopeGrid;
 using DopeGrid.Standard;
 using NUnit.Framework;
 using System;

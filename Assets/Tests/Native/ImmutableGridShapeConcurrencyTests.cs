@@ -1,3 +1,4 @@
+using DopeGrid;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -74,7 +75,7 @@ public class ImmutableGridShapeConcurrencyTests
                 var shape = new GridShape(index + 1, 1, Allocator.TempJob);
                 for (int j = 0; j <= index; j++)
                 {
-                    shape.SetCellValue(j, 0, true);
+                    shape[j, 0] = true;
                 }
 
                 var immutable = shape.AsReadOnly().GetOrCreateImmutable();
@@ -206,12 +207,12 @@ public class ImmutableGridShapeConcurrencyTests
                                     for (int y = 0; y < height; y++)
                                     {
                                         if (random.NextBool())
-                                            shape.SetCellValue(x, y, true);
+                                            shape[x, y] = true;
                                     }
                                 }
 
                                 // Ensure at least one cell is set
-                                shape.SetCellValue(0, 0, true);
+                                shape[0, 0] = true;
 
                                 var trimmed = shape.AsReadOnly().Trim(Allocator.TempJob);
                                 var immutable = trimmed.AsReadOnly().GetOrCreateImmutable();
@@ -299,7 +300,7 @@ public class ImmutableGridShapeConcurrencyTests
             // Create a unique pattern based on index
             for (int i = 0; i <= index && i < ShapeSize * ShapeSize; i++)
             {
-                shape.SetCellValue(i % ShapeSize, i / ShapeSize, true);
+                shape[i % ShapeSize, i / ShapeSize] = true;
             }
 
             var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
@@ -457,10 +458,10 @@ public class ImmutableGridShapeConcurrencyTests
                         {
                             var size = random.NextInt(1, 4);
                             var shape = new GridShape(size, size, Allocator.Temp);
-                            shape.SetCellValue(0, 0, true);
+                            shape[0, 0] = true;
 
                             if (random.NextBool())
-                                shape.SetCellValue(size - 1, size - 1, true);
+                                shape[size - 1, size - 1] = true;
 
                             var trimmed = shape.AsReadOnly().Trim(Allocator.Temp);
                             var immutable = trimmed.AsReadOnly().GetOrCreateImmutable();
@@ -637,12 +638,12 @@ public class ImmutableGridShapeConcurrencyTests
                     {
                         if (random.NextFloat() > 0.5f)
                         {
-                            shape.SetCellValue(i % complexity, i / complexity, true);
+                            shape[i % complexity, i / complexity] = true;
                         }
                     }
 
                     // Ensure at least one cell
-                    shape.SetCellValue(0, 0, true);
+                    shape[0, 0] = true;
 
                     var trimmed = shape.AsReadOnly().Trim(Allocator.TempJob);
                     var immutable = trimmed.AsReadOnly().GetOrCreateImmutable();
@@ -698,11 +699,11 @@ public class ImmutableGridShapeConcurrencyTests
     {
         // Create a complex base shape
         var shape = new GridShape(4, 4, Allocator.TempJob);
-        shape.SetCellValue(0, 0, true);
-        shape.SetCellValue(1, 0, true);
-        shape.SetCellValue(0, 1, true);
-        shape.SetCellValue(2, 2, true);
-        shape.SetCellValue(3, 3, true);
+        shape[0, 0] = true;
+        shape[1, 0] = true;
+        shape[0, 1] = true;
+        shape[2, 2] = true;
+        shape[3, 3] = true;
 
         var trimmed = shape.AsReadOnly().Trim(Allocator.TempJob);
         var baseImmutable = trimmed.AsReadOnly().GetOrCreateImmutable();

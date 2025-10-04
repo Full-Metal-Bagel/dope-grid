@@ -10,12 +10,12 @@ public class ShapesRotateTests
     [Test]
     public void Rotate_Single_90Degrees()
     {
-        using var shape = Shapes.Single(Allocator.Temp);
-        using var rotated = shape.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
+        var shape = Shapes.Single(Allocator.Temp);
+        var rotated = shape.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
 
         Assert.AreEqual(1, rotated.Width);
         Assert.AreEqual(1, rotated.Height);
-        Assert.IsTrue(rotated[0, 0]);
+        Assert.IsTrue(rotated.GetCellValue(0, 0));
 
         // Verify invariants
         Assert.AreEqual(shape.OccupiedSpaceCount, rotated.OccupiedSpaceCount, "OccupiedSpaceCount should be preserved");
@@ -25,14 +25,14 @@ public class ShapesRotateTests
     [Test]
     public void Rotate_Line_90Degrees()
     {
-        using var shape = Shapes.Line(3, Allocator.Temp);
-        using var rotated = shape.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
+        var shape = Shapes.Line(3, Allocator.Temp);
+        var rotated = shape.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
 
         Assert.AreEqual(1, rotated.Width);
         Assert.AreEqual(3, rotated.Height);
-        Assert.IsTrue(rotated[0, 0]);
-        Assert.IsTrue(rotated[0, 1]);
-        Assert.IsTrue(rotated[0, 2]);
+        Assert.IsTrue(rotated.GetCellValue(0, 0));
+        Assert.IsTrue(rotated.GetCellValue(0, 1));
+        Assert.IsTrue(rotated.GetCellValue(0, 2));
 
         // Verify invariants
         Assert.AreEqual(shape.OccupiedSpaceCount, rotated.OccupiedSpaceCount, "OccupiedSpaceCount should be preserved");
@@ -164,24 +164,20 @@ public class ShapesRotateTests
     public void Rotate_CustomShape()
     {
         var shape = new GridShape(3, 2, Allocator.Temp);
-        try
-        {
-            shape[0, 0] = true;
-            shape[1, 0] = true;
-            shape[2, 1] = true;
+        shape[0, 0] = true;
+        shape[1, 0] = true;
+        shape[2, 1] = true;
 
-            using var rotated = shape.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
-            Assert.AreEqual(2, rotated.Width);
-            Assert.AreEqual(3, rotated.Height);
+        var rotated = shape.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
+        Assert.AreEqual(2, rotated.Width);
+        Assert.AreEqual(3, rotated.Height);
 
-            // Verify invariants
-            Assert.AreEqual(3, shape.OccupiedSpaceCount, "Custom shape should have 3 occupied cells");
-            Assert.AreEqual(shape.OccupiedSpaceCount, rotated.OccupiedSpaceCount, "OccupiedSpaceCount should be preserved");
-        }
-        finally
-        {
-            shape.Dispose();
-        }
+        // Verify invariants
+        Assert.AreEqual(3, shape.OccupiedSpaceCount, "Custom shape should have 3 occupied cells");
+        Assert.AreEqual(shape.OccupiedSpaceCount, rotated.OccupiedSpaceCount, "OccupiedSpaceCount should be preserved");
+
+        rotated.Dispose();
+        shape.Dispose();
     }
 
     [Test]
@@ -207,23 +203,22 @@ public class ShapesRotateTests
         var height = random.Next(5, 20);
 
         var shape = new GridShape(width, height, Allocator.Temp);
-        try
-        {
-            // Randomly populate cells
-            var cellsToFill = random.Next(1, width * height / 2); // Fill up to half the grid
-            for (var i = 0; i < cellsToFill; i++)
-            {
-                var x = random.Next(0, width);
-                var y = random.Next(0, height);
-                shape[x, y] = true;
-            }
 
-            var originalOccupiedCount = shape.OccupiedSpaceCount;
+        // Randomly populate cells
+        var cellsToFill = random.Next(1, width * height / 2); // Fill up to half the grid
+        for (var i = 0; i < cellsToFill; i++)
+        {
+            var x = random.Next(0, width);
+            var y = random.Next(0, height);
+            shape[x, y] = true;
+        }
+
+        var originalOccupiedCount = shape.OccupiedSpaceCount;
 
         // Test all rotation angles
-        using var rotated90 = shape.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
-        using var rotated180 = shape.Rotate(RotationDegree.Clockwise180, Allocator.Temp);
-        using var rotated270 = shape.Rotate(RotationDegree.Clockwise270, Allocator.Temp);
+        var rotated90 = shape.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
+        var rotated180 = shape.Rotate(RotationDegree.Clockwise180, Allocator.Temp);
+        var rotated270 = shape.Rotate(RotationDegree.Clockwise270, Allocator.Temp);
 
         // Verify invariant: OccupiedSpaceCount is preserved
         Assert.AreEqual(originalOccupiedCount, rotated90.OccupiedSpaceCount,
@@ -235,19 +230,19 @@ public class ShapesRotateTests
 
         // Verify rotation compositions
         // 2x90° = 180°
-        using var rotated90x2 = rotated90.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
+        var rotated90x2 = rotated90.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
         Assert.IsTrue(rotated180.Equals(rotated90x2),
             $"2x90° should equal 180° rotation (seed: {seed})");
 
         // 3x90° = 270°
-        using var rotated90x3 = rotated90x2.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
+        var rotated90x3 = rotated90x2.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
         Assert.IsTrue(rotated270.Equals(rotated90x3),
             $"3x90° should equal 270° rotation (seed: {seed})");
 
         // 4x90° = 360° = 0°
         // Note: Due to bounding box recalculation during rotation, dimensions might change
         // if the original shape had empty rows/columns that get trimmed
-        using var rotated90x4 = rotated90x3.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
+        var rotated90x4 = rotated90x3.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
 
         // The number of occupied cells should always be preserved
         Assert.AreEqual(shape.OccupiedSpaceCount, rotated90x4.OccupiedSpaceCount,
@@ -255,13 +250,13 @@ public class ShapesRotateTests
 
         // 2x180° = 360° = 0°
         // Same issue as 4x90° - dimensions might change due to bounding box recalculation
-        using var rotated180x2 = rotated180.Rotate(RotationDegree.Clockwise180, Allocator.Temp);
+        var rotated180x2 = rotated180.Rotate(RotationDegree.Clockwise180, Allocator.Temp);
         Assert.AreEqual(shape.OccupiedSpaceCount, rotated180x2.OccupiedSpaceCount,
             $"OccupiedSpaceCount should be preserved after 2x180° rotation (seed: {seed})");
 
         // 270° + 90° = 360° = 0°
         // Same issue - dimensions might change due to bounding box recalculation
-        using var rotated270plus90 = rotated270.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
+        var rotated270plus90 = rotated270.Rotate(RotationDegree.Clockwise90, Allocator.Temp);
         Assert.AreEqual(shape.OccupiedSpaceCount, rotated270plus90.OccupiedSpaceCount,
             $"OccupiedSpaceCount should be preserved after 270° + 90° rotation (seed: {seed})");
 
@@ -282,13 +277,19 @@ public class ShapesRotateTests
         Assert.AreEqual(rotated270.Width * rotated270.Height, rotated270.Size,
             $"270° rotation Size should equal Width * Height (seed: {seed})");
 
-            // Note: Dimensions after rotation are based on the bounding box of occupied cells,
-            // not the original grid dimensions. The rotation algorithm trims empty space.
-            // So Size may differ from the original, but it will always be minimal to contain all occupied cells.
-        }
-        finally
-        {
-            shape.Dispose();
-        }
+        // Note: Dimensions after rotation are based on the bounding box of occupied cells,
+        // not the original grid dimensions. The rotation algorithm trims empty space.
+        // So Size may differ from the original, but it will always be minimal to contain all occupied cells.
+
+        // Dispose all created shapes
+        rotated270plus90.Dispose();
+        rotated180x2.Dispose();
+        rotated90x4.Dispose();
+        rotated90x3.Dispose();
+        rotated90x2.Dispose();
+        rotated270.Dispose();
+        rotated180.Dispose();
+        rotated90.Dispose();
+        shape.Dispose();
     }
 }
