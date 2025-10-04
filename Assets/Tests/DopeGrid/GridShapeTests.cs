@@ -39,16 +39,6 @@ public class GridShapeTests
         Assert.That(shape[0, 0], Is.False);
     }
 
-    [Test]
-    public void Indexer_WithGridPosition_Works()
-    {
-        using var shape = new GridShape(3, 3);
-        var pos = new GridPosition(1, 2);
-
-        shape[pos] = true;
-
-        Assert.That(shape[pos], Is.True);
-    }
 
     [Test]
     public void IsOccupied_ReturnsSameAsValue()

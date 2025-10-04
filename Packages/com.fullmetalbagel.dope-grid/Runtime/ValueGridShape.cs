@@ -38,12 +38,6 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
         set => _values[this.GetIndex(x, y)] = value;
     }
 
-    public T this[GridPosition pos]
-    {
-        get => this[pos.X, pos.Y];
-        set => this[pos.X, pos.Y] = value;
-    }
-
     public bool IsOccupied(int x, int y) => !this[x, y].Equals(_availableValue);
 
     public void Clear()
@@ -89,7 +83,6 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
         }
 
         public T this[int x, int y] => _values.Span[this.GetIndex(x, y)];
-        public T this[GridPosition pos] => _values.Span[this.GetIndex(pos.X, pos.Y)];
         public bool IsOccupied(int x, int y) => !this[x, y].Equals(_availableValue);
 
         public void CopyTo(ValueGridShape<T> other) => _values.CopyTo(other._values);

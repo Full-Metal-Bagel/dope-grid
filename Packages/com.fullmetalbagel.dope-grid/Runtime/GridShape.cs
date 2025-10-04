@@ -36,12 +36,6 @@ public readonly struct GridShape : IEquatable<GridShape>, IDisposable, IReadOnly
         set => Bits.Set(this.GetIndex(x, y), value);
     }
 
-    public bool this[GridPosition pos]
-    {
-        get => this[pos.X, pos.Y];
-        set => this[pos.X, pos.Y] = value;
-    }
-
     public bool IsOccupied(int x, int y) => this[x, y];
 
     public void Clear()

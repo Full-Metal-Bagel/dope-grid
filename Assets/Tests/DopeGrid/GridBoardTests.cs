@@ -40,7 +40,7 @@ public class GridBoardTests
     {
         using var original = new GridBoard(3, 3);
         var item = Shapes.ImmutableSingle();
-        original.TryAddItemAt(item, new GridPosition(0, 0));
+        original.TryAddItemAt(item, 0, 0);
 
         using var copy = new GridBoard(original);
 
@@ -81,13 +81,12 @@ public class GridBoardTests
     {
         using var board = new GridBoard(5, 5);
         var item = Shapes.ImmutableSingle();
-        var pos = new GridPosition(2, 3);
 
-        var result = board.TryAddItemAt(item, pos);
+        var result = board.TryAddItemAt(item, 2, 3);
 
         Assert.That(result, Is.True);
         Assert.That(board.ItemCount, Is.EqualTo(1));
-        Assert.That(board.ItemPositions[0], Is.EqualTo(pos));
+        Assert.That(board.ItemPositions[0], Is.EqualTo((2, 3)));
     }
 
     [Test]
@@ -95,9 +94,8 @@ public class GridBoardTests
     {
         using var board = new GridBoard(5, 5);
         var item = Shapes.ImmutableLine(3);
-        var pos = new GridPosition(4, 0);
 
-        var result = board.TryAddItemAt(item, pos);
+        var result = board.TryAddItemAt(item, 4, 0);
 
         Assert.That(result, Is.False);
         Assert.That(board.ItemCount, Is.EqualTo(0));
@@ -110,8 +108,8 @@ public class GridBoardTests
         var item1 = Shapes.ImmutableSingle();
         var item2 = Shapes.ImmutableSingle();
 
-        board.TryAddItemAt(item1, new GridPosition(2, 2));
-        var result = board.TryAddItemAt(item2, new GridPosition(2, 2));
+        board.TryAddItemAt(item1, 2, 2);
+        var result = board.TryAddItemAt(item2, 2, 2);
 
         Assert.That(result, Is.False);
         Assert.That(board.ItemCount, Is.EqualTo(1));
@@ -122,7 +120,7 @@ public class GridBoardTests
     {
         using var board = new GridBoard(5, 5);
         var item = Shapes.ImmutableSingle();
-        board.TryAddItemAt(item, new GridPosition(0, 0));
+        board.TryAddItemAt(item, 0, 0);
 
         Assert.That(board[0, 0], Is.True, "Cell should be occupied before removal");
 
@@ -137,7 +135,7 @@ public class GridBoardTests
     {
         using var board = new GridBoard(5, 5);
         var item = Shapes.ImmutableSingle();
-        var added = board.TryAddItemAt(item, new GridPosition(0, 0));
+        var added = board.TryAddItemAt(item, 0, 0);
 
         Assert.That(added, Is.True, "Item should be added successfully");
 
@@ -154,9 +152,9 @@ public class GridBoardTests
         var item2 = Shapes.ImmutableSingle();
         var item3 = Shapes.ImmutableSingle();
 
-        var added1 = board.TryAddItemAt(item1, new GridPosition(0, 0));
-        var added2 = board.TryAddItemAt(item2, new GridPosition(1, 0));
-        var added3 = board.TryAddItemAt(item3, new GridPosition(2, 0));
+        var added1 = board.TryAddItemAt(item1, 0, 0);
+        var added2 = board.TryAddItemAt(item2, 1, 0);
+        var added3 = board.TryAddItemAt(item3, 2, 0);
 
         Assert.That(added1 && added2 && added3, Is.True, "All items should be added");
 
@@ -186,7 +184,7 @@ public class GridBoardTests
         shape[0, 0] = true;
         using var board = new GridBoard(shape);
         var item = Shapes.ImmutableSingle();
-        board.TryAddItemAt(item, new GridPosition(1, 1));
+        board.TryAddItemAt(item, 1, 1);
 
         board.Clear();
 
@@ -215,16 +213,14 @@ public class GridBoardTests
     {
         using var board = new GridBoard(5, 5);
         var item = Shapes.ImmutableSingle();
-        var pos1 = new GridPosition(0, 0);
-        var pos2 = new GridPosition(2, 3);
 
-        var added1 = board.TryAddItemAt(item, pos1);
-        var added2 = board.TryAddItemAt(item, pos2);
+        var added1 = board.TryAddItemAt(item, 0, 0);
+        var added2 = board.TryAddItemAt(item, 2, 3);
 
         Assert.That(added1 && added2, Is.True, "Both items should be added");
         Assert.That(board.ItemPositions.Count, Is.EqualTo(2));
-        Assert.That(board.ItemPositions[0], Is.EqualTo(pos1));
-        Assert.That(board.ItemPositions[1], Is.EqualTo(pos2));
+        Assert.That(board.ItemPositions[0], Is.EqualTo((0, 0)));
+        Assert.That(board.ItemPositions[1], Is.EqualTo((2, 3)));
     }
 
     [Test]
@@ -232,7 +228,7 @@ public class GridBoardTests
     {
         using var board = new GridBoard(5, 5);
         var item = Shapes.ImmutableLine(3);
-        board.TryAddItemAt(item, new GridPosition(1, 1));
+        board.TryAddItemAt(item, 1, 1);
 
         var grid = board.CurrentGrid;
 
@@ -247,7 +243,7 @@ public class GridBoardTests
     {
         using var board = new GridBoard(5, 5);
         var item = Shapes.ImmutableSingle();
-        board.TryAddItemAt(item, new GridPosition(2, 2));
+        board.TryAddItemAt(item, 2, 2);
 
         Assert.That(board.IsOccupied(2, 2), Is.True);
         Assert.That(board.IsOccupied(0, 0), Is.False);
@@ -258,10 +254,10 @@ public class GridBoardTests
     {
         using var original = new GridBoard(5, 5);
         var item = Shapes.ImmutableSingle();
-        original.TryAddItemAt(item, new GridPosition(0, 0));
+        original.TryAddItemAt(item, 0, 0);
 
         using var clone = original.Clone();
-        clone.TryAddItemAt(item, new GridPosition(1, 1));
+        clone.TryAddItemAt(item, 1, 1);
 
         Assert.That(original.ItemCount, Is.EqualTo(1));
         Assert.That(clone.ItemCount, Is.EqualTo(2));
@@ -275,9 +271,9 @@ public class GridBoardTests
         var lShape = Shapes.ImmutableLShape();
         var tShape = Shapes.ImmutableTShape();
 
-        var added1 = board.TryAddItemAt(line, new GridPosition(0, 0));
-        var added2 = board.TryAddItemAt(lShape, new GridPosition(0, 1));
-        var added3 = board.TryAddItemAt(tShape, new GridPosition(3, 0));
+        var added1 = board.TryAddItemAt(line, 0, 0);
+        var added2 = board.TryAddItemAt(lShape, 0, 1);
+        var added3 = board.TryAddItemAt(tShape, 3, 0);
 
         Assert.That(added1, Is.True, $"Line should be added. Line occupied count: {line.OccupiedSpaceCount()}");
         Assert.That(added2, Is.True, $"LShape should be added. LShape occupied count: {lShape.OccupiedSpaceCount()}");

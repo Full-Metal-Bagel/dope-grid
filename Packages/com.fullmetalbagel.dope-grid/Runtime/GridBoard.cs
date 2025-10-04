@@ -15,8 +15,8 @@ public readonly struct GridBoard : IReadOnlyGridShape<bool>, IDisposable, IEquat
     private readonly List<ImmutableGridShape> _items;
     public IReadOnlyList<ImmutableGridShape> Items => _items;
 
-    private readonly List<GridPosition> _itemPositions; // top-left position
-    public IReadOnlyList<GridPosition> ItemPositions => _itemPositions;
+    private readonly List<(int x, int y)> _itemPositions; // top-left position
+    public IReadOnlyList<(int x, int y)> ItemPositions => _itemPositions;
 
     public int Width => _initializedGrid.Width;
     public int Height => _initializedGrid.Height;
@@ -29,7 +29,7 @@ public readonly struct GridBoard : IReadOnlyGridShape<bool>, IDisposable, IEquat
         _grid = new GridShape(width, height);
         _initializedGrid = _grid.Clone();
         _items = new List<ImmutableGridShape>(capacity: 8);
-        _itemPositions = new List<GridPosition>(capacity: 8);
+        _itemPositions = new List<(int x, int y)>(capacity: 8);
     }
 
     public GridBoard(GridBoard other)
@@ -38,7 +38,7 @@ public readonly struct GridBoard : IReadOnlyGridShape<bool>, IDisposable, IEquat
         _initializedGrid = _grid.Clone();
         _items = new List<ImmutableGridShape>(other._items.Capacity);
         _items.AddRange(other._items);
-        _itemPositions = new List<GridPosition>(other._itemPositions.Capacity);
+        _itemPositions = new List<(int x, int y)>(other._itemPositions.Capacity);
         _itemPositions.AddRange(other.ItemPositions);
     }
 
@@ -49,39 +49,39 @@ public readonly struct GridBoard : IReadOnlyGridShape<bool>, IDisposable, IEquat
         _grid = containerShape.Clone();
         _initializedGrid = _grid.Clone();
         _items = new List<ImmutableGridShape>(capacity: 8);
-        _itemPositions = new List<GridPosition>(capacity: 8);
+        _itemPositions = new List<(int x, int y)>(capacity: 8);
     }
 
     public int ItemCount => _items.Count;
 
     public bool TryAddItem(ImmutableGridShape item)
     {
-        var pos = _grid.FindFirstFitWithFixedRotation(item);
-        if (pos.X >= 0)
+        var (x, y) = _grid.FindFirstFitWithFixedRotation(item);
+        if (x >= 0)
         {
-            AddItemAt(item, pos);
+            AddItemAt(item, x, y);
             return true;
         }
 
         return false;
     }
 
-    public bool TryAddItemAt(ImmutableGridShape shape, GridPosition pos)
+    public bool TryAddItemAt(ImmutableGridShape shape, int x, int y)
     {
-        if (_grid.CanPlaceItem(shape, pos))
+        if (_grid.CanPlaceItem(shape, x, y))
         {
-            AddItemAt(shape, pos);
+            AddItemAt(shape, x, y);
             return true;
         }
 
         return false;
     }
 
-    private void AddItemAt(ImmutableGridShape shape, GridPosition pos)
+    private void AddItemAt(ImmutableGridShape shape, int x, int y)
     {
-        _grid.FillShapeWithValue(shape, pos, true);
+        _grid.FillShapeWithValue(shape, x, y, true);
         _items.Add(shape);
-        _itemPositions.Add(pos);
+        _itemPositions.Add((x, y));
     }
 
     public void RemoveItem(int index)
@@ -89,8 +89,8 @@ public readonly struct GridBoard : IReadOnlyGridShape<bool>, IDisposable, IEquat
         if (index >= 0 && index < _items.Count)
         {
             var shape = _items[index];
-            var pos = _itemPositions[index];
-            _grid.FillShapeWithValue(shape, pos, false);
+            var (x, y) = _itemPositions[index];
+            _grid.FillShapeWithValue(shape, x, y, false);
 
             // swap-back remove
             var lastIdx = _items.Count - 1;

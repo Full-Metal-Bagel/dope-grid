@@ -9,10 +9,6 @@ public interface IGridShape<T> : IReadOnlyGridShape
 
 public static class GridShapeExtension
 {
-    public static void SetCellValue<TGrid, TValue>(this TGrid grid, GridPosition pos, TValue value)
-        where TGrid : IGridShape<TValue>
-        => grid[pos.X, pos.Y] = value;
-
     public static void SetCellValue<TGrid, TValue>(this TGrid grid, int x, int y, TValue value)
         where TGrid : IGridShape<TValue>
         => grid[x, y] = value;
@@ -77,10 +73,6 @@ public static class GridShapeExtension
         }
     }
 
-    public static void FillRect<TGrid, TValue>(this TGrid grid, GridPosition pos, int width, int height, TValue value)
-        where TGrid : IGridShape<TValue>
-        => grid.FillRect(pos.X, pos.Y, width, height, value);
-
     public static void FillShape<TGrid, TShape, TValue>(this TGrid grid, TShape shape, int offsetX, int offsetY, TValue _ = default!)
         where TGrid : IGridShape<TValue>
         where TShape : IReadOnlyGridShape<TValue>
@@ -100,12 +92,6 @@ public static class GridShapeExtension
         }
     }
 
-    public static void FillShape<TGrid, TShape, TValue>(this TGrid grid, TShape shape, GridPosition pos, TValue _ = default!)
-        where TGrid : IGridShape<TValue>
-        where TShape : IReadOnlyGridShape<TValue>
-        where TValue : IEquatable<TValue>
-    => FillShape(grid, shape, pos.X, pos.Y, _);
-
     public static void FillShapeWithValue<TGrid, TShape, TValue>(this TGrid grid, TShape shape, int offsetX, int offsetY, TValue value)
         where TGrid : IGridShape<TValue>
         where TShape : IReadOnlyGridShape
@@ -124,11 +110,6 @@ public static class GridShapeExtension
             }
         }
     }
-
-    public static void FillShapeWithValue<TGrid, TShape, TValue>(this TGrid grid, TShape shape, GridPosition pos, TValue value)
-        where TGrid : IGridShape<TValue>
-        where TShape : IReadOnlyGridShape<bool>
-    => FillShapeWithValue(grid, shape, pos.X, pos.Y, value);
 
     public static void RotateShape<TInputShape, TOutputShape, TValue>(this TInputShape input, RotationDegree degree, TOutputShape output, TValue _ = default!)
         where TInputShape : IReadOnlyGridShape<TValue>
@@ -199,10 +180,6 @@ public static class GridShapeExtension
 
 public static class BoolGridShapeExtension
 {
-    public static void SetCellValue<TGrid>(this TGrid grid, GridPosition pos, bool value)
-        where TGrid : IGridShape<bool>
-        => grid.SetCellValue<TGrid, bool>(pos, value);
-
     public static void CopyTo<TSourceGrid, TTargetGrid>(this TSourceGrid source, TTargetGrid target)
         where TSourceGrid : IReadOnlyGridShape<bool>
         where TTargetGrid : IGridShape<bool>
@@ -220,17 +197,8 @@ public static class BoolGridShapeExtension
         where TGrid : IGridShape<bool>
         => grid.FillRect<TGrid, bool>(x, y, width, height, value);
 
-    public static void FillRect<TGrid>(this TGrid grid, GridPosition pos, int width, int height, bool value)
-        where TGrid : IGridShape<bool>
-        => grid.FillRect<TGrid, bool>(pos, width, height, value);
-
-    public static void FillShape<TGrid, TShape>(this TGrid grid, TShape shape, GridPosition pos)
+    public static void FillShapeWithValue<TGrid, TShape>(this TGrid grid, TShape shape, int x, int y, bool value)
         where TGrid : IGridShape<bool>
         where TShape : IReadOnlyGridShape<bool>
-        => grid.FillShape<TGrid, TShape, bool>(shape, pos);
-
-    public static void FillShapeWithValue<TGrid, TShape>(this TGrid grid, TShape shape, GridPosition pos, bool value)
-        where TGrid : IGridShape<bool>
-        where TShape : IReadOnlyGridShape<bool>
-        => grid.FillShapeWithValue<TGrid, TShape, bool>(shape, pos, value);
+        => grid.FillShapeWithValue<TGrid, TShape, bool>(shape, x, y, value);
 }
