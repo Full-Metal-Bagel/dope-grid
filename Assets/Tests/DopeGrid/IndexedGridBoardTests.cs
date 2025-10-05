@@ -20,20 +20,24 @@ public class IndexedGridBoardTests
     }
 
     [Test]
-    public void Constructor_WithImmutableGridShape_CreatesBoard()
+    public void CreateFromShape_WithGridShape_CreatesBoard()
     {
-        var shape = Shapes.ImmutableRectangle(3, 3);
-        using var board = new IndexedGridBoard<ItemData>(shape);
+        using var shape = new GridShape(3, 3);
+        shape.FillAll(true);
+        using var board = IndexedGridBoard<ItemData>.CreateFromShape(shape);
 
         Assert.That(board.Width, Is.EqualTo(3));
         Assert.That(board.Height, Is.EqualTo(3));
     }
 
     [Test]
-    public void Constructor_WithEmptyShape_ThrowsException()
+    public void CreateFromShape_WithEmptyShape_CreatesEmptyBoard()
     {
-        var shape = ImmutableGridShape.Empty;
-        Assert.Throws<ArgumentException>(() => new IndexedGridBoard<ItemData>(shape));
+        using var shape = new GridShape(0, 0);
+        using var board = IndexedGridBoard<ItemData>.CreateFromShape(shape);
+
+        Assert.That(board.Width, Is.EqualTo(0));
+        Assert.That(board.Height, Is.EqualTo(0));
     }
 
     [Test]
@@ -174,18 +178,30 @@ public class IndexedGridBoardTests
     [Test]
     public void Clear_RestoresInitializedGrid()
     {
-        using var shape = new ValueGridShape<int>(3, 3, -1);
-        shape[0, 0] = 1;
-        using var board = new IndexedGridBoard<ItemData>(shape);
+        using var shape = new GridShape(3, 3);
+        shape[0, 0] = true;
+        shape[1, 1] = true;
+        shape[2, 2] = true;
+        // Only cells [0,0], [1,1], [2,2] are available; others are blocked
+        using var board = IndexedGridBoard<ItemData>.CreateFromShape(shape);
         var item = new ItemData("Bow", 70);
         var itemShape = Shapes.ImmutableSingle();
-        board.TryAddItemAt(item, itemShape, 1, 1);
+
+        // Add item at an available cell
+        board.TryAddItemAt(item, itemShape, 0, 0);
+        Assert.That(board.ItemCount, Is.EqualTo(1));
+        Assert.That(board[0, 0], Is.GreaterThanOrEqualTo(0), "Cell should contain item index");
 
         board.Clear();
 
+        // After clear, item should be removed
         Assert.That(board.ItemCount, Is.EqualTo(0));
-        Assert.That(board.IsOccupied(0, 0), Is.True);
-        Assert.That(board.IsOccupied(1, 1), Is.False);
+        // Available cells should be restored to -1
+        Assert.That(board[0, 0], Is.EqualTo(-1), "Available cell should be -1 after clear");
+        Assert.That(board[1, 1], Is.EqualTo(-1), "Available cell should be -1 after clear");
+        // Blocked cells should remain int.MinValue
+        Assert.That(board[1, 0], Is.EqualTo(int.MinValue), "Blocked cell should remain int.MinValue");
+        Assert.That(board[0, 1], Is.EqualTo(int.MinValue), "Blocked cell should remain int.MinValue");
     }
 
     [Test]
@@ -424,7 +440,7 @@ public class IndexedGridBoardTests
     }
 
     [Test]
-    public void Constructor_WithImmutableGridShape_UnoccupiedCellsMarkedAsMinValue()
+    public void CreateFromShape_WithGridShape_UnoccupiedCellsMarkedAsMinValue()
     {
         // Create an L-shaped container
         using var shape = new GridShape(3, 3);
@@ -432,9 +448,8 @@ public class IndexedGridBoardTests
         shape[1, 0] = true;
         shape[0, 1] = true;
         // [2,0], [1,1], [2,1], [0,2], [1,2], [2,2] are unoccupied
-        var immutableShape = shape.GetImmutableShape();
 
-        using var board = new IndexedGridBoard<ItemData>(immutableShape);
+        using var board = IndexedGridBoard<ItemData>.CreateFromShape(shape);
 
         // Occupied cells should have -1 (empty value)
         Assert.That(board[0, 0], Is.EqualTo(-1), "Occupied container cell should have -1");

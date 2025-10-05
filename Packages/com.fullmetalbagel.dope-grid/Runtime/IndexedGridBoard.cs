@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DopeGrid;
 
@@ -38,18 +39,21 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, ID
         _freeIndices = HashSetPool<int>.Rent();
     }
 
-    public IndexedGridBoard(ImmutableGridShape containerShape)
-        : this(containerShape.Width, containerShape.Height)
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types")]
+    public static IndexedGridBoard<TItemData> CreateFromShape<TShape>(TShape shape)
+        where TShape : struct, IReadOnlyGridShape<bool>
     {
-        for (var y = 0; y < Height; y++)
-        for (var x = 0; x < Width; x++)
+        var board = new IndexedGridBoard<TItemData>(shape.Width, shape.Height);
+        for (var y = 0; y < shape.Height; y++)
+        for (var x = 0; x < shape.Width; x++)
         {
-            if (!containerShape.IsOccupied(x, y))
+            if (!shape.IsOccupied(x, y))
             {
-                _grid[x, y] = int.MinValue;
-                _initializedGrid[x, y] = int.MinValue;
+                board._grid[x, y] = int.MinValue;
+                board._initializedGrid[x, y] = int.MinValue;
             }
         }
+        return board;
     }
 
     public bool IsOccupied(int x, int y) => _grid.IsOccupied(x, y);
