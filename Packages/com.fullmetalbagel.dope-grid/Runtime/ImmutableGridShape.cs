@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
 namespace DopeGrid;
@@ -92,7 +93,9 @@ public static class ImmutableGridShape2DList
 
     internal sealed class ShapeDataset : IDisposable
     {
-        private readonly List<byte[]> _patterns;
+        private ulong[] _patternStore;
+        private int _patternStoreLength; // in ulong words
+        private readonly List<int> _patternOffsets; // per-shape start offset in words
         private readonly List<(int width, int height)> _bounds;
         public IReadOnlyList<(int width, int height)> Bounds => _bounds;
         private readonly List<int> _rotate90Indices; // shape index after rotate 90
@@ -103,7 +106,9 @@ public static class ImmutableGridShape2DList
         public ShapeDataset()
         {
             // id 0 reserved for empty
-            _patterns = new List<byte[]>(capacity: 128) { Array.Empty<byte>() };
+            _patternStore = Array.Empty<ulong>();
+            _patternStoreLength = 0;
+            _patternOffsets = new List<int>(capacity: 128) { 0 };
             _bounds = new List<(int width, int height)>(capacity: 128) { (0, 0) };
             _rotate90Indices = new List<int>(capacity: 128) { 0 };
             _flipIndices = new List<int>(capacity: 128) { 0 };
@@ -114,8 +119,9 @@ public static class ImmutableGridShape2DList
         {
             var size = _bounds[id];
             var bitLength = size.width * size.height;
-            var data = _patterns[id];
-            return new SpanBitArray(data.AsSpan(), bitLength);
+            var startWord = _patternOffsets[id];
+            var bytes = MemoryMarshal.AsBytes(_patternStore.AsSpan(startWord));
+            return new SpanBitArray(bytes, bitLength);
         }
 
         [Pure, MustUseReturnValue]
@@ -145,10 +151,18 @@ public static class ImmutableGridShape2DList
 
                 _bounds.Add((shape.Width, shape.Height));
 
-                var bytes = new byte[SpanBitArrayUtility.ByteCount(shape.Size())];
-                var dest = new SpanBitArray(bytes.AsSpan(), shape.Size());
+                var bitLength = shape.Size();
+                var byteCount = SpanBitArrayUtility.ByteCount(bitLength);
+                var wordCount = byteCount == 0 ? 0 : (byteCount + sizeof(ulong) - 1) / sizeof(ulong);
+
+                var startWord = _patternStoreLength;
+                EnsureWordCapacity(startWord + wordCount);
+
+                var dest = new SpanBitArray(MemoryMarshal.AsBytes(_patternStore.AsSpan(startWord)), bitLength);
                 shape.ReadOnlyBits.CopyTo(dest);
-                _patterns.Add(bytes);
+
+                _patternOffsets.Add(startWord);
+                _patternStoreLength += wordCount;
 
                 _rotate90Indices.Add(-1);
                 _flipIndices.Add(-1);
@@ -190,10 +204,24 @@ public static class ImmutableGridShape2DList
 
         public void Dispose()
         {
-            _patterns.Clear();
+            _patternStore = Array.Empty<ulong>();
+            _patternStoreLength = 0;
+            _patternOffsets.Clear();
             _bounds.Clear();
             _rotate90Indices.Clear();
             _flipIndices.Clear();
+        }
+
+        private void EnsureWordCapacity(int requiredWords)
+        {
+            if (_patternStore.Length >= requiredWords) return;
+            var newCapacity = _patternStore.Length == 0 ? Math.Max(requiredWords, 128) : Math.Max(requiredWords, _patternStore.Length * 2);
+            var newStore = new ulong[newCapacity];
+            if (_patternStoreLength > 0)
+            {
+                Array.Copy(_patternStore, 0, newStore, 0, _patternStoreLength);
+            }
+            _patternStore = newStore;
         }
     }
 }
