@@ -79,7 +79,7 @@ public static class ImmutableGridShape2DList
         if (s_shapes.IsValueCreated)
         {
             s_shapes.Value.Dispose();
-            s_shapes = new Lazy<Shapes>(() => new Shapes());
+            s_shapes = new Lazy<ShapeDataset>(() => new ShapeDataset(), LazyThreadSafetyMode.ExecutionAndPublication);
         }
     }
 #endif
