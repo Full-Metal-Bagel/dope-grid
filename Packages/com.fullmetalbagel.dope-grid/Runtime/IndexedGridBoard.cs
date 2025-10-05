@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DopeGrid;
 
-public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<TItemData>, IDisposable, IEquatable<IndexedGridBoard<TItemData>>
+public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, IDisposable, IEquatable<IndexedGridBoard<TItemData>>
 {
     private readonly ValueGridShape<int> _grid; // Stores item index at each cell (-1 for empty)
     public ValueGridShape<int>.ReadOnly Grid => _grid;
@@ -20,12 +20,12 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<TItemDat
     private readonly List<(int x, int y)> _itemPosition;
     public IReadOnlyList<(int x, int y)> ItemPositions => _itemPosition;
 
-    private readonly Queue<int> _freeIndices;
+    private readonly HashSet<int> _freeIndices;
 
     public int Width => _initializedGrid.Width;
     public int Height => _initializedGrid.Height;
 
-    public int ItemCount => _items.Count;
+    public int ItemCount => _items.Count - _freeIndices.Count;
     public int FreeSpace => Grid.CountValue(-1);
 
     public IndexedGridBoard(int width, int height)
@@ -35,7 +35,7 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<TItemDat
         _items = ListPool<TItemData>.Rent();
         _itemShapes = ListPool<ImmutableGridShape>.Rent();
         _itemPosition = ListPool<(int x, int y)>.Rent();
-        _freeIndices = QueuePool<int>.Rent();
+        _freeIndices = HashSetPool<int>.Rent();
     }
 
     public IndexedGridBoard(ValueGridShape<int> containerShape)
@@ -46,11 +46,11 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<TItemDat
         _items = ListPool<TItemData>.Rent();
         _itemShapes = ListPool<ImmutableGridShape>.Rent();
         _itemPosition = ListPool<(int x, int y)>.Rent();
-        _freeIndices = QueuePool<int>.Rent();
+        _freeIndices = HashSetPool<int>.Rent();
     }
 
     public bool IsOccupied(int x, int y) => _grid.IsOccupied(x, y);
-    public TItemData this[int x, int y] => _items[_grid[x, y]];
+    public int this[int x, int y] => _grid[x, y];
 
     public (int index, RotationDegree rotation) TryAddItem(TItemData data, ImmutableGridShape item)
     {
@@ -75,8 +75,16 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<TItemDat
 
     private int AddItemAt(TItemData itemData, ImmutableGridShape itemShape, int x, int y)
     {
-        if (_freeIndices.TryDequeue(out var itemIndex))
+        int itemIndex;
+        // Reuse any free index
+        if (_freeIndices.Count > 0)
         {
+            // Take any index from the set (enumeration order is undefined but fast)
+            using var enumerator = _freeIndices.GetEnumerator();
+            enumerator.MoveNext();
+            itemIndex = enumerator.Current;
+            _freeIndices.Remove(itemIndex);
+
             _items[itemIndex] = itemData;
             _itemShapes[itemIndex] = itemShape;
             _itemPosition[itemIndex] = (x, y);
@@ -104,7 +112,7 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<TItemDat
             _items[index] = default!;
             _itemShapes[index] = ImmutableGridShape.Empty;
             _itemPosition[index] = (-1, -1);
-            _freeIndices.Enqueue(index);
+            _freeIndices.Add(index);
         }
     }
 
@@ -124,11 +132,13 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<TItemDat
         ListPool<TItemData>.Return(_items);
         ListPool<ImmutableGridShape>.Return(_itemShapes);
         ListPool<(int x, int y)>.Return(_itemPosition);
-        QueuePool<int>.Return(_freeIndices);
+        HashSetPool<int>.Return(_freeIndices);
     }
 
+    public Enumerator GetEnumerator() => new(_items, _itemShapes, _freeIndices);
+
     public static implicit operator ReadOnly(IndexedGridBoard<TItemData> board) => board.AsReadOnly();
-    public ReadOnly AsReadOnly() => new(_grid.AsReadOnly(), _items);
+    public ReadOnly AsReadOnly() => new(_grid.AsReadOnly(), _items, _itemShapes, _freeIndices);
 
     public override bool Equals(object? obj) => throw new NotSupportedException();
     public override int GetHashCode() => throw new NotSupportedException();
@@ -136,28 +146,72 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<TItemDat
     public static bool operator !=(IndexedGridBoard<TItemData> left, IndexedGridBoard<TItemData> right) => !(left == right);
     public bool Equals(IndexedGridBoard<TItemData> other) => throw new NotSupportedException();
 
+    public ref struct Enumerator
+    {
+        private readonly IReadOnlyList<TItemData> _items;
+        private readonly IReadOnlyList<ImmutableGridShape> _itemShapes;
+        private readonly HashSet<int> _freeIndicesSet;
+        private int _currentIndex;
+
+        internal Enumerator(IReadOnlyList<TItemData> items, IReadOnlyList<ImmutableGridShape> itemShapes, HashSet<int> freeIndices)
+        {
+            _items = items;
+            _itemShapes = itemShapes;
+            _freeIndicesSet = freeIndices;
+            _currentIndex = -1;
+        }
+
+        public readonly (int index, TItemData data, ImmutableGridShape shape) Current
+        {
+            get
+            {
+                if (_currentIndex < 0 || _currentIndex >= _items.Count)
+                    throw new InvalidOperationException("Enumeration has not started or has already finished");
+                return (_currentIndex, _items[_currentIndex], _itemShapes[_currentIndex]);
+            }
+        }
+
+        public bool MoveNext()
+        {
+            while (++_currentIndex < _items.Count)
+            {
+                if (!_freeIndicesSet.Contains(_currentIndex))
+                    return true;
+            }
+            return false;
+        }
+
+        public void Reset() => _currentIndex = -1;
+    }
+
     public readonly struct ReadOnly : IReadOnlyGridShape<TItemData>, IEquatable<ReadOnly>
     {
         private readonly ValueGridShape<int>.ReadOnly _grid;
         private readonly IReadOnlyList<TItemData> _items;
+        private readonly IReadOnlyList<ImmutableGridShape> _itemShapes;
+        private readonly HashSet<int> _freeIndices;
 
         public ValueGridShape<int>.ReadOnly Grid => _grid;
         public int Width => _grid.Width;
         public int Height => _grid.Height;
 
-        public int ItemCount => _items.Count;
+        public int ItemCount => _items.Count - _freeIndices.Count;
         public int FreeSpace => _grid.CountValue(-1);
 
         public bool IsOccupied(int x, int y) => _grid.IsOccupied(x, y);
         public TItemData this[int x, int y] => _items[_grid[x, y]];
 
-        internal ReadOnly(ValueGridShape<int>.ReadOnly grid, IReadOnlyList<TItemData> items)
+        internal ReadOnly(ValueGridShape<int>.ReadOnly grid, IReadOnlyList<TItemData> items, IReadOnlyList<ImmutableGridShape> itemShapes, HashSet<int> freeIndices)
         {
             _grid = grid;
             _items = items;
+            _itemShapes = itemShapes;
+            _freeIndices = freeIndices;
         }
 
-        public override bool Equals(object obj) => throw new NotSupportedException();
+        public Enumerator GetEnumerator() => new(_items, _itemShapes, _freeIndices);
+
+        public override bool Equals(object? obj) => throw new NotSupportedException();
         public override int GetHashCode() => throw new NotSupportedException();
         public static bool operator ==(ReadOnly left, ReadOnly right) => left.Equals(right);
         public static bool operator !=(ReadOnly left, ReadOnly right) => !(left == right);

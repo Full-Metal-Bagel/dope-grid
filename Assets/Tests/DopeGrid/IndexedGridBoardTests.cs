@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using DopeGrid;
 
 namespace DopeGrid.Tests;
@@ -117,10 +119,11 @@ public class IndexedGridBoardTests
         var index = board.TryAddItemAt(item, shape, 0, 0);
 
         Assert.That(board.IsOccupied(0, 0), Is.True, "Cell should be occupied before removal");
+        Assert.That(board.ItemCount, Is.EqualTo(1));
 
         board.RemoveItem(index);
 
-        Assert.That(board.ItemCount, Is.EqualTo(1), "ItemCount stays the same due to index reuse");
+        Assert.That(board.ItemCount, Is.EqualTo(0), "ItemCount decreases after removal");
         Assert.That(board.IsOccupied(0, 0), Is.False, "Cell should be free after removal");
     }
 
@@ -146,11 +149,15 @@ public class IndexedGridBoardTests
         var shape = Shapes.ImmutableSingle();
 
         var index1 = board.TryAddItemAt(item1, shape, 0, 0);
+        Assert.That(board.ItemCount, Is.EqualTo(1));
+
         board.RemoveItem(index1);
+        Assert.That(board.ItemCount, Is.EqualTo(0), "ItemCount should be 0 after removal");
 
         var index2 = board.TryAddItemAt(item2, shape, 1, 1);
 
         Assert.That(index2, Is.EqualTo(index1), "Removed index should be reused");
+        Assert.That(board.ItemCount, Is.EqualTo(1), "ItemCount should be 1 after re-adding");
     }
 
     [Test]
@@ -185,16 +192,16 @@ public class IndexedGridBoardTests
     }
 
     [Test]
-    public void Indexer_ReturnsCorrectItem()
+    public void Indexer_ReturnsCorrectItemIndex()
     {
         using var board = new IndexedGridBoard<ItemData>(5, 5);
         var item = new ItemData("Ring", 150);
         var shape = Shapes.ImmutableSingle();
-        board.TryAddItemAt(item, shape, 2, 2);
+        var itemIndex = board.TryAddItemAt(item, shape, 2, 2);
 
-        var retrievedItem = board[2, 2];
+        var retrievedIndex = board[2, 2];
 
-        Assert.That(retrievedItem, Is.EqualTo(item));
+        Assert.That(retrievedIndex, Is.EqualTo(itemIndex));
     }
 
     [Test]
@@ -294,32 +301,95 @@ public class IndexedGridBoardTests
         var item = new ItemData("LongSword", 110);
         var shape = Shapes.ImmutableLine(4);
 
-        // Fill the board so horizontal line won't fit, but rotated might
+        // Fill the board to block horizontal placement of a 4-unit line, forcing a rotation.
         var filler = new ItemData("Filler", 1);
         var single = Shapes.ImmutableSingle();
-        board.TryAddItemAt(filler, single, 1, 0);
-        board.TryAddItemAt(filler, single, 2, 0);
-        board.TryAddItemAt(filler, single, 3, 0);
+        for (int y = 0; y < board.Height; y++)
+        {
+            board.TryAddItemAt(filler, single, 2, y);
+        }
 
         var (index, rotation) = board.TryAddItem(item, shape);
 
         Assert.That(index, Is.GreaterThanOrEqualTo(0), "Should find a fit with rotation");
-        Assert.That(rotation, Is.Not.EqualTo(RotationDegree.None).Or.EqualTo(RotationDegree.None),
-            "Rotation may or may not be needed depending on placement");
+        Assert.That(rotation, Is.AnyOf(RotationDegree.Clockwise90, RotationDegree.Clockwise270), "A 90 or 270 degree rotation was expected.");
     }
 
     [Test]
-    public void ItemData_DefaultValue_AfterRemoval()
+    public void ItemCount_AfterRemoval()
     {
         using var board = new IndexedGridBoard<ItemData>(5, 5);
         var item = new ItemData("Staff", 95);
         var shape = Shapes.ImmutableSingle();
 
         var index = board.TryAddItemAt(item, shape, 1, 1);
+        Assert.That(board.ItemCount, Is.EqualTo(1), "ItemCount should be 1 after adding one item");
+
         board.RemoveItem(index);
 
-        // After removal, trying to access should give default (though this is dangerous in practice)
-        Assert.That(board.ItemCount, Is.EqualTo(1), "Count doesn't decrease due to index reuse");
+        Assert.That(board.ItemCount, Is.EqualTo(0), "ItemCount should be 0 after removal");
+    }
+
+    [Test]
+    public void ItemCount_AfterAddRemoveAdd()
+    {
+        using var board = new IndexedGridBoard<ItemData>(5, 5);
+        var item1 = new ItemData("Sword", 100);
+        var item2 = new ItemData("Shield", 80);
+        var shape = Shapes.ImmutableSingle();
+
+        // Add first item
+        var index1 = board.TryAddItemAt(item1, shape, 0, 0);
+        Assert.That(board.ItemCount, Is.EqualTo(1));
+
+        // Remove first item
+        board.RemoveItem(index1);
+        Assert.That(board.ItemCount, Is.EqualTo(0), "ItemCount should be 0 after removal");
+
+        // Add second item (reuses index)
+        var index2 = board.TryAddItemAt(item2, shape, 1, 1);
+        Assert.That(index2, Is.EqualTo(index1), "Index should be reused");
+        Assert.That(board.ItemCount, Is.EqualTo(1), "ItemCount back to 1");
+    }
+
+    [Test]
+    public void ItemCount_WithMultipleItems()
+    {
+        using var board = new IndexedGridBoard<ItemData>(5, 5);
+        var item = new ItemData("Item", 1);
+        var shape = Shapes.ImmutableSingle();
+
+        var index1 = board.TryAddItemAt(item, shape, 0, 0);
+        var index2 = board.TryAddItemAt(item, shape, 1, 0);
+        var index3 = board.TryAddItemAt(item, shape, 2, 0);
+
+        Assert.That(board.ItemCount, Is.EqualTo(3));
+
+        board.RemoveItem(index2);
+
+        Assert.That(board.ItemCount, Is.EqualTo(2), "ItemCount decreased to 2");
+
+        board.RemoveItem(index1);
+        board.RemoveItem(index3);
+
+        Assert.That(board.ItemCount, Is.EqualTo(0), "ItemCount is 0");
+    }
+
+    [Test]
+    public void ItemCount_AfterClear()
+    {
+        using var board = new IndexedGridBoard<ItemData>(5, 5);
+        var item = new ItemData("Potion", 50);
+        var shape = Shapes.ImmutableSingle();
+
+        board.TryAddItemAt(item, shape, 0, 0);
+        board.TryAddItemAt(item, shape, 1, 0);
+
+        Assert.That(board.ItemCount, Is.EqualTo(2));
+
+        board.Clear();
+
+        Assert.That(board.ItemCount, Is.EqualTo(0), "ItemCount reset to 0 after clear");
     }
 
     [Test]
@@ -365,5 +435,166 @@ public class IndexedGridBoardTests
         var readOnly2 = board2.AsReadOnly();
 
         Assert.Throws<NotSupportedException>(() => readOnly1.Equals(readOnly2));
+    }
+
+    [Test]
+    public void Enumerator_IteratesValidItemsOnly()
+    {
+        using var board = new IndexedGridBoard<ItemData>(5, 5);
+        var item1 = new ItemData("Sword", 100);
+        var item2 = new ItemData("Shield", 80);
+        var item3 = new ItemData("Potion", 50);
+        var shape = Shapes.ImmutableSingle();
+
+        var index1 = board.TryAddItemAt(item1, shape, 0, 0);
+        var index2 = board.TryAddItemAt(item2, shape, 1, 0);
+        var index3 = board.TryAddItemAt(item3, shape, 2, 0);
+
+        // Remove middle item
+        board.RemoveItem(index2);
+
+        var enumeratedItems = new List<(int index, ItemData data, ImmutableGridShape shape)>();
+        foreach (var item in board)
+        {
+            enumeratedItems.Add(item);
+        }
+
+        Assert.That(enumeratedItems.Count, Is.EqualTo(2), "Should only enumerate active items");
+
+        var indices = enumeratedItems.Select(x => x.index).ToList();
+        var data = enumeratedItems.Select(x => x.data).ToList();
+
+        Assert.That(indices, Does.Contain(index1));
+        Assert.That(indices, Does.Contain(index3));
+        Assert.That(data, Does.Contain(item1));
+        Assert.That(data, Does.Contain(item3));
+    }
+
+    [Test]
+    public void Enumerator_EmptyBoard_NoIterations()
+    {
+        using var board = new IndexedGridBoard<ItemData>(5, 5);
+
+        var count = 0;
+        foreach (var _ in board)
+        {
+            count++;
+        }
+
+        Assert.That(count, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void Enumerator_AllItemsRemoved_NoIterations()
+    {
+        using var board = new IndexedGridBoard<ItemData>(5, 5);
+        var item = new ItemData("Item", 1);
+        var shape = Shapes.ImmutableSingle();
+
+        var index1 = board.TryAddItemAt(item, shape, 0, 0);
+        var index2 = board.TryAddItemAt(item, shape, 1, 0);
+
+        board.RemoveItem(index1);
+        board.RemoveItem(index2);
+
+        var count = 0;
+        foreach (var _ in board)
+        {
+            count++;
+        }
+
+        Assert.That(count, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void Enumerator_ReadOnly_IteratesValidItemsOnly()
+    {
+        using var board = new IndexedGridBoard<ItemData>(5, 5);
+        var item1 = new ItemData("Ring", 150);
+        var item2 = new ItemData("Amulet", 120);
+        var shape = Shapes.ImmutableSingle();
+
+        board.TryAddItemAt(item1, shape, 0, 0);
+        var index2 = board.TryAddItemAt(item2, shape, 1, 0);
+        board.RemoveItem(index2);
+
+        var readOnly = board.AsReadOnly();
+        var enumeratedItems = new List<(int index, ItemData data, ImmutableGridShape shape)>();
+        foreach (var item in readOnly)
+        {
+            enumeratedItems.Add(item);
+        }
+
+        Assert.That(enumeratedItems.Count, Is.EqualTo(1));
+        Assert.That(enumeratedItems[0].data, Is.EqualTo(item1));
+    }
+
+    [Test]
+    public void Enumerator_WithComplexPattern_IteratesCorrectly()
+    {
+        using var board = new IndexedGridBoard<ItemData>(10, 10);
+        var shape = Shapes.ImmutableSingle();
+
+        var indices = new List<int>();
+        for (int i = 0; i < 5; i++)
+        {
+            var item = new ItemData($"Item{i}", i);
+            indices.Add(board.TryAddItemAt(item, shape, i, 0));
+        }
+
+        // Remove items at indices 1 and 3
+        board.RemoveItem(indices[1]);
+        board.RemoveItem(indices[3]);
+
+        var enumeratedIndices = new List<int>();
+        foreach (var (index, _, _) in board)
+        {
+            enumeratedIndices.Add(index);
+        }
+
+        Assert.That(enumeratedIndices.Count, Is.EqualTo(3));
+        Assert.That(enumeratedIndices, Does.Contain(indices[0]));
+        Assert.That(enumeratedIndices, Does.Contain(indices[2]));
+        Assert.That(enumeratedIndices, Does.Contain(indices[4]));
+        Assert.That(enumeratedIndices, Does.Not.Contain(indices[1]));
+        Assert.That(enumeratedIndices, Does.Not.Contain(indices[3]));
+    }
+
+    [Test]
+    public void IndexReuse_ReusesFreedIndices()
+    {
+        using var board = new IndexedGridBoard<ItemData>(10, 10);
+        var shape = Shapes.ImmutableSingle();
+
+        // Add 5 items
+        var index0 = board.TryAddItemAt(new ItemData("Item0", 0), shape, 0, 0);
+        var index1 = board.TryAddItemAt(new ItemData("Item1", 1), shape, 1, 0);
+        var index2 = board.TryAddItemAt(new ItemData("Item2", 2), shape, 2, 0);
+        var index3 = board.TryAddItemAt(new ItemData("Item3", 3), shape, 3, 0);
+        var index4 = board.TryAddItemAt(new ItemData("Item4", 4), shape, 4, 0);
+
+        Assert.That(index0, Is.EqualTo(0));
+        Assert.That(index1, Is.EqualTo(1));
+        Assert.That(index2, Is.EqualTo(2));
+        Assert.That(index3, Is.EqualTo(3));
+        Assert.That(index4, Is.EqualTo(4));
+
+        // Remove indices 1, 3, 2 (in that order)
+        board.RemoveItem(index1);
+        board.RemoveItem(index3);
+        board.RemoveItem(index2);
+
+        var reusedIndices = new HashSet<int>();
+
+        // Add new items - should reuse freed indices (order unspecified)
+        reusedIndices.Add(board.TryAddItemAt(new ItemData("New1", 10), shape, 5, 0));
+        reusedIndices.Add(board.TryAddItemAt(new ItemData("New2", 20), shape, 6, 0));
+        reusedIndices.Add(board.TryAddItemAt(new ItemData("New3", 30), shape, 7, 0));
+
+        Assert.That(reusedIndices, Is.EquivalentTo(new[] { 1, 2, 3 }), "Should reuse all freed indices");
+
+        // Next item should get a new index
+        var newIndex = board.TryAddItemAt(new ItemData("New4", 40), shape, 8, 0);
+        Assert.That(newIndex, Is.EqualTo(5), "Should allocate new index after all free indices used");
     }
 }
