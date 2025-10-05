@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <TargetFrameworks>net8.0;netstandard2.1</TargetFrameworks>
+    <OutputType>Library</OutputType>
+    <LangVersion>10</LangVersion>
+    <RootNamespace>DopeGrid.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.0"/>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"/>
+    <PackageReference Include="NUnit" Version="3.14.0"/>
+    <PackageReference Include="NUnit.Analyzers" Version="3.9.0"/>
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="NUnit.Framework"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../../Assets/Tests/DopeGrid/**/*.cs"/>
+    <Link Include="..\..\.editorconfig"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DopeGrid\DopeGrid.csproj" />
+  </ItemGroup>
+
+</Project>
