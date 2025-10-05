@@ -28,17 +28,17 @@ public readonly struct GridBoard : IReadOnlyGridShape<bool>, IDisposable, IEquat
     {
         _grid = new GridShape(width, height);
         _initializedGrid = _grid.Clone();
-        _items = new List<ImmutableGridShape>(capacity: 8);
-        _itemPositions = new List<(int x, int y)>(capacity: 8);
+        _items = ListPool<ImmutableGridShape>.Rent(8);
+        _itemPositions = ListPool<(int x, int y)>.Rent(8);
     }
 
     public GridBoard(GridBoard other)
     {
         _grid = other._grid.Clone();
         _initializedGrid = _grid.Clone();
-        _items = new List<ImmutableGridShape>(other._items.Capacity);
+        _items = ListPool<ImmutableGridShape>.Rent(other._items.Count);
         _items.AddRange(other._items);
-        _itemPositions = new List<(int x, int y)>(other._itemPositions.Capacity);
+        _itemPositions = ListPool<(int x, int y)>.Rent(other._itemPositions.Count);
         _itemPositions.AddRange(other.ItemPositions);
     }
 
@@ -48,8 +48,8 @@ public readonly struct GridBoard : IReadOnlyGridShape<bool>, IDisposable, IEquat
             throw new ArgumentException("container shape is empty", nameof(containerShape));
         _grid = containerShape.Clone();
         _initializedGrid = _grid.Clone();
-        _items = new List<ImmutableGridShape>(capacity: 8);
-        _itemPositions = new List<(int x, int y)>(capacity: 8);
+        _items = ListPool<ImmutableGridShape>.Rent(8);
+        _itemPositions = ListPool<(int x, int y)>.Rent(8);
     }
 
     public int ItemCount => _items.Count;
@@ -115,7 +115,8 @@ public readonly struct GridBoard : IReadOnlyGridShape<bool>, IDisposable, IEquat
     {
         _initializedGrid.Dispose();
         _grid.Dispose();
-        // Lists are managed; nothing to dispose.
+        ListPool<ImmutableGridShape>.Return(_items);
+        ListPool<(int x, int y)>.Return(_itemPositions);
     }
 
     public GridBoard Clone()

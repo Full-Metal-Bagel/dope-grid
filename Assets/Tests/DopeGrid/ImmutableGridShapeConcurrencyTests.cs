@@ -40,7 +40,7 @@ public class ImmutableGridShapeConcurrencyStandardTests
             {
                 barrier.SignalAndWait(); // Ensure all threads start simultaneously
 
-                using var shape = Shapes.TShape();
+                var shape = Shapes.TShape();
                 var immutable = shape.GetOrCreateImmutable();
                 results[index] = immutable.Id;
             });
@@ -71,7 +71,7 @@ public class ImmutableGridShapeConcurrencyStandardTests
                 barrier.SignalAndWait(); // Ensure all threads start simultaneously
 
                 // Each thread creates a unique shape
-                using var shape = Shapes.Line(index + 1);
+                var shape = Shapes.Line(index + 1);
                 var immutable = shape.GetOrCreateImmutable();
                 results[index] = immutable.Id;
             });
@@ -90,7 +90,7 @@ public class ImmutableGridShapeConcurrencyStandardTests
     public void ConcurrentRotations_SameShape_ConsistentResults()
     {
         // First, create a base L-shape
-        using var baseShape = Shapes.LShape();
+        var baseShape = Shapes.LShape();
         var baseImmutable = baseShape.GetOrCreateImmutable();
 
         const int threadCount = 20;
@@ -130,7 +130,7 @@ public class ImmutableGridShapeConcurrencyStandardTests
     public void ConcurrentFlips_SameShape_ConsistentResults()
     {
         // Create a base shape that's asymmetric
-        using var baseShape = Shapes.LShape();
+        var baseShape = Shapes.LShape();
         var baseImmutable = baseShape.GetOrCreateImmutable();
 
         const int threadCount = 20;
@@ -288,7 +288,7 @@ public class ImmutableGridShapeConcurrencyStandardTests
         {
             tasks[i] = Task.Run(() =>
             {
-                using var shape = Shapes.TShape();
+                var shape = Shapes.TShape();
                 return shape.GetOrCreateImmutable().Id;
             });
         }
@@ -304,7 +304,7 @@ public class ImmutableGridShapeConcurrencyStandardTests
     [Test]
     public async Task AsyncConcurrentTransformations_ConsistentResults()
     {
-        using var baseShape = Shapes.LShape();
+        var baseShape = Shapes.LShape();
         var baseImmutable = baseShape.GetOrCreateImmutable();
 
         const int taskCount = 30;
@@ -372,7 +372,7 @@ public class ImmutableGridShapeConcurrencyStandardTests
                         case 1: // Test standard shapes
                         {
                             var shapeType = random.Next(0, 4);
-                            using GridShape testShape = shapeType switch
+                            var testShape = shapeType switch
                             {
                                 0 => Shapes.Line(3),
                                 1 => Shapes.Square(2),
@@ -390,7 +390,7 @@ public class ImmutableGridShapeConcurrencyStandardTests
                         }
                         case 2: // Verify shape properties
                         {
-                            using var shape = Shapes.Cross();
+                            var shape = Shapes.Cross();
                             var immutable = shape.GetOrCreateImmutable();
 
                             if (immutable.Width > 0 && immutable.Height > 0 &&

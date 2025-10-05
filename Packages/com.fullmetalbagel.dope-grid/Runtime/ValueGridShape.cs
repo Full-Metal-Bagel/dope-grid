@@ -21,15 +21,9 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
         _availableValue = availableValue;
         if (Size > 0)
         {
-            _values = ArrayPool.Rent<T>(Size);
-            Array.Clear(_values, 0, Size);
+            _values = ArrayPool<T>.Rent(Size);
+            Array.Fill(_values, availableValue, 0, Size);
         }
-    }
-
-    public ValueGridShape(int width, int height, T defaultValue, T availableValue)
-        : this(width, height, availableValue)
-    {
-        this.FillAll(defaultValue);
     }
 
     public T this[int x, int y]
@@ -42,7 +36,7 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
 
     public void Clear()
     {
-        this.FillAll(_availableValue);
+        Array.Fill(_values, _availableValue, 0, Size);
     }
 
     public ValueGridShape<T> Clone() => AsReadOnly().Clone();
@@ -51,7 +45,7 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
     public void Dispose()
     {
         if (_values.Length == 0) return;
-        ArrayPool.Return(_values);
+        ArrayPool<T>.Return(_values);
     }
 
     public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on GridShape and GridShape.ReadOnly is not supported.");

@@ -33,7 +33,8 @@ public class ValueGridShapeTests
     [Test]
     public void Constructor_WithDefaultAndAvailableValue_FillsCorrectly()
     {
-        using var shape = new ValueGridShape<int>(3, 3, defaultValue: 5, availableValue: 0);
+        using var shape = new ValueGridShape<int>(3, 3);
+        shape.FillAll(5);
 
         for (int y = 0; y < 3; y++)
         for (int x = 0; x < 3; x++)

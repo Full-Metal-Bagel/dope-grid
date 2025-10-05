@@ -24,7 +24,7 @@ public readonly struct GridShape : IReadOnlyBitsGridShape, IGridShape<bool>, IEq
         var byteCount = SpanBitArrayUtility.ByteCount(bitLength);
         if (byteCount > 0)
         {
-            _bytes = ArrayPool.Rent<byte>(byteCount);
+            _bytes = ArrayPool<byte>.Rent(byteCount);
             Array.Clear(_bytes, 0, byteCount);
         }
     }
@@ -45,7 +45,7 @@ public readonly struct GridShape : IReadOnlyBitsGridShape, IGridShape<bool>, IEq
     public void Dispose()
     {
         if (_bytes.Length == 0) return;
-        ArrayPool.Return(_bytes);
+        ArrayPool<byte>.Return(_bytes);
     }
 
     public GridShape Clone() => AsReadOnly().Clone();

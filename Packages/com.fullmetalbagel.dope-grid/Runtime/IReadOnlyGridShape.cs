@@ -210,7 +210,7 @@ public static class ReadOnlyGridShapeExtensions
     }
 
     [Pure, MustUseReturnValue]
-    public static ((int x, int y) position, RotationDegree rotation) FindFirstFitWithFreeRotation<TGrid, TValue>(this TGrid grid, ImmutableGridShape shape, TValue _ = default!)
+    public static (int x, int y, RotationDegree rotation) FindFirstFitWithFreeRotation<TGrid, TValue>(this TGrid grid, ImmutableGridShape shape, TValue _ = default!)
         where TGrid : IReadOnlyGridShape<TValue>
     {
         var rotateCount = 0;
@@ -233,7 +233,7 @@ public static class ReadOnlyGridShapeExtensions
             _ => throw new NotImplementedException()
         };
 
-        return (position, rotation);
+        return (position.x, position.y, rotation);
     }
 
     [Pure, MustUseReturnValue]
@@ -353,7 +353,7 @@ public static class ReadOnlyBoolGridShapeExtensions
         => grid.CanPlaceItem<TGrid, TShape, bool>(shape, x, y);
 
     [Pure, MustUseReturnValue]
-    public static ((int x, int y) position, RotationDegree rotation) FindFirstFitWithFreeRotation<TGrid>( this TGrid grid, ImmutableGridShape item)
+    public static (int x, int y, RotationDegree rotation) FindFirstFitWithFreeRotation<TGrid>( this TGrid grid, ImmutableGridShape item)
         where TGrid : IReadOnlyGridShape<bool>
     => grid.FindFirstFitWithFreeRotation<TGrid, bool>(item);
 

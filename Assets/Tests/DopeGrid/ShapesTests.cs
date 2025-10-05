@@ -10,7 +10,7 @@ public class ShapesTests
     [Test]
     public void Single_CreatesOneByOneShape()
     {
-        using var shape = Shapes.Single();
+        var shape = Shapes.Single();
 
         Assert.That(shape.Width, Is.EqualTo(1));
         Assert.That(shape.Height, Is.EqualTo(1));
@@ -21,7 +21,7 @@ public class ShapesTests
     [Test]
     public void Line_CreatesHorizontalLine()
     {
-        using var shape = Shapes.Line(5);
+        var shape = Shapes.Line(5);
 
         Assert.That(shape.Width, Is.EqualTo(5));
         Assert.That(shape.Height, Is.EqualTo(1));
@@ -35,7 +35,7 @@ public class ShapesTests
     [Test]
     public void Square_CreatesSquareShape()
     {
-        using var shape = Shapes.Square(3);
+        var shape = Shapes.Square(3);
 
         Assert.That(shape.Width, Is.EqualTo(3));
         Assert.That(shape.Height, Is.EqualTo(3));
@@ -50,7 +50,7 @@ public class ShapesTests
     [Test]
     public void LShape_CreatesLShape()
     {
-        using var shape = Shapes.LShape();
+        var shape = Shapes.LShape();
 
         Assert.That(shape.Width, Is.EqualTo(2));
         Assert.That(shape.Height, Is.EqualTo(2));
@@ -64,7 +64,7 @@ public class ShapesTests
     [Test]
     public void TShape_CreatesTShape()
     {
-        using var shape = Shapes.TShape();
+        var shape = Shapes.TShape();
 
         Assert.That(shape.Width, Is.EqualTo(3));
         Assert.That(shape.Height, Is.EqualTo(2));
@@ -80,7 +80,7 @@ public class ShapesTests
     [Test]
     public void Cross_CreatesCrossShape()
     {
-        using var shape = Shapes.Cross();
+        var shape = Shapes.Cross();
 
         Assert.That(shape.Width, Is.EqualTo(3));
         Assert.That(shape.Height, Is.EqualTo(3));

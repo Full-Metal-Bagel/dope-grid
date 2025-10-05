@@ -66,7 +66,7 @@ public class GridExtensionsTests
     public void BoolGridShapeExtension_FillShapeWithValue_FillsShape()
     {
         using var grid = new GridShape(5, 5);
-        using var shape = Shapes.Single();
+        var shape = Shapes.Single();
 
         grid.FillShapeWithValue(shape, 2, 2, true);
 
@@ -115,7 +115,8 @@ public class GridExtensionsTests
     public void GridShapeExtension_FillShapeWithValue_WorksWithInt()
     {
         using var grid = new ValueGridShape<int>(5, 5);
-        using var shape = new ValueGridShape<int>(2, 2, defaultValue: 1, availableValue: 0);
+        using var shape = new ValueGridShape<int>(2, 2);
+        shape.FillAll(1);
 
         grid.FillShapeWithValue(shape, 1, 1, 42);
 
@@ -425,7 +426,8 @@ public class GridExtensionsTests
     public void GridShapeExtension_FillShape_WithNegativeOffset_ClipsCorrectly()
     {
         using var grid = new ValueGridShape<int>(5, 5);
-        using var shape = new ValueGridShape<int>(3, 3, defaultValue: 1, availableValue: 0);
+        using var shape = new ValueGridShape<int>(3, 3);
+        shape.FillAll(1);
 
         grid.FillShape<ValueGridShape<int>, ValueGridShape<int>, int>(shape, -1, -1);
 
@@ -438,7 +440,8 @@ public class GridExtensionsTests
     public void GridShapeExtension_FillShape_WithOffsetBeyondGrid_ClipsCorrectly()
     {
         using var grid = new ValueGridShape<int>(5, 5);
-        using var shape = new ValueGridShape<int>(3, 3, defaultValue: 99, availableValue: 0);
+        using var shape = new ValueGridShape<int>(3, 3);
+        shape.FillAll(99);
 
         grid.FillShape<ValueGridShape<int>, ValueGridShape<int>, int>(shape, 4, 4);
 
