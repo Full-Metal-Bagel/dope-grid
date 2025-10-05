@@ -6,6 +6,239 @@ namespace DopeGrid.Tests;
 [TestFixture]
 public class ShapesTests
 {
+    // Factory method tests
+    [Test]
+    public void Single_CreatesOneByOneShape()
+    {
+        using var shape = Shapes.Single();
+
+        Assert.That(shape.Width, Is.EqualTo(1));
+        Assert.That(shape.Height, Is.EqualTo(1));
+        Assert.That(shape[0, 0], Is.True);
+        Assert.That(shape.OccupiedSpaceCount(), Is.EqualTo(1));
+    }
+
+    [Test]
+    public void Line_CreatesHorizontalLine()
+    {
+        using var shape = Shapes.Line(5);
+
+        Assert.That(shape.Width, Is.EqualTo(5));
+        Assert.That(shape.Height, Is.EqualTo(1));
+        for (int i = 0; i < 5; i++)
+        {
+            Assert.That(shape[i, 0], Is.True);
+        }
+        Assert.That(shape.OccupiedSpaceCount(), Is.EqualTo(5));
+    }
+
+    [Test]
+    public void Square_CreatesSquareShape()
+    {
+        using var shape = Shapes.Square(3);
+
+        Assert.That(shape.Width, Is.EqualTo(3));
+        Assert.That(shape.Height, Is.EqualTo(3));
+        for (int y = 0; y < 3; y++)
+        for (int x = 0; x < 3; x++)
+        {
+            Assert.That(shape[x, y], Is.True);
+        }
+        Assert.That(shape.OccupiedSpaceCount(), Is.EqualTo(9));
+    }
+
+    [Test]
+    public void LShape_CreatesLShape()
+    {
+        using var shape = Shapes.LShape();
+
+        Assert.That(shape.Width, Is.EqualTo(2));
+        Assert.That(shape.Height, Is.EqualTo(2));
+        Assert.That(shape[0, 0], Is.True);
+        Assert.That(shape[0, 1], Is.True);
+        Assert.That(shape[1, 1], Is.True);
+        Assert.That(shape[1, 0], Is.False);
+        Assert.That(shape.OccupiedSpaceCount(), Is.EqualTo(3));
+    }
+
+    [Test]
+    public void TShape_CreatesTShape()
+    {
+        using var shape = Shapes.TShape();
+
+        Assert.That(shape.Width, Is.EqualTo(3));
+        Assert.That(shape.Height, Is.EqualTo(2));
+        Assert.That(shape[0, 0], Is.True);
+        Assert.That(shape[1, 0], Is.True);
+        Assert.That(shape[2, 0], Is.True);
+        Assert.That(shape[1, 1], Is.True);
+        Assert.That(shape[0, 1], Is.False);
+        Assert.That(shape[2, 1], Is.False);
+        Assert.That(shape.OccupiedSpaceCount(), Is.EqualTo(4));
+    }
+
+    [Test]
+    public void Cross_CreatesCrossShape()
+    {
+        using var shape = Shapes.Cross();
+
+        Assert.That(shape.Width, Is.EqualTo(3));
+        Assert.That(shape.Height, Is.EqualTo(3));
+        Assert.That(shape[1, 0], Is.True);
+        Assert.That(shape[0, 1], Is.True);
+        Assert.That(shape[1, 1], Is.True);
+        Assert.That(shape[2, 1], Is.True);
+        Assert.That(shape[1, 2], Is.True);
+        Assert.That(shape[0, 0], Is.False);
+        Assert.That(shape[2, 0], Is.False);
+        Assert.That(shape[0, 2], Is.False);
+        Assert.That(shape[2, 2], Is.False);
+        Assert.That(shape.OccupiedSpaceCount(), Is.EqualTo(5));
+    }
+
+    // Immutable factory method tests
+    [Test]
+    public void ImmutableSingle_CreatesImmutableSingleShape()
+    {
+        var shape = Shapes.ImmutableSingle();
+
+        Assert.That(shape.Width, Is.EqualTo(1));
+        Assert.That(shape.Height, Is.EqualTo(1));
+        Assert.That(shape[0, 0], Is.True);
+    }
+
+    [Test]
+    public void ImmutableLine_CreatesImmutableLineShape()
+    {
+        var shape = Shapes.ImmutableLine(4);
+
+        Assert.That(shape.Width, Is.EqualTo(4));
+        Assert.That(shape.Height, Is.EqualTo(1));
+        for (int i = 0; i < 4; i++)
+        {
+            Assert.That(shape[i, 0], Is.True);
+        }
+    }
+
+    [Test]
+    public void ImmutableSquare_CreatesImmutableSquareShape()
+    {
+        var shape = Shapes.ImmutableSquare(2);
+
+        Assert.That(shape.Width, Is.EqualTo(2));
+        Assert.That(shape.Height, Is.EqualTo(2));
+        for (int y = 0; y < 2; y++)
+        for (int x = 0; x < 2; x++)
+        {
+            Assert.That(shape[x, y], Is.True);
+        }
+    }
+
+    [Test]
+    public void ImmutableLShape_CreatesImmutableLShape()
+    {
+        var shape = Shapes.ImmutableLShape();
+
+        Assert.That(shape.Width, Is.EqualTo(2));
+        Assert.That(shape.Height, Is.EqualTo(2));
+        Assert.That(shape[0, 0], Is.True);
+        Assert.That(shape[0, 1], Is.True);
+        Assert.That(shape[1, 1], Is.True);
+        Assert.That(shape[1, 0], Is.False);
+    }
+
+    [Test]
+    public void ImmutableTShape_CreatesImmutableTShape()
+    {
+        var shape = Shapes.ImmutableTShape();
+
+        Assert.That(shape.Width, Is.EqualTo(3));
+        Assert.That(shape.Height, Is.EqualTo(2));
+        Assert.That(shape[0, 0], Is.True);
+        Assert.That(shape[1, 0], Is.True);
+        Assert.That(shape[2, 0], Is.True);
+        Assert.That(shape[1, 1], Is.True);
+    }
+
+    [Test]
+    public void ImmutableCross_CreatesImmutableCrossShape()
+    {
+        var shape = Shapes.ImmutableCross();
+
+        Assert.That(shape.Width, Is.EqualTo(3));
+        Assert.That(shape.Height, Is.EqualTo(3));
+        Assert.That(shape[1, 0], Is.True);
+        Assert.That(shape[0, 1], Is.True);
+        Assert.That(shape[1, 1], Is.True);
+        Assert.That(shape[2, 1], Is.True);
+        Assert.That(shape[1, 2], Is.True);
+    }
+
+    // GetRotatedShape tests
+    [Test]
+    public void GetRotatedShape_None_ReturnsSameShape()
+    {
+        var original = Shapes.ImmutableSingle();
+        var rotated = original.GetRotatedShape(RotationDegree.None);
+
+        Assert.That(rotated.Id, Is.EqualTo(original.Id));
+    }
+
+    [Test]
+    public void GetRotatedShape_Clockwise90_RotatesCorrectly()
+    {
+        var original = Shapes.ImmutableLine(3);
+        var rotated = original.GetRotatedShape(RotationDegree.Clockwise90);
+
+        Assert.That(rotated.Width, Is.EqualTo(1));
+        Assert.That(rotated.Height, Is.EqualTo(3));
+        for (int i = 0; i < 3; i++)
+        {
+            Assert.That(rotated[0, i], Is.True);
+        }
+    }
+
+    [Test]
+    public void GetRotatedShape_Clockwise180_RotatesCorrectly()
+    {
+        var original = Shapes.ImmutableLShape();
+        var rotated = original.GetRotatedShape(RotationDegree.Clockwise180);
+
+        Assert.That(rotated.Width, Is.EqualTo(2));
+        Assert.That(rotated.Height, Is.EqualTo(2));
+        // After 180 rotation, L shape should be mirrored
+        Assert.That(rotated[1, 0], Is.True);
+        Assert.That(rotated[1, 1], Is.True);
+        Assert.That(rotated[0, 0], Is.True);
+    }
+
+    [Test]
+    public void GetRotatedShape_Clockwise270_RotatesCorrectly()
+    {
+        var original = Shapes.ImmutableLine(3);
+        var rotated = original.GetRotatedShape(RotationDegree.Clockwise270);
+
+        Assert.That(rotated.Width, Is.EqualTo(1));
+        Assert.That(rotated.Height, Is.EqualTo(3));
+        for (int i = 0; i < 3; i++)
+        {
+            Assert.That(rotated[0, i], Is.True);
+        }
+    }
+
+    [Test]
+    public void GetRotatedShape_InvalidRotation_ThrowsArgumentOutOfRangeException()
+    {
+        var shape = Shapes.ImmutableSingle();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            shape.GetRotatedShape((RotationDegree)999);
+        });
+    }
+
+    // UnsafeProcessShape tests
+
     [Test]
     public void UnsafeProcessShape_SmallShape_UsesBytes8()
     {
@@ -267,5 +500,60 @@ public class ShapesTests
 
         Assert.That(wideResult, Is.EqualTo(10));
         Assert.That(tallResult, Is.EqualTo(10));
+    }
+
+    [Test]
+    public void UnsafeProcessShape_EdgeCaseAt512Bytes_UsesStackAlloc()
+    {
+        // Exactly 512 bytes = 4096 bits
+        var result = Shapes.UnsafeProcessShape(64, 64, 0, (shape, data) =>
+        {
+            Assert.That(shape.Size, Is.EqualTo(4096));
+
+            shape[0, 0] = true;
+            shape[63, 63] = true;
+
+            Assert.That(shape[0, 0], Is.True);
+            Assert.That(shape[63, 63], Is.True);
+
+            return shape.Size;
+        });
+
+        Assert.That(result, Is.EqualTo(4096));
+    }
+
+    [Test]
+    public void UnsafeProcessShape_LargerThan512Bytes_UsesGridShape()
+    {
+        // Larger than 512 bytes
+        var result = Shapes.UnsafeProcessShape(100, 100, 0, (shape, data) =>
+        {
+            Assert.That(shape.Size, Is.EqualTo(10000));
+
+            shape[0, 0] = true;
+            shape[99, 99] = true;
+
+            Assert.That(shape[0, 0], Is.True);
+            Assert.That(shape[99, 99], Is.True);
+
+            return true;
+        });
+
+        Assert.That(result, Is.True);
+    }
+
+    [Test]
+    public void UnsafeProcessShape_Bits_ModificationWorks()
+    {
+        var result = Shapes.UnsafeProcessShape(5, 5, 0, (shape, data) =>
+        {
+            var bits = shape.Bits;
+            bits.Set(shape.GetIndex(1, 1), true);
+            bits.Set(shape.GetIndex(3, 3), true);
+
+            return shape[1, 1] && shape[3, 3];
+        });
+
+        Assert.That(result, Is.True);
     }
 }

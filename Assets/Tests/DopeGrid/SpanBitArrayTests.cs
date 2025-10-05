@@ -319,4 +319,66 @@ public class SpanBitArrayTests
 
         Assert.That(readOnly.Get(3), Is.True);
     }
+
+    [Test]
+    public void SetBits_LargeValue_SetsCorrectly()
+    {
+        Span<byte> bytes = stackalloc byte[4];
+        bytes.Clear();
+        var bitArray = new SpanBitArray(bytes, 32);
+
+        bitArray.SetBits(0, 0xABCD, 16);
+
+        Assert.That(bitArray.GetBits(0, 16), Is.EqualTo(0xABCD));
+    }
+
+    [Test]
+    public void Clear_WithPartialByte_ClearsCorrectly()
+    {
+        Span<byte> bytes = stackalloc byte[2];
+        bytes.Fill(0xFF);
+        var bitArray = new SpanBitArray(bytes, 12);
+
+        bitArray.Clear();
+
+        for (int i = 0; i < 12; i++)
+        {
+            Assert.That(bitArray.Get(i), Is.False);
+        }
+    }
+
+    [Test]
+    public void Inverse_WithMultipleBytes_InvertsCorrectly()
+    {
+        Span<byte> bytes = stackalloc byte[2];
+        bytes.Clear();
+        var bitArray = new SpanBitArray(bytes, 16);
+        bitArray.Set(0, true);
+        bitArray.Set(15, true);
+
+        bitArray.Inverse();
+
+        Assert.That(bitArray.Get(0), Is.False);
+        Assert.That(bitArray.Get(1), Is.True);
+        Assert.That(bitArray.Get(14), Is.True);
+        Assert.That(bitArray.Get(15), Is.False);
+    }
+
+    [Test]
+    public void SetRange_ToFalse_ClearsRange()
+    {
+        Span<byte> bytes = stackalloc byte[2];
+        bytes.Fill(0xFF);
+        var bitArray = new SpanBitArray(bytes, 16);
+
+        bitArray.SetRange(4, 8, false);
+
+        for (int i = 0; i < 16; i++)
+        {
+            if (i >= 4 && i < 12)
+                Assert.That(bitArray.Get(i), Is.False);
+            else
+                Assert.That(bitArray.Get(i), Is.True);
+        }
+    }
 }

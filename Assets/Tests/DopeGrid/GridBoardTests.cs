@@ -306,4 +306,49 @@ public class GridBoardTests
         Assert.That(initializedGrid[2, 2], Is.True);
         Assert.That(initializedGrid[1, 1], Is.False);
     }
+
+    [Test]
+    public void GetHashCode_ThrowsNotSupportedException()
+    {
+        using var board = new GridBoard(3, 3);
+
+        Assert.Throws<NotSupportedException>(() => board.GetHashCode());
+    }
+
+    [Test]
+    public void Equals_Object_ThrowsNotSupportedException()
+    {
+        using var board = new GridBoard(3, 3);
+
+        Assert.Throws<NotSupportedException>(() => board.Equals((object)board));
+    }
+
+    [Test]
+    public void Equals_GridBoard_ThrowsNotSupportedException()
+    {
+        using var board1 = new GridBoard(3, 3);
+        using var board2 = new GridBoard(3, 3);
+
+        Assert.Throws<NotSupportedException>(() => board1.Equals(board2));
+    }
+
+    [Test]
+    public void EqualityOperator_CallsEquals()
+    {
+        using var board1 = new GridBoard(3, 3);
+        using var board2 = new GridBoard(3, 3);
+
+        // This will throw because Equals throws
+        Assert.Throws<NotSupportedException>(() => { var _ = board1 == board2; });
+    }
+
+    [Test]
+    public void InequalityOperator_CallsEquals()
+    {
+        using var board1 = new GridBoard(3, 3);
+        using var board2 = new GridBoard(3, 3);
+
+        // This will throw because Equals throws
+        Assert.Throws<NotSupportedException>(() => { var _ = board1 != board2; });
+    }
 }

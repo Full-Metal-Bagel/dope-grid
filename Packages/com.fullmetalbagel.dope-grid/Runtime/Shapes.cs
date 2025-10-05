@@ -110,19 +110,6 @@ public static class Shapes
         return shape.GetOrCreateImmutable();
     }
 
-    [Pure, MustUseReturnValue]
-    public static ImmutableGridShape GetRotatedShape(this ImmutableGridShape shape, RotationDegree rotation)
-    {
-        return rotation switch
-        {
-            RotationDegree.None => shape,
-            RotationDegree.Clockwise90 => shape.Rotate90(),
-            RotationDegree.Clockwise180 => shape.Rotate90().Rotate90(),
-            RotationDegree.Clockwise270 => shape.Rotate90().Rotate90().Rotate90(),
-            _ => throw new ArgumentOutOfRangeException(nameof(rotation), rotation, null)
-        };
-    }
-
     public static unsafe TResult UnsafeProcessShape<TCaptureData, TResult>(int width, int height, TCaptureData data, Func<UnsafeBitsGridShape, TCaptureData, TResult> processor)
     {
         if (processor is null) throw new ArgumentNullException(nameof(processor));
@@ -132,7 +119,7 @@ public static class Shapes
         if (SpanBitArrayUtility.ByteCount(size) <= 512)
         {
             var buffer = stackalloc byte[size];
-            using var @unsafe = new UnsafeBitsGridShape(width, height, new IntPtr(buffer));
+            var @unsafe = new UnsafeBitsGridShape(width, height, buffer);
             return processor(@unsafe, data);
         }
 

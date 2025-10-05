@@ -1,6 +1,22 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace DopeGrid.Tests;
+
+[StructLayout(LayoutKind.Sequential)]
+struct Bytes8
+{
+    private long _l;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+struct Bytes32
+{
+    private long _l0;
+    private long _l1;
+    private long _l2;
+    private long _l3;
+}
 
 [TestFixture]
 public class FixedGridShapeTests
@@ -110,6 +126,15 @@ public class FixedGridShapeTests
         FixedGridShape<Bytes8>.ReadOnly readOnly = shape;
 
         Assert.That(readOnly[2, 2], Is.True);
+    }
+
+    [Test]
+    public void ReadOnlyWrapper_Size_ReturnsCorrectValue()
+    {
+        var shape = new FixedGridShape<Bytes8>(4, 3);
+        var readOnly = shape.AsReadOnly();
+
+        Assert.That(readOnly.Size, Is.EqualTo(12));
     }
 
     [Test]

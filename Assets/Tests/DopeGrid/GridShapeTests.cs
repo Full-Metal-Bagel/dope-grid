@@ -278,4 +278,64 @@ public class GridShapeTests
         Assert.Throws<InvalidOperationException>(() => shape.Dispose(),
             "Second dispose should throw because array was already returned to pool");
     }
+
+    [Test]
+    public void GetHashCode_ThrowsNotSupportedException()
+    {
+        using var shape = new GridShape(3, 3);
+
+        Assert.Throws<NotSupportedException>(() => shape.GetHashCode());
+    }
+
+    [Test]
+    public void Equals_Object_ThrowsNotSupportedException()
+    {
+        using var shape = new GridShape(3, 3);
+
+        Assert.Throws<NotSupportedException>(() => shape.Equals((object)shape));
+    }
+
+    [Test]
+    public void ReadOnly_CopyTo_DifferentSize_ThrowsArgumentException()
+    {
+        using var source = new GridShape(3, 3);
+        using var dest = new GridShape(2, 2);
+
+        var readOnly = source.AsReadOnly();
+
+        Assert.Throws<ArgumentException>(() => readOnly.CopyTo(dest));
+    }
+
+    [Test]
+    public void ReadOnly_NotEqual_Operator_Works()
+    {
+        using var shape1 = new GridShape(3, 3);
+        using var shape2 = new GridShape(3, 3);
+
+        shape1[0, 0] = true;
+        shape2[1, 1] = true;
+
+        var readOnly1 = shape1.AsReadOnly();
+        var readOnly2 = shape2.AsReadOnly();
+
+        Assert.That(readOnly1 != readOnly2, Is.True);
+    }
+
+    [Test]
+    public void ReadOnly_GetHashCode_ThrowsNotSupportedException()
+    {
+        using var shape = new GridShape(3, 3);
+        var readOnly = shape.AsReadOnly();
+
+        Assert.Throws<NotSupportedException>(() => readOnly.GetHashCode());
+    }
+
+    [Test]
+    public void ReadOnly_Equals_Object_ThrowsNotSupportedException()
+    {
+        using var shape = new GridShape(3, 3);
+        var readOnly = shape.AsReadOnly();
+
+        Assert.Throws<NotSupportedException>(() => readOnly.Equals((object)readOnly));
+    }
 }

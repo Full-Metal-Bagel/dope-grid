@@ -21,6 +21,11 @@ public readonly unsafe record struct UnsafeBitsGridShape : IGridShape<bool>, IRe
     }
     public bool IsOccupied(int x, int y) => this[x, y];
 
+    public UnsafeBitsGridShape(int width, int height, byte* bitsPtr)
+        : this(width, height, new IntPtr(bitsPtr))
+    {
+    }
+
     public UnsafeBitsGridShape(int width, int height, IntPtr bitsPtr)
     {
         Width = width;

@@ -99,7 +99,7 @@ public static class GridShapeExtension
         var maxX = Math.Min(shape.Width, grid.Width - offsetX);
         var maxY = Math.Min(shape.Height, grid.Height - offsetY);
         var startX = Math.Max(0, -offsetX);
-        var startY = Math.Max(0, -offsetX);
+        var startY = Math.Max(0, -offsetY);
 
         for (int y = startY; y < maxY; y++)
         for (int x = startX; x < maxX; x++)

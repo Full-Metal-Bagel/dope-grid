@@ -303,4 +303,68 @@ public class ReadOnlySpanBitArrayTests
 
         Assert.That(destArray.GetBits(3, 8), Is.EqualTo(sourceArray.GetBits(4, 8)));
     }
+
+    [Test]
+    public void Constructor_WithByteCount_CreatesCorrectly()
+    {
+        Span<byte> bytes = stackalloc byte[4];
+        // ReadOnlySpanBitArray only has 2-argument constructor
+        var bitArray = new ReadOnlySpanBitArray(bytes, 32);
+
+        Assert.That(bitArray.BitLength, Is.EqualTo(32));
+    }
+
+    [Test]
+    public void SequenceEqual_WithPartialLastByte_ComparesCorrectly()
+    {
+        Span<byte> bytes1 = stackalloc byte[2];
+        Span<byte> bytes2 = stackalloc byte[2];
+        bytes1[0] = 0b11001100;
+        bytes1[1] = 0b00000001;
+        bytes2[0] = 0b11001100;
+        bytes2[1] = 0b11110001; // Different bits but only first bit of second byte matters
+
+        var bitArray1 = new ReadOnlySpanBitArray(bytes1, 9);
+        var bitArray2 = new ReadOnlySpanBitArray(bytes2, 9);
+
+        Assert.That(bitArray1.SequenceEqual(bitArray2), Is.True);
+    }
+
+    [Test]
+    public void GetBits_WithPartialByte_ReturnsCorrectValue()
+    {
+        Span<byte> bytes = stackalloc byte[2];
+        bytes[0] = 0b11110000;
+        bytes[1] = 0b00001111;
+        var bitArray = new ReadOnlySpanBitArray(bytes, 12);
+
+        // Test getting bits from partial second byte
+        var value = bitArray.GetBits(8, 4);
+
+        Assert.That(value, Is.EqualTo(0b1111));
+    }
+
+    [Test]
+    public void CountBits_WithPartialLastByte_CountsCorrectly()
+    {
+        Span<byte> bytes = stackalloc byte[2];
+        bytes[0] = 0b11111111;
+        bytes[1] = 0b11111111;
+        var bitArray = new ReadOnlySpanBitArray(bytes, 12);
+
+        var count = bitArray.CountBits(0, 12);
+
+        Assert.That(count, Is.EqualTo(12));
+    }
+
+    [Test]
+    public void SetBits_WithByteValue_SetsCorrectly()
+    {
+        Span<byte> bytes = stackalloc byte[2];
+        var bitArray = new SpanBitArray(bytes, 16);
+
+        bitArray.SetBits(4, (byte)0b1111, 4);
+
+        Assert.That(bitArray.GetBits(4, 4), Is.EqualTo(0b1111));
+    }
 }
