@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using DopeGrid;
 using DopeGrid.Inventory;
 using DopeGrid.Native;
-using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -20,8 +19,8 @@ public class TestInventoryView : MonoBehaviour
     private void Start()
     {
         _items = GetComponentInParent<Items>();
-        // Create an inventory with persistent allocator; dispose on destroy
-        _inventory = new Inventory(_width, _height, Allocator.Persistent);
+        // Create an inventory; dispose on destroy
+        _inventory = new Inventory(_width, _height);
 
         BuildDefinitionsMap();
         PopulateSampleItems();
