@@ -203,7 +203,7 @@ public class ReadOnlyBoolGridShapeExtensionsTests
         tempShape.FillAll(true);
         var shape = tempShape.GetOrCreateImmutable();
 
-        var ((x, y), rotation) = grid.FindFirstFitWithFreeRotation(shape);
+        var (x, y, rotation) = grid.FindFirstFitWithFreeRotation(shape);
 
         Assert.That(x, Is.GreaterThanOrEqualTo(-1));
         Assert.That(y, Is.GreaterThanOrEqualTo(-1));
@@ -218,7 +218,7 @@ public class ReadOnlyBoolGridShapeExtensionsTests
         tempShape.FillAll(true);
         var shape = tempShape.GetOrCreateImmutable();
 
-        var ((x, y), rotation) = grid.FindFirstFitWithFreeRotation(shape);
+        var (x, y, rotation) = grid.FindFirstFitWithFreeRotation(shape);
 
         Assert.That(x, Is.EqualTo(-1));
         Assert.That(y, Is.EqualTo(-1));

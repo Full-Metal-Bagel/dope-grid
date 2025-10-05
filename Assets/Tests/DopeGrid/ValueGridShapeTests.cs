@@ -17,11 +17,11 @@ public class ValueGridShapeTests
     }
 
     [Test]
-    public void Constructor_WithAvailableValue_SetsCorrectly()
+    public void Constructor_WithEmptyValue_SetsCorrectly()
     {
-        using var shape = new ValueGridShape<int>(3, 3, availableValue: 0);
+        using var shape = new ValueGridShape<int>(3, 3, emptyValue: 0);
 
-        // All cells should be 0 (the available value) initially
+        // All cells should be 0 (the empty value) initially
         for (int y = 0; y < 3; y++)
         for (int x = 0; x < 3; x++)
         {
@@ -31,9 +31,10 @@ public class ValueGridShapeTests
     }
 
     [Test]
-    public void Constructor_WithDefaultAndAvailableValue_FillsCorrectly()
+    public void Constructor_WithDefaultAndEmptyValue_FillsCorrectly()
     {
-        using var shape = new ValueGridShape<int>(3, 3, defaultValue: 5, availableValue: 0);
+        using var shape = new ValueGridShape<int>(3, 3);
+        shape.FillAll(5);
 
         for (int y = 0; y < 3; y++)
         for (int x = 0; x < 3; x++)
@@ -61,7 +62,7 @@ public class ValueGridShapeTests
     [Test]
     public void IsOccupied_DetectsOccupiedCells()
     {
-        using var shape = new ValueGridShape<int>(3, 3, availableValue: 0);
+        using var shape = new ValueGridShape<int>(3, 3, emptyValue: 0);
 
         shape[1, 1] = 5;
         shape[2, 2] = 10;
@@ -73,9 +74,9 @@ public class ValueGridShapeTests
     }
 
     [Test]
-    public void Clear_ResetsAllCellsToAvailableValue()
+    public void Clear_ResetsAllCellsToEmptyValue()
     {
-        using var shape = new ValueGridShape<int>(3, 3, availableValue: -1);
+        using var shape = new ValueGridShape<int>(3, 3, emptyValue: -1);
 
         shape[0, 0] = 10;
         shape[1, 1] = 20;
@@ -238,7 +239,7 @@ public class ValueGridShapeTests
     [Test]
     public void ReadOnly_IsOccupied_WorksCorrectly()
     {
-        using var shape = new ValueGridShape<int>(3, 3, availableValue: 0);
+        using var shape = new ValueGridShape<int>(3, 3, emptyValue: 0);
         shape[1, 1] = 5;
 
         var readOnly = shape.AsReadOnly();
@@ -332,7 +333,7 @@ public class ValueGridShapeTests
         byteShape[0, 0] = 255;
         Assert.That(byteShape[0, 0], Is.EqualTo(255));
 
-        using var charShape = new ValueGridShape<char>(3, 3, availableValue: ' ');
+        using var charShape = new ValueGridShape<char>(3, 3, emptyValue: ' ');
         charShape[1, 1] = 'A';
         Assert.That(charShape[1, 1], Is.EqualTo('A'));
         Assert.That(charShape.IsOccupied(1, 1), Is.True);

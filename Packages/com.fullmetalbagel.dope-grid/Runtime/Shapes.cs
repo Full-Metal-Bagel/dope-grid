@@ -8,26 +8,26 @@ public static class Shapes
 {
     [SuppressMessage("Naming", "CA1720:Identifier contains type name")]
     [Pure, MustUseReturnValue]
-    public static GridShape Single()
+    public static FixedGridShape<ulong> Single()
     {
-        var shape = new GridShape(1, 1);
+        var shape = new FixedGridShape<ulong>(1, 1);
         shape[0, 0] = true;
         return shape;
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape Line(int length)
+    public static FixedGridShape<ulong> Line(int length)
     {
-        var shape = new GridShape(length, 1);
+        var shape = new FixedGridShape<ulong>(length, 1);
         for (var i = 0; i < length; i++)
             shape[i, 0] = true;
         return shape;
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape Square(int size)
+    public static FixedGridShape<ulong> Square(int size)
     {
-        var shape = new GridShape(size, size);
+        var shape = new FixedGridShape<ulong>(size, size);
         for (var y = 0; y < size; y++)
         for (var x = 0; x < size; x++)
             shape[x, y] = true;
@@ -35,9 +35,9 @@ public static class Shapes
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape LShape()
+    public static FixedGridShape<ulong> LShape()
     {
-        var shape = new GridShape(2, 2);
+        var shape = new FixedGridShape<ulong>(2, 2);
         shape[0, 0] = true;
         shape[0, 1] = true;
         shape[1, 1] = true;
@@ -45,9 +45,9 @@ public static class Shapes
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape TShape()
+    public static FixedGridShape<ulong> TShape()
     {
-        var shape = new GridShape(3, 2);
+        var shape = new FixedGridShape<ulong>(3, 2);
         shape[0, 0] = true;
         shape[1, 0] = true;
         shape[2, 0] = true;
@@ -56,9 +56,9 @@ public static class Shapes
     }
 
     [Pure, MustUseReturnValue]
-    public static GridShape Cross()
+    public static FixedGridShape<ulong> Cross()
     {
-        var shape = new GridShape(3, 3);
+        var shape = new FixedGridShape<ulong>(3, 3);
         shape[1, 0] = true;
         shape[0, 1] = true;
         shape[1, 1] = true;
@@ -71,42 +71,42 @@ public static class Shapes
     [Pure, MustUseReturnValue]
     public static ImmutableGridShape ImmutableSingle()
     {
-        using var shape = Single();
+        var shape = Single();
         return shape.GetOrCreateImmutable();
     }
 
     [Pure, MustUseReturnValue]
     public static ImmutableGridShape ImmutableLine(int length)
     {
-        using var shape = Line(length);
+        var shape = Line(length);
         return shape.GetOrCreateImmutable();
     }
 
     [Pure, MustUseReturnValue]
     public static ImmutableGridShape ImmutableSquare(int size)
     {
-        using var shape = Square(size);
+        var shape = Square(size);
         return shape.GetOrCreateImmutable();
     }
 
     [Pure, MustUseReturnValue]
     public static ImmutableGridShape ImmutableLShape()
     {
-        using var shape = LShape();
+        var shape = LShape();
         return shape.GetOrCreateImmutable();
     }
 
     [Pure, MustUseReturnValue]
     public static ImmutableGridShape ImmutableTShape()
     {
-        using var shape = TShape();
+        var shape = TShape();
         return shape.GetOrCreateImmutable();
     }
 
     [Pure, MustUseReturnValue]
     public static ImmutableGridShape ImmutableCross()
     {
-        using var shape = Cross();
+        var shape = Cross();
         return shape.GetOrCreateImmutable();
     }
 

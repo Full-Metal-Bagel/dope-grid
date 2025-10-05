@@ -167,18 +167,4 @@ public class EdgeCaseTests
         Assert.That(SpanBitArrayUtility.ByteCount(8), Is.EqualTo(1));
         Assert.That(SpanBitArrayUtility.ByteCount(9), Is.EqualTo(2));
     }
-
-    // ValueGridShape edge case - test with different default values
-    [Test]
-    public void ValueGridShape_WithNonZeroAvailable_WorksCorrectly()
-    {
-        using var shape = new ValueGridShape<int>(3, 3, defaultValue: 10, availableValue: 5);
-
-        for (int y = 0; y < 3; y++)
-        for (int x = 0; x < 3; x++)
-        {
-            Assert.That(shape[x, y], Is.EqualTo(10));
-            Assert.That(shape.IsOccupied(x, y), Is.True);
-        }
-    }
 }

@@ -18,8 +18,8 @@ public class ImmutableGridShapeTests
     [Test]
     public void GetOrCreateImmutable_CreatesSameIdForIdenticalShapes()
     {
-        using var shape1 = Shapes.Single();
-        using var shape2 = Shapes.Single();
+        var shape1 = Shapes.Single();
+        var shape2 = Shapes.Single();
 
         var immutable1 = shape1.GetOrCreateImmutable();
         var immutable2 = shape2.GetOrCreateImmutable();
@@ -30,8 +30,8 @@ public class ImmutableGridShapeTests
     [Test]
     public void GetOrCreateImmutable_CreatesDifferentIdForDifferentShapes()
     {
-        using var shape1 = Shapes.Single();
-        using var shape2 = Shapes.Line(2);
+        var shape1 = Shapes.Single();
+        var shape2 = Shapes.Line(2);
 
         var immutable1 = shape1.GetOrCreateImmutable();
         var immutable2 = shape2.GetOrCreateImmutable();
