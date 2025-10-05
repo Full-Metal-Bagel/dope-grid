@@ -123,21 +123,17 @@ public static class Shapes
         };
     }
 
-    public static TResult UnsafeProcessShape<TCaptureData, TResult>(int width, int height, TCaptureData data, Func<UnsafeBitsGridShape, TCaptureData, TResult> processor)
+    public static unsafe TResult UnsafeProcessShape<TCaptureData, TResult>(int width, int height, TCaptureData data, Func<UnsafeBitsGridShape, TCaptureData, TResult> processor)
     {
         if (processor is null) throw new ArgumentNullException(nameof(processor));
 
         var size = width * height;
 
-        if (SpanBitArrayUtility.ByteCount(size) <= 8)
+        if (SpanBitArrayUtility.ByteCount(size) <= 512)
         {
-            var shape = new FixedGridShape<Bytes8>(width, height);
-            return processor(shape.AsUnsafe(), data);
-        }
-        if (SpanBitArrayUtility.ByteCount(size) <= 32)
-        {
-            var shape = new FixedGridShape<Bytes32>(width, height);
-            return processor(shape.AsUnsafe(), data);
+            var buffer = stackalloc byte[size];
+            using var @unsafe = new UnsafeBitsGridShape(width, height, new IntPtr(buffer));
+            return processor(@unsafe, data);
         }
 
         {

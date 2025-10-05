@@ -108,6 +108,11 @@ public readonly ref struct ReadOnlySpanBitArray
         return true;
     }
 
+    public int CountBits()
+    {
+        return CountBits(0, BitLength);
+    }
+
     public int CountBits(int index, int bitCount)
     {
         SpanBitArrayUtility.ValidateRange(BitLength, index, bitCount);

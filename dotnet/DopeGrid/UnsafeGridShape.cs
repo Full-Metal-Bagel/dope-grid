@@ -11,7 +11,7 @@ public readonly unsafe record struct UnsafeBitsGridShape : IGridShape<bool>, IRe
     private readonly IntPtr _ptr;
     private readonly IntPtr _gcHandle;
     public int Size => Width * Height;
-    private SpanBitArray Bits => new(new Span<byte>(_ptr.ToPointer(), SpanBitArrayUtility.ByteCount(Size)), Size);
+    public SpanBitArray Bits => new(new Span<byte>(_ptr.ToPointer(), SpanBitArrayUtility.ByteCount(Size)), Size);
     public ReadOnlySpanBitArray ReadOnlyBits => Bits;
 
     public bool this[int x, int y]

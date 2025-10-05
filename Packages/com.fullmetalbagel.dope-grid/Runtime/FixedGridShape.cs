@@ -2,14 +2,20 @@ using System;
 
 namespace DopeGrid;
 
-public readonly record struct FixedGridShape<TSize> : IGridShape<bool>, IReadOnlyBitsGridShape
-    where TSize : unmanaged, ISize
+public readonly unsafe record struct FixedGridShape<TSize> : IGridShape<bool>, IReadOnlyBitsGridShape
+    where TSize : unmanaged
 {
     public int Width { get; }
     public int Height { get; }
     public int Size => Width * Height;
     private readonly TSize _buffer = default;
-    private unsafe Span<byte> GetSpan() => new(_buffer.HeadPtr.ToPointer(), sizeof(TSize));
+    private Span<byte> GetSpan()
+    {
+        fixed (void* p = &_buffer)
+        {
+            return new Span<byte>(p, sizeof(TSize));
+        }
+    }
 
     public ReadOnlySpanBitArray ReadOnlyBits => new(GetSpan(), Size);
     public SpanBitArray Bits => new(GetSpan(), Size);
@@ -25,9 +31,9 @@ public readonly record struct FixedGridShape<TSize> : IGridShape<bool>, IReadOnl
     public FixedGridShape(int width, int height)
     {
         var byteCount = SpanBitArrayUtility.ByteCount(width * height);
-        if (_buffer.Size < byteCount)
+        if (sizeof(TSize) < byteCount)
         {
-            throw new ArgumentException($"Provided buffer is too small, actual={_buffer.Size} expect={byteCount}", nameof(width));
+            throw new ArgumentException($"Provided buffer is too small, actual={sizeof(TSize)} expect={byteCount}", nameof(width));
         }
 
         Width = width;
@@ -36,7 +42,6 @@ public readonly record struct FixedGridShape<TSize> : IGridShape<bool>, IReadOnl
 
     public static implicit operator ReadOnly(FixedGridShape<TSize> shape) => shape.AsReadOnly();
     public ReadOnly AsReadOnly() => new(this);
-    public UnsafeBitsGridShape AsUnsafe() => new(Width, Height, _buffer.HeadPtr);
 
     public readonly record struct ReadOnly : IReadOnlyBitsGridShape
     {
