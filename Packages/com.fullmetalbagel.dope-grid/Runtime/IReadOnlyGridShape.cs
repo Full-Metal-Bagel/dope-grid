@@ -10,6 +10,11 @@ public interface IReadOnlyGridShape
     bool IsOccupied(int x, int y);
 }
 
+public interface IReadOnlyBitsGridShape : IReadOnlyGridShape<bool>
+{
+    ReadOnlySpanBitArray ReadOnlyBits { get; }
+}
+
 public interface IReadOnlyGridShape<out T> : IReadOnlyGridShape
 {
     T this[int x, int y] { get; }

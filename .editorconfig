@@ -213,6 +213,9 @@ dotnet_diagnostic.CA1018.severity = warning
 # CA1034: Do not nest type. Alternatively, change its accessibility so that it is not externally visible.
 dotnet_diagnostic.CA1034.severity = suggestion
 
+#  CA1040:Avoid empty interfaces
+dotnet_diagnostic.CA1040.severity = suggestion
+
 # CA1043: Use Integral Or String Argument For Indexers
 dotnet_diagnostic.CA1043.severity = suggestion
 

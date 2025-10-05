@@ -3,15 +3,14 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DopeGrid;
 
-public readonly struct GridShape : IEquatable<GridShape>, IDisposable, IReadOnlyGridShape<bool>, IGridShape<bool>
+public readonly struct GridShape : IReadOnlyBitsGridShape, IGridShape<bool>, IEquatable<GridShape>, IDisposable
 {
     public int Width { get; }
     public int Height { get; }
-
     private readonly byte[] _bytes = Array.Empty<byte>();
 
     public ReadOnlySpanBitArray ReadOnlyBits => new(_bytes!, Size);
-    internal SpanBitArray Bits => new(_bytes!.AsSpan(), Size);
+    public SpanBitArray Bits => new(_bytes!.AsSpan(), Size);
 
     public int Size => Width * Height;
     public int OccupiedSpaceCount() => ReadOnlyBits.CountBits(0, Size);
@@ -54,6 +53,7 @@ public readonly struct GridShape : IEquatable<GridShape>, IDisposable, IReadOnly
 
     public static implicit operator ReadOnly(GridShape shape) => shape.AsReadOnly();
     public ReadOnly AsReadOnly() => new(Width, Height, _bytes.AsMemory(0, SpanBitArrayUtility.ByteCount(Size)));
+    public UnsafeBitsGridShape AsUnsafe() => new(Width, Height, _bytes);
 
     public bool Equals(GridShape other) => AsReadOnly().Equals(other.AsReadOnly());
     public static bool operator ==(in GridShape left, in GridShape right) => left.Equals(right);
@@ -62,16 +62,17 @@ public readonly struct GridShape : IEquatable<GridShape>, IDisposable, IReadOnly
     public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on GridShape and GridShape.ReadOnly is not supported.");
     public override bool Equals(object? obj) => throw new NotSupportedException("Equals(object) on GridShape and GridShape.ReadOnly is not supported.");
 
-    public readonly struct ReadOnly : IReadOnlyGridShape<bool>, IEquatable<ReadOnly>
+    // TODO: better be `ref struct`, but can't have interface until C# 13
+    public readonly struct ReadOnly : IReadOnlyBitsGridShape, IEquatable<ReadOnly>
     {
         public int Width { get; }
         public int Height { get; }
 
         private readonly ReadOnlyMemory<byte> _bytes;
-        public ReadOnlySpanBitArray Bits => new(_bytes.Span, Size);
+        public ReadOnlySpanBitArray ReadOnlyBits => new(_bytes.Span, Size);
 
         public int Size => Width * Height;
-        public int OccupiedSpaceCount() => Bits.CountBits(0, Size);
+        public int OccupiedSpaceCount() => ReadOnlyBits.CountBits(0, Size);
         public int FreeSpaceCount() => Size - OccupiedSpaceCount();
 
         internal ReadOnly(int width, int height, ReadOnlyMemory<byte> bytes)
@@ -81,7 +82,7 @@ public readonly struct GridShape : IEquatable<GridShape>, IDisposable, IReadOnly
             _bytes = bytes;
         }
 
-        public bool this[int x, int y] => Bits.Get(this.GetIndex(x, y));
+        public bool this[int x, int y] => ReadOnlyBits.Get(this.GetIndex(x, y));
         public bool IsOccupied(int x, int y) => this[x, y];
 
         public void CopyTo(GridShape other)
@@ -98,7 +99,7 @@ public readonly struct GridShape : IEquatable<GridShape>, IDisposable, IReadOnly
             return clone;
         }
 
-        public bool Equals(ReadOnly other) => Width == other.Width && Height == other.Height && Bits.SequenceEqual(other.Bits);
+        public bool Equals(ReadOnly other) => Width == other.Width && Height == other.Height && ReadOnlyBits.SequenceEqual(other.ReadOnlyBits);
         public static bool operator ==(ReadOnly left, ReadOnly right) => left.Equals(right);
         public static bool operator !=(ReadOnly left, ReadOnly right) => !left.Equals(right);
 

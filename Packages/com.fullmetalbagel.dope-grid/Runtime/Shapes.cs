@@ -122,4 +122,28 @@ public static class Shapes
             _ => throw new ArgumentOutOfRangeException(nameof(rotation), rotation, null)
         };
     }
+
+    public static TResult UnsafeProcessShape<TCaptureData, TResult>(int width, int height, TCaptureData data, Func<UnsafeBitsGridShape, TCaptureData, TResult> processor)
+    {
+        if (processor is null) throw new ArgumentNullException(nameof(processor));
+
+        var size = width * height;
+
+        if (SpanBitArrayUtility.ByteCount(size) <= 8)
+        {
+            var shape = new FixedGridShape<Bytes8>(width, height);
+            return processor(shape.AsUnsafe(), data);
+        }
+        if (SpanBitArrayUtility.ByteCount(size) <= 32)
+        {
+            var shape = new FixedGridShape<Bytes32>(width, height);
+            return processor(shape.AsUnsafe(), data);
+        }
+
+        {
+            using var shape = new GridShape(width, height);
+            using var @unsafe = shape.AsUnsafe();
+            return processor(@unsafe, data);
+        }
+    }
 }

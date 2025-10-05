@@ -66,6 +66,7 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
     public ReadOnly AsReadOnly() => new(Width, Height, _values!, _availableValue);
     public ReadOnly AsBoolReadOnly() => new(Width, Height, _values!, _availableValue);
 
+    // TODO: better be `ref struct`, but can't have interface until C# 13
     public readonly struct ReadOnly : IReadOnlyGridShape<T>, IEquatable<ReadOnly>
     {
         public int Width { get; }
