@@ -38,15 +38,18 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, ID
         _freeIndices = HashSetPool<int>.Rent();
     }
 
-    public IndexedGridBoard(ValueGridShape<int> containerShape)
+    public IndexedGridBoard(ImmutableGridShape containerShape)
+        : this(containerShape.Width, containerShape.Height)
     {
-        if (containerShape.IsEmpty()) throw new ArgumentException("invalid initial shape", nameof(containerShape));
-        _grid = containerShape.Clone();
-        _initializedGrid = _grid.Clone();
-        _items = ListPool<TItemData>.Rent();
-        _itemShapes = ListPool<ImmutableGridShape>.Rent();
-        _itemPosition = ListPool<(int x, int y)>.Rent();
-        _freeIndices = HashSetPool<int>.Rent();
+        for (var y = 0; y < Height; y++)
+        for (var x = 0; x < Width; x++)
+        {
+            if (!containerShape.IsOccupied(x, y))
+            {
+                _grid[x, y] = int.MinValue;
+                _initializedGrid[x, y] = int.MinValue;
+            }
+        }
     }
 
     public bool IsOccupied(int x, int y) => _grid.IsOccupied(x, y);

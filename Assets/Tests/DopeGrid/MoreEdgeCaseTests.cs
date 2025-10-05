@@ -158,7 +158,7 @@ public class MoreEdgeCaseTests
     [Test]
     public void ValueGridShape_ReadOnly_WithDifferentDefault()
     {
-        using var shape = new ValueGridShape<int>(3, 3, availableValue: 5);
+        using var shape = new ValueGridShape<int>(3, 3, emptyValue: 5);
         var readOnly = shape.AsReadOnly();
 
         for (int y = 0; y < 3; y++)

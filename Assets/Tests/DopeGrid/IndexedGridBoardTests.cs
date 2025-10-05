@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DopeGrid;
 
 namespace DopeGrid.Tests;
 
@@ -21,21 +20,19 @@ public class IndexedGridBoardTests
     }
 
     [Test]
-    public void Constructor_WithValueGridShape_CreatesBoard()
+    public void Constructor_WithImmutableGridShape_CreatesBoard()
     {
-        using var shape = new ValueGridShape<int>(3, 3, -1);
-        shape[0, 0] = 1;
+        var shape = Shapes.ImmutableRectangle(3, 3);
         using var board = new IndexedGridBoard<ItemData>(shape);
 
         Assert.That(board.Width, Is.EqualTo(3));
         Assert.That(board.Height, Is.EqualTo(3));
-        Assert.That(board.IsOccupied(0, 0), Is.True);
     }
 
     [Test]
     public void Constructor_WithEmptyShape_ThrowsException()
     {
-        using var shape = new ValueGridShape<int>(0, 0, -1);
+        var shape = ImmutableGridShape.Empty;
         Assert.Throws<ArgumentException>(() => new IndexedGridBoard<ItemData>(shape));
     }
 
@@ -424,6 +421,99 @@ public class IndexedGridBoardTests
         var readOnly = board.AsReadOnly();
 
         Assert.Throws<NotSupportedException>(() => readOnly.GetHashCode());
+    }
+
+    [Test]
+    public void Constructor_WithImmutableGridShape_UnoccupiedCellsMarkedAsMinValue()
+    {
+        // Create an L-shaped container
+        using var shape = new GridShape(3, 3);
+        shape[0, 0] = true;
+        shape[1, 0] = true;
+        shape[0, 1] = true;
+        // [2,0], [1,1], [2,1], [0,2], [1,2], [2,2] are unoccupied
+        var immutableShape = shape.GetImmutableShape();
+
+        using var board = new IndexedGridBoard<ItemData>(immutableShape);
+
+        // Occupied cells should have -1 (empty value)
+        Assert.That(board[0, 0], Is.EqualTo(-1), "Occupied container cell should have -1");
+        Assert.That(board[1, 0], Is.EqualTo(-1), "Occupied container cell should have -1");
+        Assert.That(board[0, 1], Is.EqualTo(-1), "Occupied container cell should have -1");
+
+        // Unoccupied cells should have int.MinValue (unavailable)
+        Assert.That(board[2, 0], Is.EqualTo(int.MinValue), "Unoccupied container cell should have int.MinValue");
+        Assert.That(board[1, 1], Is.EqualTo(int.MinValue), "Unoccupied container cell should have int.MinValue");
+        Assert.That(board[2, 2], Is.EqualTo(int.MinValue), "Unoccupied container cell should have int.MinValue");
+
+        // IsOccupied should return true for cells with int.MinValue (they're permanently blocked)
+        Assert.That(board.IsOccupied(2, 0), Is.True, "Unoccupied container cells should be marked as occupied");
+        Assert.That(board.IsOccupied(1, 1), Is.True, "Unoccupied container cells should be marked as occupied");
+    }
+
+    [Test]
+    public void RemoveItem_RestoresCorrectEmptyValue()
+    {
+        using var board = new IndexedGridBoard<ItemData>(5, 5);
+
+        var item = new ItemData("Sword", 100);
+        var itemShape = Shapes.ImmutableSingle();
+
+        // Add item at position (2, 2)
+        var index = board.TryAddItemAt(item, itemShape, 2, 2);
+        Assert.That(index, Is.GreaterThanOrEqualTo(0), "Item should be added successfully");
+        Assert.That(board.IsOccupied(2, 2), Is.True, "Cell should be occupied after adding item");
+        Assert.That(board[2, 2], Is.EqualTo(index), "Cell should contain the item index");
+
+        // Remove the item
+        board.RemoveItem(index);
+
+        // Cell should be restored to -1 (empty value)
+        Assert.That(board.IsOccupied(2, 2), Is.False, "Cell should not be occupied after removal");
+        Assert.That(board[2, 2], Is.EqualTo(-1), "Cell should contain -1 after removal");
+    }
+
+    [Test]
+    public void FreeSpace_CountIsCorrectAfterRemoval()
+    {
+        using var board = new IndexedGridBoard<ItemData>(5, 5);
+
+        var item = new ItemData("Potion", 50);
+        var itemShape = Shapes.ImmutableSingle();
+
+        int initialFreeSpace = board.FreeSpace;
+        Assert.That(initialFreeSpace, Is.EqualTo(25), "All cells should be free initially");
+
+        // Add an item
+        var index = board.TryAddItemAt(item, itemShape, 1, 1);
+        Assert.That(board.FreeSpace, Is.EqualTo(24), "Free space should decrease by 1");
+
+        // Remove the item
+        board.RemoveItem(index);
+
+        Assert.That(board.FreeSpace, Is.EqualTo(25), "Free space should be restored after removal");
+    }
+
+    [Test]
+    public void CanReuseSlotAfterRemoval()
+    {
+        using var board = new IndexedGridBoard<ItemData>(5, 5);
+
+        var item1 = new ItemData("Staff", 75);
+        var item2 = new ItemData("Wand", 50);
+        var itemShape = Shapes.ImmutableSingle();
+
+        // Add first item
+        var index1 = board.TryAddItemAt(item1, itemShape, 2, 2);
+        Assert.That(index1, Is.GreaterThanOrEqualTo(0));
+
+        // Remove first item
+        board.RemoveItem(index1);
+
+        // Should be able to add second item at the same position
+        var index2 = board.TryAddItemAt(item2, itemShape, 2, 2);
+        Assert.That(index2, Is.GreaterThanOrEqualTo(0), "Should be able to reuse the slot after removal");
+        Assert.That(board.Items[index2].Name, Is.EqualTo("Wand"));
     }
 
     [Test]
