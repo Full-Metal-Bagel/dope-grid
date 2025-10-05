@@ -252,7 +252,7 @@ public static class ReadOnlyGridShapeExtensions
         for (int sy = 0; sy < shape.Height; sy++)
         for (int sx = 0; sx < shape.Width; sx++)
         {
-            if (shape[sx, sy])
+            if (shape.IsOccupied(sx, sy))
             {
                 var gx = x + sx;
                 var gy = y + sy;

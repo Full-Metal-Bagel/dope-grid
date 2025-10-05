@@ -123,10 +123,10 @@ public readonly struct GridBoard : IReadOnlyGridShape<bool>, IDisposable, IEquat
         return new GridBoard(this);
     }
 
-    public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on GridShape and GridShape.ReadOnly is not supported.");
+    public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on GridBoard is not supported.");
     [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
-    public override bool Equals(object? obj) => throw new NotSupportedException("Equals(object) on GridShape and GridShape.ReadOnly is not supported.");
-    public bool Equals(GridBoard other) => throw new NotSupportedException("Equals(object) on GridShape and GridShape.ReadOnly is not supported.");
+    public override bool Equals(object? obj) => throw new NotSupportedException("Equals(object) on GridBoard is not supported.");
+    public bool Equals(GridBoard other) => throw new NotSupportedException("Equals(GridBoard) on GridBoard is not supported.");
     public static bool operator ==(GridBoard left, GridBoard right) => left.Equals(right);
     public static bool operator !=(GridBoard left, GridBoard right) => !left.Equals(right);
 }

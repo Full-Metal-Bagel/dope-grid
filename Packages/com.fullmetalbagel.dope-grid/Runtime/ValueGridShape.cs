@@ -98,8 +98,8 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
         public static bool operator ==(ReadOnly left, ReadOnly right) => left.Equals(right);
         public static bool operator !=(ReadOnly left, ReadOnly right) => !left.Equals(right);
 
-        public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on GridShape and GridShape.ReadOnly is not supported.");
+        public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on ValueGridShape<T> is not supported.");
         [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
-        public override bool Equals(object? obj) => throw new NotSupportedException("Equals(object) on GridShape and GridShape.ReadOnly is not supported.");
+        public override bool Equals(object? obj) => throw new NotSupportedException("Equals(object) on ValueGridShape<T> is not supported.");
     }
 }
