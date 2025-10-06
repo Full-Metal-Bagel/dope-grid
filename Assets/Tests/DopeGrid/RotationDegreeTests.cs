@@ -1,6 +1,3 @@
-using System.Numerics;
-using DopeGrid;
-
 namespace DopeGrid.Tests;
 
 [TestFixture]
@@ -36,45 +33,47 @@ public class RotationDegreeTests
     [Test]
     public void GetRotationOffset_ReturnsCorrectOffset()
     {
-        var size = new Vector2(10f, 20f);
+        float width = 10f;
+        float height = 20f;
 
-        var offset0 = RotationDegree.None.GetRotationOffset(size);
-        Assert.That(offset0.X, Is.EqualTo(0f));
-        Assert.That(offset0.Y, Is.EqualTo(0f));
+        var (offsetX0, offsetY0) = RotationDegree.None.GetRotationOffset(width, height);
+        Assert.That(offsetX0, Is.EqualTo(0f));
+        Assert.That(offsetY0, Is.EqualTo(0f));
 
-        var offset90 = RotationDegree.Clockwise90.GetRotationOffset(size);
-        Assert.That(offset90.X, Is.EqualTo(20f));
-        Assert.That(offset90.Y, Is.EqualTo(0f));
+        var (offsetX90, offsetY90) = RotationDegree.Clockwise90.GetRotationOffset(width, height);
+        Assert.That(offsetX90, Is.EqualTo(20f));
+        Assert.That(offsetY90, Is.EqualTo(0f));
 
-        var offset180 = RotationDegree.Clockwise180.GetRotationOffset(size);
-        Assert.That(offset180.X, Is.EqualTo(10f));
-        Assert.That(offset180.Y, Is.EqualTo(-20f));
+        var (offsetX180, offsetY180) = RotationDegree.Clockwise180.GetRotationOffset(width, height);
+        Assert.That(offsetX180, Is.EqualTo(10f));
+        Assert.That(offsetY180, Is.EqualTo(-20f));
 
-        var offset270 = RotationDegree.Clockwise270.GetRotationOffset(size);
-        Assert.That(offset270.X, Is.EqualTo(0f));
-        Assert.That(offset270.Y, Is.EqualTo(-10f));
+        var (offsetX270, offsetY270) = RotationDegree.Clockwise270.GetRotationOffset(width, height);
+        Assert.That(offsetX270, Is.EqualTo(0f));
+        Assert.That(offsetY270, Is.EqualTo(-10f));
     }
 
     [Test]
-    public void CalculateRotatedSize_Vector2_ReturnsCorrectSize()
+    public void CalculateRotatedSize_Floats_ReturnsCorrectSize()
     {
-        var size = new Vector2(10f, 20f);
+        float width = 10f;
+        float height = 20f;
 
-        var rotated0 = RotationDegree.None.CalculateRotatedSize(size);
-        Assert.That(rotated0.X, Is.EqualTo(10f));
-        Assert.That(rotated0.Y, Is.EqualTo(20f));
+        var (rotatedWidth0, rotatedHeight0) = RotationDegree.None.CalculateRotatedSize(width, height);
+        Assert.That(rotatedWidth0, Is.EqualTo(10f));
+        Assert.That(rotatedHeight0, Is.EqualTo(20f));
 
-        var rotated90 = RotationDegree.Clockwise90.CalculateRotatedSize(size);
-        Assert.That(rotated90.X, Is.EqualTo(20f));
-        Assert.That(rotated90.Y, Is.EqualTo(10f));
+        var (rotatedWidth90, rotatedHeight90) = RotationDegree.Clockwise90.CalculateRotatedSize(width, height);
+        Assert.That(rotatedWidth90, Is.EqualTo(20f));
+        Assert.That(rotatedHeight90, Is.EqualTo(10f));
 
-        var rotated180 = RotationDegree.Clockwise180.CalculateRotatedSize(size);
-        Assert.That(rotated180.X, Is.EqualTo(10f));
-        Assert.That(rotated180.Y, Is.EqualTo(20f));
+        var (rotatedWidth180, rotatedHeight180) = RotationDegree.Clockwise180.CalculateRotatedSize(width, height);
+        Assert.That(rotatedWidth180, Is.EqualTo(10f));
+        Assert.That(rotatedHeight180, Is.EqualTo(20f));
 
-        var rotated270 = RotationDegree.Clockwise270.CalculateRotatedSize(size);
-        Assert.That(rotated270.X, Is.EqualTo(20f));
-        Assert.That(rotated270.Y, Is.EqualTo(10f));
+        var (rotatedWidth270, rotatedHeight270) = RotationDegree.Clockwise270.CalculateRotatedSize(width, height);
+        Assert.That(rotatedWidth270, Is.EqualTo(20f));
+        Assert.That(rotatedHeight270, Is.EqualTo(10f));
     }
 
     [Test]
@@ -136,12 +135,23 @@ public class RotationDegreeTests
     [Test]
     public void SquareSize_RemainsUnchangedForAllRotations()
     {
-        var size = new Vector2(10f, 10f);
+        float squareSize = 10f;
 
-        Assert.That(RotationDegree.None.CalculateRotatedSize(size), Is.EqualTo(size));
-        Assert.That(RotationDegree.Clockwise90.CalculateRotatedSize(size), Is.EqualTo(size));
-        Assert.That(RotationDegree.Clockwise180.CalculateRotatedSize(size), Is.EqualTo(size));
-        Assert.That(RotationDegree.Clockwise270.CalculateRotatedSize(size), Is.EqualTo(size));
+        var (width0, height0) = RotationDegree.None.CalculateRotatedSize(squareSize, squareSize);
+        Assert.That(width0, Is.EqualTo(squareSize));
+        Assert.That(height0, Is.EqualTo(squareSize));
+
+        var (width90, height90) = RotationDegree.Clockwise90.CalculateRotatedSize(squareSize, squareSize);
+        Assert.That(width90, Is.EqualTo(squareSize));
+        Assert.That(height90, Is.EqualTo(squareSize));
+
+        var (width180, height180) = RotationDegree.Clockwise180.CalculateRotatedSize(squareSize, squareSize);
+        Assert.That(width180, Is.EqualTo(squareSize));
+        Assert.That(height180, Is.EqualTo(squareSize));
+
+        var (width270, height270) = RotationDegree.Clockwise270.CalculateRotatedSize(squareSize, squareSize);
+        Assert.That(width270, Is.EqualTo(squareSize));
+        Assert.That(height270, Is.EqualTo(squareSize));
     }
 
     [Test]
