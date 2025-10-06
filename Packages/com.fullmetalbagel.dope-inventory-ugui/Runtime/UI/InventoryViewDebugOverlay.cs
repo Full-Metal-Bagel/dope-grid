@@ -7,14 +7,13 @@ using UnityEngine.UI;
 namespace DopeGrid.Inventory
 {
     [DisallowMultipleComponent]
-    public class InventoryViewDebugOverlay<TItem> : MonoBehaviour
-        where TItem : IInventoryItem
+    public class InventoryViewDebugOverlay : MonoBehaviour
     {
         [SerializeField] private Color _indexColor = Color.red;
         [SerializeField] private Color _instanceColor = Color.blue;
         [SerializeField] private LabelMode _labelMode = LabelMode.ItemIndex;
 
-        private InventoryView<TItem> _view = null!;
+        private InventoryView _view = null!;
 
         private RectTransform? _root;
         private readonly List<Text> _itemTexts = new();
@@ -23,7 +22,7 @@ namespace DopeGrid.Inventory
 
         private void Awake()
         {
-            _view = GetComponent<InventoryView<TItem>>();
+            _view = GetComponent<InventoryView>();
         }
 
         private void Update()
@@ -102,7 +101,6 @@ namespace DopeGrid.Inventory
             {
                 var shape = item.Shape;
                 var origin = new int2(item.X, item.Y);
-                var itemData = item.Data;
                 for (int y = 0; y < shape.Height; y++)
                 {
                     for (int x = 0; x < shape.Width; x++)

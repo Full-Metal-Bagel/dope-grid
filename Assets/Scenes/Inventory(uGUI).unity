@@ -489,7 +489,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 834434dce45c4d348879a1213cd1a192, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _view: {fileID: 738009272}
+  _view: {fileID: 0}
   _width: 6
   _height: 6
   _uiItems:
@@ -510,7 +510,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 738009266}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d8bcda342584860933213ffde33fbd6, type: 3}
+  m_Script: {fileID: 11500000, guid: c38a11c83645c45f88fce8da4c71d745, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _placeableColor: {r: 0, g: 1, b: 0, a: 0.35}
@@ -658,7 +658,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 834434dce45c4d348879a1213cd1a192, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _view: {fileID: 1908836751}
+  _view: {fileID: 0}
   _width: 6
   _height: 6
   _uiItems:
@@ -717,7 +717,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1908836745}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d8bcda342584860933213ffde33fbd6, type: 3}
+  m_Script: {fileID: 11500000, guid: c38a11c83645c45f88fce8da4c71d745, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _placeableColor: {r: 0, g: 1, b: 0, a: 0.35}

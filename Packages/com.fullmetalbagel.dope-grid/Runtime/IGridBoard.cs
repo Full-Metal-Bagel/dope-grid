@@ -1,6 +1,6 @@
 namespace DopeGrid;
 
-public interface IGridBoard<out T> : IReadOnlyGridBoard<T>
+public interface IGridBoard<out T> : IReadOnlyGridShape<T>
 {
     (BoardItemData item, RotationDegree rotation) TryAddItem(ImmutableGridShape item);
     (BoardItemData item, RotationDegree rotation) TryAddItemAt(ImmutableGridShape shape, int x, int y);
@@ -13,7 +13,7 @@ public interface IReadOnlyGridBoard<out T> : IReadOnlyGridShape<T>
     BoardItemData GetItemById(int id);
 }
 
-public interface IIndexedGridBoard : IGridBoard<int>, IReadOnlyIndexedGridBoard { }
+public interface IIndexedGridBoard : IGridBoard<int> { }
 public interface IReadOnlyIndexedGridBoard : IReadOnlyGridBoard<int> { }
 
 public static class GridBoardExtension

@@ -9,14 +9,16 @@ namespace DopeGrid.Inventory;
 
 internal sealed class InventoryViewSyncer : IDisposable
 {
-    private readonly SharedInventoryData _sharedInventoryData;
+    private readonly IInventoryItemViewPool _pool;
+    private readonly IInventoryUI _ui;
     private readonly Transform _parent;
     private readonly Vector2 _cellSize;
     private readonly Dictionary<int, Image> _itemViews = new();
 
-    public InventoryViewSyncer(SharedInventoryData sharedInventoryData, Transform parent, Vector2 cellSize)
+    public InventoryViewSyncer(Transform parent, Vector2 cellSize, IInventoryItemViewPool pool, IInventoryUI ui)
     {
-        _sharedInventoryData = sharedInventoryData;
+        _pool = pool;
+        _ui = ui;
         _parent = parent;
         _cellSize = cellSize;
     }
@@ -27,13 +29,13 @@ internal sealed class InventoryViewSyncer : IDisposable
         {
             if (kv.Value != null)
             {
-                _sharedInventoryData.Pool.Release(kv.Value);
+                _pool.Release(kv.Value);
             }
         }
         _itemViews.Clear();
     }
 
-    public void SyncViews<T>(IndexedGridBoard<T>.ReadOnly inventory) where T : IInventoryItem
+    public void SyncViews(IndexedGridBoard.ReadOnly inventory)
     {
         var seen = HashSetPool<int>.Get();
         var toRemove = ListPool<int>.Get();
@@ -44,20 +46,21 @@ internal sealed class InventoryViewSyncer : IDisposable
             foreach (var item in inventory)
             {
                 seen.Add(item.Id);
-                var itemData = item.Data;
 
-                // Lookup UI definition by Guid
-                if (!_sharedInventoryData.Definitions.TryGetValue(itemData.DefinitionId, out var itemUI) || itemUI == null)
+                if (!_ui.HasUI(item.Id))
                     continue; // No UI—skip rendering
 
+                var sprite = _ui.GetItemSprite(item.Id);
+                var rotation = _ui.GetItemRotation(item.Id);
+
                 var image = GetOrCreateItemView(item.Id);
-                image.sprite = itemUI.Image;
+                image.sprite = sprite;
                 image.raycastTarget = false;
                 image.preserveAspect = false;
 
                 // Compute target AABB (rotated shape) and pre-rotation rect size
                 var rotatedSize = new Vector2(item.Shape.Width * _cellSize.x, item.Shape.Height * _cellSize.y);
-                var preRotSize = itemData.Rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
+                var preRotSize = rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
                     ? new Vector2(rotatedSize.y, rotatedSize.x)
                     : rotatedSize;
                 var pos = new int2(item.X, item.Y);
@@ -66,8 +69,8 @@ internal sealed class InventoryViewSyncer : IDisposable
                 var rt = (RectTransform)image.transform;
                 EnsureTopLeftAnchors(rt);
                 rt.sizeDelta = preRotSize;
-                var angleZ = itemData.Rotation.GetZRotation();
-                var (offsetX, offsetY) = itemData.Rotation.GetRotationOffset(preRotSize.x, preRotSize.y);
+                var angleZ = rotation.GetZRotation();
+                var (offsetX, offsetY) = rotation.GetRotationOffset(preRotSize.x, preRotSize.y);
                 var offset = new Vector2(offsetX, offsetY);
                 rt.anchoredPosition = anchoredPos + offset;
                 rt.localEulerAngles = new Vector3(0f, 0f, angleZ);
@@ -85,7 +88,7 @@ internal sealed class InventoryViewSyncer : IDisposable
                 var image = _itemViews[id];
                 if (image != null)
                 {
-                    _sharedInventoryData.Pool.Release(image);
+                    _pool.Release(image);
                 }
                 _itemViews.Remove(id);
             }
@@ -102,7 +105,7 @@ internal sealed class InventoryViewSyncer : IDisposable
         if (_itemViews.TryGetValue(id, out var existing) && existing != null)
             return existing;
 
-        var image = _sharedInventoryData.Pool.Get();
+        var image = _pool.Get();
 #if UNITY_EDITOR
         image.name = $"Item_{id}";
 #endif

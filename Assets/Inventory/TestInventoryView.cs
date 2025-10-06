@@ -1,7 +1,17 @@
 using System;
+using System.Collections.Generic;
 using DopeGrid;
 using DopeGrid.Inventory;
 using UnityEngine;
+
+class InventoryUI : IInventoryUI
+{
+    public Dictionary<int, (Sprite image, RotationDegree rotation)> Items { get; } = new();
+
+    public RotationDegree GetItemRotation(int id) => Items[id].rotation;
+    public Sprite GetItemSprite(int id) => Items[id].image;
+    public bool HasUI(int id) => Items.ContainsKey(id);
+}
 
 public class TestInventoryView : MonoBehaviour
 {
@@ -10,22 +20,19 @@ public class TestInventoryView : MonoBehaviour
     [SerializeField] private int _height = 6;
     [SerializeField] private UIImageGridDefinition[] _uiItems = Array.Empty<UIImageGridDefinition>();
 
-    private IndexedGridBoard<InventoryItem> _inventory;
+    private IndexedGridBoard _inventory;
     private Shared _shared;
 
     private void Start()
     {
         _shared = GetComponentInParent<Shared>();
         // Create an inventory; dispose on destroy
-        _inventory = new IndexedGridBoard<InventoryItem>(_width, _height);
+        _inventory = new IndexedGridBoard(_width, _height);
 
         BuildDefinitionsMap();
-        PopulateSampleItems();
+        var inventoryUI = PopulateSampleItems();
 
-        if (_view != null)
-        {
-            _view.Initialize(_inventory, _shared.SharedInventoryData);
-        }
+        _view.Initialize(_inventory, _shared.SharedInventoryData, inventoryUI);
     }
 
     private void BuildDefinitionsMap()
@@ -38,9 +45,10 @@ public class TestInventoryView : MonoBehaviour
         }
     }
 
-    private void PopulateSampleItems()
+    private IInventoryUI PopulateSampleItems()
     {
-        if (_uiItems == null || _uiItems.Length == 0) return;
+        var inventoryUI = new InventoryUI();
+        if (_uiItems == null || _uiItems.Length == 0) return inventoryUI;
 
         var rotations = new[]
         {
@@ -60,19 +68,18 @@ public class TestInventoryView : MonoBehaviour
             var shape = ui.Shape.ToImmutableGridShape();
             var rotation = rotations[rotationIndex];
             rotationIndex = (rotationIndex + 1) % rotations.Length;
-            var item = new InventoryItem(guid, shape, rotation);
 
-            var (id, rot) = _inventory.TryAddItem(item, item.RotatedShape);
-            if (rot != RotationDegree.None)
-            {
-                _inventory.UpdateItem(id, item with { Rotation = rotation.Rotate(rot) });
-            }
-
-            if (id < 0)
+            var (item, rot) = _inventory.TryAddItem(shape.GetRotatedShape(rotation));
+            if (item.IsInvalid)
             {
                 Debug.LogWarning($"Inventory full; failed to place item ({ui.name}).");
             }
+            else
+            {
+                inventoryUI.Items.Add(item.Id, (ui.Image, rotation.Rotate(rot)));
+            }
         }
+        return inventoryUI;
     }
 
     private void OnDestroy()
