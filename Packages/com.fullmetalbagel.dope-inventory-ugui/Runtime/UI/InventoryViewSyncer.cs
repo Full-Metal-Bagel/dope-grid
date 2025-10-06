@@ -35,7 +35,7 @@ internal sealed class InventoryViewSyncer : IDisposable
         _itemViews.Clear();
     }
 
-    public void SyncViews(IndexedGridBoard.ReadOnly inventory)
+    public void SyncViews(IInventory inventory)
     {
         var seen = HashSetPool<int>.Get();
         var toRemove = ListPool<int>.Get();

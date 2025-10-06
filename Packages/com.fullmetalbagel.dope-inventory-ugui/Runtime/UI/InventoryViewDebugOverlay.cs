@@ -81,7 +81,7 @@ namespace DopeGrid.Inventory
 
         private void UpdateItemIndices()
         {
-            var inventory = _view.ReadOnlyInventory;
+            var inventory = _view.Inventory;
             var cellSize = _view.CellSize;
 
             // Count needed labels across all items
@@ -121,7 +121,7 @@ namespace DopeGrid.Inventory
 
         private void UpdateEmptyCells()
         {
-            var inventory = _view.ReadOnlyInventory;
+            var inventory = _view.Inventory;
             var cellSize = _view.CellSize;
             var width = inventory.Width;
             var height = inventory.Height;
@@ -135,13 +135,12 @@ namespace DopeGrid.Inventory
             {
                 var x = i % width;
                 var y = i / width;
-                var value = inventory.Grid[x, y];
+                var isEmpty = !inventory.IsOccupied(x, y);
                 var text = _emptyTexts[i];
                 var rt = (RectTransform)text.transform;
                 rt.sizeDelta = cellSize;
                 rt.anchoredPosition = new Vector2(x * cellSize.x, -(y * cellSize.y));
                 text.fontSize = fs;
-                var isEmpty = value == -1;
                 text.text = isEmpty ? "-1" : string.Empty;
                 text.gameObject.SetActive(isEmpty);
             }

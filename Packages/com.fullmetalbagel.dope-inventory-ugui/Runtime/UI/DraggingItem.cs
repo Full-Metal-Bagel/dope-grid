@@ -17,8 +17,8 @@ public class DraggingItem
 
     // public Inventory SourceInventory { get; set; } = default;
     // public Inventory TargetInventory { get; set; } = default;
-    public int2 TargetPosition { get; set; } = default;
-    public int LastFrame { get; set; } = 0;
+    // public int2 TargetPosition { get; set; } = default;
+    // public int LastFrame { get; set; } = 0;
 
     public DraggingItem(RectTransform view, UIImageGridDefinitionData definition, RotationDegree rotation = RotationDegree.None)
     {

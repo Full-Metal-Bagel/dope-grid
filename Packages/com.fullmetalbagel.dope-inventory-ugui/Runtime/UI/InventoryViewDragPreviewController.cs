@@ -37,7 +37,7 @@
             _draggingViews.Clear();
         }
 
-        public void UpdateDragPlacementPreview(IndexedGridBoard inventory)
+        public void UpdateDragPlacementPreview(IInventory inventory)
         {
             var seen = HashSetPool<DraggingItem>.Get();
             var toRemove = ListPool<DraggingItem>.Get();

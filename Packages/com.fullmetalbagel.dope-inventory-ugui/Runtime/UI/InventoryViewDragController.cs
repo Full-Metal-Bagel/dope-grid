@@ -10,13 +10,13 @@ internal sealed class InventoryViewDragController : IDisposable
     private readonly SharedInventoryData _sharedInventoryData;
     private readonly Canvas _canvas;
     private readonly RectTransform _inventoryTransform;
-    private readonly IndexedGridBoard _inventory;
+    private readonly IInventory _inventory;
     private readonly Vector2 _cellSize;
     private readonly IInventoryUI _inventoryUI;
     private Image _ghost;
     private DraggingItem? _draggingItem;
 
-    public InventoryViewDragController(SharedInventoryData sharedInventoryData, RectTransform inventoryTransform, IndexedGridBoard inventory, Vector2 cellSize, IInventoryUI inventoryUI)
+    public InventoryViewDragController(SharedInventoryData sharedInventoryData, RectTransform inventoryTransform, IInventory inventory, Vector2 cellSize, IInventoryUI inventoryUI)
     {
         _sharedInventoryData = sharedInventoryData;
         _inventoryTransform = inventoryTransform;

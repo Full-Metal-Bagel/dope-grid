@@ -31,7 +31,7 @@ public class TestInventoryView : MonoBehaviour
         BuildDefinitionsMap();
         var inventoryUI = PopulateSampleItems();
 
-        _view.Initialize(_inventory, _shared.SharedInventoryData, inventoryUI);
+        _view.Initialize(new Inventory(_inventory), _shared.SharedInventoryData, inventoryUI);
     }
 
     private void BuildDefinitionsMap()
