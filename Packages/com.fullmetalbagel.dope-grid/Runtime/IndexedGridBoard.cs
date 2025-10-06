@@ -114,7 +114,6 @@ public readonly struct IndexedGridBoard : IIndexedGridBoard, IReadOnlyIndexedGri
 
         _grid.FillShapeWithValue(item.Shape, item.X, item.Y, -1);
 
-        _items[id] = default!;
         _items[id] = ImmutableGridShape.Empty;
         _itemPosition[id] = (-1, -1);
         _freeIndices.Add(id);
@@ -124,7 +123,6 @@ public readonly struct IndexedGridBoard : IIndexedGridBoard, IReadOnlyIndexedGri
     public void Reset()
     {
         _initializedGrid.CopyTo(_grid);
-        _items.Clear();
         _items.Clear();
         _itemPosition.Clear();
         _freeIndices.Clear();
