@@ -7,26 +7,21 @@ namespace DopeGrid;
 public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, IDisposable, IEquatable<IndexedGridBoard<TItemData>>
 {
     private readonly ValueGridShape<int> _grid; // Stores item index at each cell (-1 for empty)
-    public ValueGridShape<int>.ReadOnly Grid => _grid;
-
     private readonly ValueGridShape<int> _initializedGrid;
-    public ValueGridShape<int>.ReadOnly InitializedGrid => _initializedGrid;
 
     private readonly List<TItemData> _items;
-    public IReadOnlyList<TItemData> Items => _items;
-
     private readonly List<ImmutableGridShape> _itemShapes;
-    public IReadOnlyList<ImmutableGridShape> ItemShapes => _itemShapes;
-
     private readonly List<(int x, int y)> _itemPosition;
-    public IReadOnlyList<(int x, int y)> ItemPositions => _itemPosition;
-
     private readonly HashSet<int> _freeIndices;
 
     public int Width => _initializedGrid.Width;
     public int Height => _initializedGrid.Height;
 
+    public ValueGridShape<int>.ReadOnly Grid => _grid;
+    public ValueGridShape<int>.ReadOnly InitializedGrid => _initializedGrid;
+
     public int ItemCount => _items.Count - _freeIndices.Count;
+    public int ItemCapacity => _items.Count;
     public int FreeSpace => Grid.CountValue(-1);
 
     public IndexedGridBoard(int width, int height)
@@ -59,7 +54,18 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, ID
     public bool IsOccupied(int x, int y) => _grid.IsOccupied(x, y);
     public int this[int x, int y] => _grid[x, y];
 
-    public (int index, RotationDegree rotation) TryAddItem(TItemData data, ImmutableGridShape item)
+    public (int id, TItemData data, ImmutableGridShape shape, int x, int y) GetItemOnPosition(int x, int y)
+    {
+        return GetItemById(this[x, y]);
+    }
+
+    public (int id, TItemData data, ImmutableGridShape shape, int x, int y) GetItemById(int id)
+    {
+        var (positionX, positionY) = _itemPosition[id];
+        return (id, _items[id], _itemShapes[id], positionX, positionY);
+    }
+
+    public (int id, RotationDegree rotation) TryAddItem(TItemData data, ImmutableGridShape item)
     {
         var (x, y, rotation) = _grid.FindFirstFitWithFreeRotation(item, default(int));
         if (x >= 0)
@@ -108,18 +114,18 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, ID
         return itemIndex;
     }
 
-    public void RemoveItem(int index)
+    public void RemoveItem(int id)
     {
-        if (index >= 0 && index < _items.Count)
+        if (id >= 0 && id < _items.Count)
         {
-            var shape = _itemShapes[index];
-            var (x, y) = _itemPosition[index];
+            var shape = _itemShapes[id];
+            var (x, y) = _itemPosition[id];
             _grid.FillShapeWithValue(shape, x, y, -1);
 
-            _items[index] = default!;
-            _itemShapes[index] = ImmutableGridShape.Empty;
-            _itemPosition[index] = (-1, -1);
-            _freeIndices.Add(index);
+            _items[id] = default!;
+            _itemShapes[id] = ImmutableGridShape.Empty;
+            _itemPosition[id] = (-1, -1);
+            _freeIndices.Add(id);
         }
     }
 
@@ -142,10 +148,10 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, ID
         HashSetPool<int>.Return(_freeIndices);
     }
 
-    public Enumerator GetEnumerator() => new(_items, _itemShapes, _freeIndices);
+    public Enumerator GetEnumerator() => new(this);
 
     public static implicit operator ReadOnly(IndexedGridBoard<TItemData> board) => board.AsReadOnly();
-    public ReadOnly AsReadOnly() => new(_grid.AsReadOnly(), _items, _itemShapes, _freeIndices);
+    public ReadOnly AsReadOnly() => new(this);
 
     public override bool Equals(object? obj) => throw new NotSupportedException();
     public override int GetHashCode() => throw new NotSupportedException();
@@ -153,75 +159,78 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, ID
     public static bool operator !=(IndexedGridBoard<TItemData> left, IndexedGridBoard<TItemData> right) => !(left == right);
     public bool Equals(IndexedGridBoard<TItemData> other) => throw new NotSupportedException();
 
-    public ref struct Enumerator
+    public readonly struct ReadOnly : IReadOnlyGridShape<int>, IEquatable<ReadOnly>
     {
-        private readonly IReadOnlyList<TItemData> _items;
-        private readonly IReadOnlyList<ImmutableGridShape> _itemShapes;
-        private readonly HashSet<int> _freeIndicesSet;
-        private int _currentIndex;
+        private readonly IndexedGridBoard<TItemData> _board;
 
-        internal Enumerator(IReadOnlyList<TItemData> items, IReadOnlyList<ImmutableGridShape> itemShapes, HashSet<int> freeIndices)
+        public ValueGridShape<int>.ReadOnly Grid => _board.Grid;
+        internal HashSet<int> FreeIndices => _board._freeIndices;
+
+        public int Width => Grid.Width;
+        public int Height => Grid.Height;
+
+        public int ItemCount => _board.ItemCount;
+        public int ItemCapacity => _board.ItemCapacity;
+        public int FreeSpace => _board.FreeSpace;
+
+        public bool IsOccupied(int x, int y) => _board.IsOccupied(x, y);
+        public int this[int x, int y] => _board[x, y];
+
+        internal ReadOnly(IndexedGridBoard<TItemData> board)
         {
-            _items = items;
-            _itemShapes = itemShapes;
-            _freeIndicesSet = freeIndices;
-            _currentIndex = -1;
+            _board = board;
         }
 
-        public readonly (int index, TItemData data, ImmutableGridShape shape) Current
+        public Enumerator GetEnumerator() => new(this);
+
+        public (int id, TItemData data, ImmutableGridShape shape, int x, int y) GetItemOnPosition(int x, int y)
         {
-            get
-            {
-                if (_currentIndex < 0 || _currentIndex >= _items.Count)
-                    throw new InvalidOperationException("Enumeration has not started or has already finished");
-                return (_currentIndex, _items[_currentIndex], _itemShapes[_currentIndex]);
-            }
+            return _board.GetItemOnPosition(x, y);
         }
 
-        public bool MoveNext()
+        public (int id, TItemData data, ImmutableGridShape shape, int x, int y) GetItemById(int id)
         {
-            while (++_currentIndex < _items.Count)
-            {
-                if (!_freeIndicesSet.Contains(_currentIndex))
-                    return true;
-            }
-            return false;
+            return _board.GetItemById(id);
         }
-
-        public void Reset() => _currentIndex = -1;
-    }
-
-    public readonly struct ReadOnly : IReadOnlyGridShape<TItemData>, IEquatable<ReadOnly>
-    {
-        private readonly ValueGridShape<int>.ReadOnly _grid;
-        private readonly IReadOnlyList<TItemData> _items;
-        private readonly IReadOnlyList<ImmutableGridShape> _itemShapes;
-        private readonly HashSet<int> _freeIndices;
-
-        public ValueGridShape<int>.ReadOnly Grid => _grid;
-        public int Width => _grid.Width;
-        public int Height => _grid.Height;
-
-        public int ItemCount => _items.Count - _freeIndices.Count;
-        public int FreeSpace => _grid.CountValue(-1);
-
-        public bool IsOccupied(int x, int y) => _grid.IsOccupied(x, y);
-        public TItemData this[int x, int y] => _items[_grid[x, y]];
-
-        internal ReadOnly(ValueGridShape<int>.ReadOnly grid, IReadOnlyList<TItemData> items, IReadOnlyList<ImmutableGridShape> itemShapes, HashSet<int> freeIndices)
-        {
-            _grid = grid;
-            _items = items;
-            _itemShapes = itemShapes;
-            _freeIndices = freeIndices;
-        }
-
-        public Enumerator GetEnumerator() => new(_items, _itemShapes, _freeIndices);
 
         public override bool Equals(object? obj) => throw new NotSupportedException();
         public override int GetHashCode() => throw new NotSupportedException();
         public static bool operator ==(ReadOnly left, ReadOnly right) => left.Equals(right);
         public static bool operator !=(ReadOnly left, ReadOnly right) => !(left == right);
         public bool Equals(ReadOnly other) => throw new NotSupportedException();
+    }
+
+    public ref struct Enumerator
+    {
+        private readonly ReadOnly _board;
+        private int _currentIndex;
+
+        internal Enumerator(ReadOnly board)
+        {
+            _board = board;
+            _currentIndex = -1;
+        }
+
+        public readonly (int id, TItemData data, ImmutableGridShape shape, int x, int y) Current
+        {
+            get
+            {
+                if (_currentIndex < 0 || _currentIndex >= _board.ItemCapacity)
+                    throw new InvalidOperationException("Enumeration has not started or has already finished");
+                return _board.GetItemById(_currentIndex);
+            }
+        }
+
+        public bool MoveNext()
+        {
+            while (++_currentIndex < _board.ItemCapacity)
+            {
+                if (!_board.FreeIndices.Contains(_currentIndex))
+                    return true;
+            }
+            return false;
+        }
+
+        public void Reset() => _currentIndex = -1;
     }
 }
