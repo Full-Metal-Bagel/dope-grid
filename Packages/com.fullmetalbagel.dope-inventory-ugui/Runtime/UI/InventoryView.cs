@@ -12,6 +12,7 @@ namespace DopeGrid.Inventory
         private static readonly Vector2 s_defaultCellSize = new(64f, 64f);
 
         public IInventory Inventory { get; private set; } = null!;
+        private IInventoryUI _inventoryUI = null!;
         private SharedInventoryData _sharedInventoryData = null!;
         private Vector2 _cellSize = s_defaultCellSize;
 
@@ -38,6 +39,7 @@ namespace DopeGrid.Inventory
             }
 
             Inventory = inventory;
+            _inventoryUI = ui;
             _sharedInventoryData = sharedInventoryData;
 
             var rectTransform = (RectTransform)transform;
@@ -86,7 +88,7 @@ namespace DopeGrid.Inventory
 
             var readOnlyInventory = Inventory;
             _viewSyncer.SyncViews(readOnlyInventory);
-            _viewDragPreviewController.UpdateDragPlacementPreview(Inventory);
+            _viewDragPreviewController.UpdateDragPlacementPreview(Inventory, _inventoryUI);
         }
 
         protected override void OnDestroy()

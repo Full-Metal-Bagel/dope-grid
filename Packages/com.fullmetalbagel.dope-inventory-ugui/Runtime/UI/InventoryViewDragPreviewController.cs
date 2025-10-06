@@ -37,7 +37,7 @@
             _draggingViews.Clear();
         }
 
-        public void UpdateDragPlacementPreview(IInventory inventory)
+        public void UpdateDragPlacementPreview(IInventory inventory, IInventoryUI inventoryUI)
         {
             var seen = HashSetPool<DraggingItem>.Get();
             var toRemove = ListPool<DraggingItem>.Get();
@@ -80,6 +80,7 @@
 
                     var canPlace = inventory.CanMoveItem(item.ItemId, shape, gridPos.x, gridPos.y);
                     item.TargetInventory = inventory;
+                    item.TargetInventoryUI = inventoryUI;
                     item.TargetPosition = gridPos;
                     item.LastFrame = Time.frameCount;
 

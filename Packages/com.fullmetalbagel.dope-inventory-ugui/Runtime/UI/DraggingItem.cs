@@ -18,6 +18,7 @@ public class DraggingItem
     public IInventory SourceInventory { get; }
     public int ItemId { get; }
     public IInventory? TargetInventory { get; set; }
+    public IInventoryUI? TargetInventoryUI { get; set; }
     public int2 TargetPosition { get; set; } = default;
     public int LastFrame { get; set; } = 0;
 

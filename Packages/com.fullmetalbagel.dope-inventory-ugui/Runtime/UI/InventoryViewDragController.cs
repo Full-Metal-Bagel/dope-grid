@@ -96,12 +96,14 @@ internal sealed class InventoryViewDragController : IDisposable
             // Check if we have a valid target position from the most recent frame
             if (Time.frameCount - _draggingItem.LastFrame <= 1 && _draggingItem.TargetInventory != null)
             {
-                var sourceInventory = _draggingItem.SourceInventory;
-                var targetInventory = _draggingItem.TargetInventory;
-                var targetPos = _draggingItem.TargetPosition;
-                var itemId = _draggingItem.ItemId;
-                var shape = _draggingItem.Shape;
-                targetInventory.TryMoveItem(sourceInventory, itemId, shape, targetPos.x, targetPos.y);
+                var (_, to) = _draggingItem.TargetInventory.TryMoveItem(
+                    _draggingItem.SourceInventory,
+                    _draggingItem.ItemId,
+                    _draggingItem.Shape,
+                    _draggingItem.TargetPosition.x,
+                    _draggingItem.TargetPosition.y
+                );
+                if (to.IsValid) _draggingItem.TargetInventoryUI!.AddOrUpdateItem(to.Id, _draggingItem.UIDefinition, _draggingItem.Rotation);
             }
 
             _sharedInventoryData.DraggingItems.Remove(_draggingItem);
