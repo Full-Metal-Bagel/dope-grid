@@ -142,6 +142,8 @@ public readonly struct IndexedGridBoard : IIndexedGridBoard, IReadOnlyIndexedGri
     public static implicit operator ReadOnly(IndexedGridBoard board) => board.AsReadOnly();
     public ReadOnly AsReadOnly() => new(this);
 
+    public bool IsSame(IndexedGridBoard other) => ReferenceEquals(_items, other._items);
+
     public override bool Equals(object? obj) => throw new NotSupportedException();
     public override int GetHashCode() => throw new NotSupportedException();
     public static bool operator ==(IndexedGridBoard left, IndexedGridBoard right) => left.Equals(right);
@@ -165,17 +167,10 @@ public readonly struct IndexedGridBoard : IIndexedGridBoard, IReadOnlyIndexedGri
         public bool IsOccupied(int x, int y) => _board.IsOccupied(x, y);
         public int this[int x, int y] => _board[x, y];
 
-        internal ReadOnly(IndexedGridBoard board)
-        {
-            _board = board;
-        }
-
+        internal ReadOnly(IndexedGridBoard board) => _board = board;
         public Enumerator GetEnumerator() => new(this);
-
-        public BoardItemData GetItemById(int id)
-        {
-            return _board.GetItemById(id);
-        }
+        public BoardItemData GetItemById(int id) => _board.GetItemById(id);
+        public bool IsSame(ReadOnly other) => _board.IsSame(other._board);
 
         public override bool Equals(object? obj) => throw new NotSupportedException();
         public override int GetHashCode() => throw new NotSupportedException();

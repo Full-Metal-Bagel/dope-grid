@@ -27,10 +27,10 @@ public class DraggingItem
         View = view;
         Rotation = rotation;
     }
-    //
-    // public int2 GetGridPosition(RectTransform transform, float2 cellSize)
-    // {
-    //     var (width, height) = Shape.Bound;
-    //     return transform.GetGridPosition(cellSize, width, height, View.position);
-    // }
+
+    public int2 GetGridPosition(RectTransform transform, float2 cellSize)
+    {
+        var (width, height) = Shape.Bound;
+        return transform.GetGridPosition(cellSize, width, height, View.position);
+    }
 }
