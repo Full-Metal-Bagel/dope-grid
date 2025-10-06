@@ -4,7 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DopeGrid;
 
-public readonly struct GridBoard : IReadOnlyGridShape<bool>, IDisposable, IEquatable<GridBoard>
+[Obsolete("should be replaced by a generic type which can be more easily extended to other forms like the indexed one")]
+public readonly struct GridBoard : IDisposable, IEquatable<GridBoard>
 {
     private readonly GridShape _grid;
     public GridShape.ReadOnly CurrentGrid => _grid;
