@@ -150,7 +150,7 @@ internal sealed class InventoryViewDragController : IDisposable
     private void UpdateDraggingItemRotation()
     {
         if (_draggingItem == null) return;
-        var (width, height) = _draggingItem.Shape.GetRotatedShape(_draggingItem.Rotation).Bound;
+        var (width, height) = _draggingItem.Shape.Bound;
         var size = new Vector2(_cellSize.x * width, _cellSize.y * height) ;
         ApplyToRectTransform(_draggingItem.Rotation, _draggingItem.View, size);
     }
