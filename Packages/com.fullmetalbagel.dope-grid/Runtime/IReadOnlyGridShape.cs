@@ -62,7 +62,7 @@ public static class ReadOnlyGridShapeExtensions
         => shape1.Width == shape2.Width && shape1.Height == shape2.Height;
 
     [Pure, MustUseReturnValue]
-    public static bool IsEmpty<TShape>(this TShape shape)
+    public static bool IsZeroSize<TShape>(this TShape shape)
         where TShape : IReadOnlyGridShape
         => shape.Width <= 0 || shape.Height <= 0;
 

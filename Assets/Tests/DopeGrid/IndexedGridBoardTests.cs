@@ -290,7 +290,8 @@ public class IndexedGridBoardTests
         Assert.That(readOnly.Height, Is.EqualTo(5));
         Assert.That(readOnly.ItemCount, Is.EqualTo(1));
         Assert.That(readOnly.IsOccupied(1, 1), Is.True);
-        Assert.That(readOnly[1, 1], Is.EqualTo(item));
+        var (_, data, _, _, _) = readOnly.GetItemOnPosition(1, 1);
+        Assert.That(data, Is.EqualTo(item));
     }
 
     [Test]
@@ -304,7 +305,8 @@ public class IndexedGridBoardTests
         IndexedGridBoard<ItemData>.ReadOnly readOnly = board;
 
         Assert.That(readOnly.IsOccupied(2, 3), Is.True);
-        Assert.That(readOnly[2, 3], Is.EqualTo(item));
+        var (_, data, _, _, _) = readOnly.GetItemOnPosition(2, 3);
+        Assert.That(data, Is.EqualTo(item));
     }
 
     [Test]
@@ -528,7 +530,8 @@ public class IndexedGridBoardTests
         // Should be able to add second item at the same position
         var index2 = board.TryAddItemAt(item2, itemShape, 2, 2);
         Assert.That(index2, Is.GreaterThanOrEqualTo(0), "Should be able to reuse the slot after removal");
-        Assert.That(board.Items[index2].Name, Is.EqualTo("Wand"));
+        var (_, data, _, _, _) = board.GetItemById(index2);
+        Assert.That(data.Name, Is.EqualTo("Wand"));
     }
 
     [Test]
@@ -558,7 +561,7 @@ public class IndexedGridBoardTests
         // Remove middle item
         board.RemoveItem(index2);
 
-        var enumeratedItems = new List<(int index, ItemData data, ImmutableGridShape shape)>();
+        var enumeratedItems = new List<IndexedGridBoard<ItemData>.ItemData>();
         foreach (var item in board)
         {
             enumeratedItems.Add(item);
@@ -566,8 +569,8 @@ public class IndexedGridBoardTests
 
         Assert.That(enumeratedItems.Count, Is.EqualTo(2), "Should only enumerate active items");
 
-        var indices = enumeratedItems.Select(x => x.index).ToList();
-        var data = enumeratedItems.Select(x => x.data).ToList();
+        var indices = enumeratedItems.Select(x => x.Id).ToList();
+        var data = enumeratedItems.Select(x => x.Data).ToList();
 
         Assert.That(indices, Does.Contain(index1));
         Assert.That(indices, Does.Contain(index3));
@@ -624,14 +627,14 @@ public class IndexedGridBoardTests
         board.RemoveItem(index2);
 
         var readOnly = board.AsReadOnly();
-        var enumeratedItems = new List<(int index, ItemData data, ImmutableGridShape shape)>();
+        var enumeratedItems = new List<IndexedGridBoard<ItemData>.ItemData>();
         foreach (var item in readOnly)
         {
             enumeratedItems.Add(item);
         }
 
         Assert.That(enumeratedItems.Count, Is.EqualTo(1));
-        Assert.That(enumeratedItems[0].data, Is.EqualTo(item1));
+        Assert.That(enumeratedItems[0].Data, Is.EqualTo(item1));
     }
 
     [Test]
@@ -652,7 +655,7 @@ public class IndexedGridBoardTests
         board.RemoveItem(indices[3]);
 
         var enumeratedIndices = new List<int>();
-        foreach (var (index, _, _) in board)
+        foreach (var (index, _, _, _, _) in board)
         {
             enumeratedIndices.Add(index);
         }
@@ -701,5 +704,151 @@ public class IndexedGridBoardTests
         // Next item should get a new index
         var newIndex = board.TryAddItemAt(new ItemData("New4", 40), shape, 8, 0);
         Assert.That(newIndex, Is.EqualTo(5), "Should allocate new index after all free indices used");
+    }
+
+    [Test]
+    public void GetItemById_ReturnsCorrectItemData()
+    {
+        using var board = new IndexedGridBoard<ItemData>(10, 10);
+        var item = new ItemData("Sword", 100);
+        var shape = Shapes.ImmutableSingle();
+
+        var index = board.TryAddItemAt(item, shape, 3, 4);
+
+        var (id, data, returnedShape, x, y) = board.GetItemById(index);
+
+        Assert.That(id, Is.EqualTo(index));
+        Assert.That(data, Is.EqualTo(item));
+        Assert.That(returnedShape, Is.EqualTo(shape));
+        Assert.That(x, Is.EqualTo(3));
+        Assert.That(y, Is.EqualTo(4));
+    }
+
+    [Test]
+    public void GetItemById_WithMultiCellShape_ReturnsCorrectData()
+    {
+        using var board = new IndexedGridBoard<ItemData>(10, 10);
+        var item = new ItemData("LongSword", 150);
+        var shape = Shapes.ImmutableLine(3);
+
+        var index = board.TryAddItemAt(item, shape, 2, 5);
+
+        var (id, data, returnedShape, x, y) = board.GetItemById(index);
+
+        Assert.That(id, Is.EqualTo(index));
+        Assert.That(data, Is.EqualTo(item));
+        Assert.That(returnedShape, Is.EqualTo(shape));
+        Assert.That(x, Is.EqualTo(2));
+        Assert.That(y, Is.EqualTo(5));
+    }
+
+    [Test]
+    public void GetItemOnPosition_ReturnsCorrectItemData()
+    {
+        using var board = new IndexedGridBoard<ItemData>(10, 10);
+        var item = new ItemData("Shield", 80);
+        var shape = Shapes.ImmutableSingle();
+
+        var index = board.TryAddItemAt(item, shape, 6, 7);
+
+        var (id, data, returnedShape, x, y) = board.GetItemOnPosition(6, 7);
+
+        Assert.That(id, Is.EqualTo(index));
+        Assert.That(data, Is.EqualTo(item));
+        Assert.That(returnedShape, Is.EqualTo(shape));
+        Assert.That(x, Is.EqualTo(6));
+        Assert.That(y, Is.EqualTo(7));
+    }
+
+    [Test]
+    public void GetItemOnPosition_WithMultiCellShape_ReturnsCorrectDataFromAnyCell()
+    {
+        using var board = new IndexedGridBoard<ItemData>(10, 10);
+        var item = new ItemData("Spear", 120);
+        var shape = Shapes.ImmutableLine(4); // 4-cell horizontal line
+
+        var index = board.TryAddItemAt(item, shape, 1, 3);
+
+        // Test getting item from different cells of the same shape
+        var result1 = board.GetItemOnPosition(1, 3);
+        var result2 = board.GetItemOnPosition(2, 3);
+        var result3 = board.GetItemOnPosition(3, 3);
+        var result4 = board.GetItemOnPosition(4, 3);
+
+        // All should return the same item data
+        Assert.That(result1.Data, Is.EqualTo(item));
+        Assert.That(result2.Data, Is.EqualTo(item));
+        Assert.That(result3.Data, Is.EqualTo(item));
+        Assert.That(result4.Data, Is.EqualTo(item));
+
+        // All should return the same ID
+        Assert.That(result1.Id, Is.EqualTo(index));
+        Assert.That(result2.Id, Is.EqualTo(index));
+        Assert.That(result3.Id, Is.EqualTo(index));
+        Assert.That(result4.Id, Is.EqualTo(index));
+
+        // All should return the same position (origin of the shape)
+        Assert.That(result1.X, Is.EqualTo(1));
+        Assert.That(result2.X, Is.EqualTo(1));
+        Assert.That(result3.X, Is.EqualTo(1));
+        Assert.That(result4.X, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void GetItemById_AfterRemoval_ReturnsUpdatedData()
+    {
+        using var board = new IndexedGridBoard<ItemData>(10, 10);
+        var item1 = new ItemData("OldItem", 50);
+        var item2 = new ItemData("NewItem", 75);
+        var shape = Shapes.ImmutableSingle();
+
+        var index1 = board.TryAddItemAt(item1, shape, 2, 2);
+        board.RemoveItem(index1);
+
+        // Reuse the same index
+        var index2 = board.TryAddItemAt(item2, shape, 5, 5);
+
+        var (_, data, _, x, y) = board.GetItemById(index2);
+
+        Assert.That(data, Is.EqualTo(item2));
+        Assert.That(x, Is.EqualTo(5));
+        Assert.That(y, Is.EqualTo(5));
+    }
+
+    [Test]
+    public void ReadOnly_GetItemById_ReturnsCorrectData()
+    {
+        using var board = new IndexedGridBoard<ItemData>(10, 10);
+        var item = new ItemData("Potion", 25);
+        var shape = Shapes.ImmutableSingle();
+
+        var index = board.TryAddItemAt(item, shape, 4, 4);
+        var readOnly = board.AsReadOnly();
+
+        var (id, data, returnedShape, x, y) = readOnly.GetItemById(index);
+
+        Assert.That(id, Is.EqualTo(index));
+        Assert.That(data, Is.EqualTo(item));
+        Assert.That(returnedShape, Is.EqualTo(shape));
+        Assert.That(x, Is.EqualTo(4));
+        Assert.That(y, Is.EqualTo(4));
+    }
+
+    [Test]
+    public void ReadOnly_GetItemOnPosition_ReturnsCorrectData()
+    {
+        using var board = new IndexedGridBoard<ItemData>(10, 10);
+        var item = new ItemData("Gem", 200);
+        var shape = Shapes.ImmutableSingle();
+
+        board.TryAddItemAt(item, shape, 8, 9);
+        var readOnly = board.AsReadOnly();
+
+        var (_, data, returnedShape, x, y) = readOnly.GetItemOnPosition(8, 9);
+
+        Assert.That(data, Is.EqualTo(item));
+        Assert.That(returnedShape, Is.EqualTo(shape));
+        Assert.That(x, Is.EqualTo(8));
+        Assert.That(y, Is.EqualTo(9));
     }
 }

@@ -20,9 +20,9 @@ public class ReadOnlyGridShapeExtensionsTests
         using var shape2 = new GridShape(5, 0);
         using var shape3 = new GridShape(3, 3);
 
-        Assert.That(shape1.IsEmpty(), Is.True);
-        Assert.That(shape2.IsEmpty(), Is.True);
-        Assert.That(shape3.IsEmpty(), Is.False);
+        Assert.That(shape1.IsZeroSize(), Is.True);
+        Assert.That(shape2.IsZeroSize(), Is.True);
+        Assert.That(shape3.IsZeroSize(), Is.False);
     }
 
     [Test]

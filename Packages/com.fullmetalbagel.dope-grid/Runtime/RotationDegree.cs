@@ -1,4 +1,4 @@
-using System.Numerics;
+using System;
 using JetBrains.Annotations;
 
 namespace DopeGrid;
@@ -50,26 +50,24 @@ public static class RotationDegreeExtensions
     };
 
     [Pure, MustUseReturnValue]
-    public static Vector2 GetRotationOffset(this RotationDegree rotation, Vector2 size)
+    public static (float offsetX, float offsetY) GetRotationOffset(this RotationDegree rotation, float width, float height)
     {
-        var w = size.X;
-        var h = size.Y;
         return rotation switch
         {
-            RotationDegree.None => Vector2.Zero,
-            RotationDegree.Clockwise90 => new Vector2(h, 0f),
-            RotationDegree.Clockwise180 => new Vector2(w, -h),
-            RotationDegree.Clockwise270 => new Vector2(0f, -w),
-            _ => Vector2.Zero
+            RotationDegree.None => (0f, 0f),
+            RotationDegree.Clockwise90 => (height, 0f),
+            RotationDegree.Clockwise180 => (width, -height),
+            RotationDegree.Clockwise270 => (0f, -width),
+            _ => throw new NotSupportedException()
         };
     }
 
     [Pure, MustUseReturnValue]
-    public static Vector2 CalculateRotatedSize(this RotationDegree rotation, Vector2 size)
+    public static (float width, float height) CalculateRotatedSize(this RotationDegree rotation, float width, float height)
     {
         return rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
-            ? new Vector2(size.Y, size.X)
-            : size;
+            ? (height, width)
+            : (width, height);
     }
 
     [Pure, MustUseReturnValue]

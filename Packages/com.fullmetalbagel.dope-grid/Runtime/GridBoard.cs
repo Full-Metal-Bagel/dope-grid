@@ -44,7 +44,7 @@ public readonly struct GridBoard : IReadOnlyGridShape<bool>, IDisposable, IEquat
 
     public GridBoard(GridShape containerShape)
     {
-        if (containerShape.IsEmpty())
+        if (containerShape.IsZeroSize())
             throw new ArgumentException("container shape is empty", nameof(containerShape));
         _grid = containerShape.Clone();
         _initializedGrid = _grid.Clone();
