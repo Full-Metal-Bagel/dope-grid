@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DopeGrid;
 
+[SuppressMessage("Design", "CA1000:Do not declare static members on generic types")]
 public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, IDisposable, IEquatable<IndexedGridBoard<TItemData>>
 {
     public readonly record struct ItemData(int Id, TItemData Data, ImmutableGridShape Shape, int X, int Y)
@@ -14,6 +15,7 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, ID
         public int X { get; } = X;
         public int Y { get; } = Y;
 
+        public static ItemData Invalid => new(-1, default!, ImmutableGridShape.Empty, -1, -1);
         public bool IsValid => !IsInvalid;
         public bool IsInvalid => Id < 0 || X < 0 || Y < 0 || Shape.IsZeroSize();
     }
@@ -46,7 +48,6 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, ID
         _freeIndices = HashSetPool<int>.Rent();
     }
 
-    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types")]
     public static IndexedGridBoard<TItemData> CreateFromShape<TShape>(TShape shape)
         where TShape : struct, IReadOnlyGridShape<bool>
     {
@@ -73,8 +74,10 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, ID
 
     public ItemData GetItemById(int id)
     {
+        if (id < 0 || id >= _items.Count) return ItemData.Invalid;
         var (positionX, positionY) = _itemPosition[id];
-        return new ItemData(id, _items[id], _itemShapes[id], positionX, positionY);
+        var item = new ItemData(id, _items[id], _itemShapes[id], positionX, positionY);
+        return item.IsValid ? item : ItemData.Invalid;
     }
 
     public (int id, RotationDegree rotation) TryAddItem(TItemData data, ImmutableGridShape item)
