@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NUnit.Framework;
 
 namespace DopeGrid.Tests;
 
@@ -327,7 +328,7 @@ public class IndexedGridBoardTests
         var (index, rotation) = board.TryAddItem(item, shape);
 
         Assert.That(index, Is.GreaterThanOrEqualTo(0), "Should find a fit with rotation");
-        Assert.That(rotation, Is.AnyOf(RotationDegree.Clockwise90, RotationDegree.Clockwise270), "A 90 or 270 degree rotation was expected.");
+        Assert.That(rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270, "A 90 or 270 degree rotation was expected.");
     }
 
     [Test]
@@ -664,8 +665,8 @@ public class IndexedGridBoardTests
         Assert.That(enumeratedIndices, Does.Contain(indices[0]));
         Assert.That(enumeratedIndices, Does.Contain(indices[2]));
         Assert.That(enumeratedIndices, Does.Contain(indices[4]));
-        Assert.That(enumeratedIndices, Does.Not.Contain(indices[1]));
-        Assert.That(enumeratedIndices, Does.Not.Contain(indices[3]));
+        Assert.That(enumeratedIndices, Has.No.Member(indices[1]));
+        Assert.That(enumeratedIndices, Has.No.Member(indices[3]));
     }
 
     [Test]

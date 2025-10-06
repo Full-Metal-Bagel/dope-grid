@@ -80,6 +80,14 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, ID
         return item.IsValid ? item : ItemData.Invalid;
     }
 
+    public bool UpdateItem(int id, TItemData item)
+    {
+        var currentItem = GetItemById(id);
+        if (currentItem.IsInvalid) return false;
+        _items[id] = item;
+        return true;
+    }
+
     public (int id, RotationDegree rotation) TryAddItem(TItemData data, ImmutableGridShape item)
     {
         var (x, y, rotation) = _grid.FindFirstFitWithFreeRotation(item, default(int));

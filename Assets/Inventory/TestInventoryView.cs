@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
 using DopeGrid;
 using DopeGrid.Inventory;
-using DopeGrid.Native;
-using Unity.Mathematics;
 using UnityEngine;
 
 public class TestInventoryView : MonoBehaviour
@@ -13,21 +10,21 @@ public class TestInventoryView : MonoBehaviour
     [SerializeField] private int _height = 6;
     [SerializeField] private UIImageGridDefinition[] _uiItems = Array.Empty<UIImageGridDefinition>();
 
-    private Inventory _inventory;
-    private Items _items;
+    private IndexedGridBoard<InventoryItem> _inventory;
+    private Shared _shared;
 
     private void Start()
     {
-        _items = GetComponentInParent<Items>();
+        _shared = GetComponentInParent<Shared>();
         // Create an inventory; dispose on destroy
-        _inventory = new Inventory(_width, _height);
+        _inventory = new IndexedGridBoard<InventoryItem>(_width, _height);
 
         BuildDefinitionsMap();
         PopulateSampleItems();
 
         if (_view != null)
         {
-            _view.Initialize(_inventory, _items.SharedInventoryData);
+            _view.Initialize(_inventory, _shared.SharedInventoryData);
         }
     }
 
@@ -37,7 +34,7 @@ public class TestInventoryView : MonoBehaviour
         {
             if (ui == null) continue;
             if (!Guid.TryParse(ui.Id, out var guid)) continue;
-            _items.SharedInventoryData.Definitions[guid] = ui.ToData();
+            _shared.SharedInventoryData.Definitions[guid] = ui.ToData();
         }
     }
 
@@ -53,18 +50,27 @@ public class TestInventoryView : MonoBehaviour
             RotationDegree.Clockwise270
         };
 
+        var rotationIndex = 0;
         foreach (var ui in _uiItems)
         {
             if (ui == null) continue;
             if (!Guid.TryParse(ui.Id, out var guid)) continue;
 
-            // Build model item definition from UI shape
-            var instanceId = _items.NextItemInstanceId;
-            var itemDef = new ItemDefinition(guid, ui.Shape.ToImmutableGridShape());
+            // Build model item from UI shape
+            var shape = ui.Shape.ToImmutableGridShape();
+            var rotation = rotations[rotationIndex];
+            rotationIndex = (rotationIndex + 1) % rotations.Length;
+            var item = new InventoryItem(guid, shape, rotation);
 
-            if (!_inventory.TryAutoPlaceItem(instanceId, itemDef, out _))
+            var (id, rot) = _inventory.TryAddItem(item, item.RotatedShape);
+            if (rot != RotationDegree.None)
             {
-                Debug.LogWarning($"Inventory full; failed to place item instance {instanceId} ({ui.name}).");
+                _inventory.UpdateItem(id, item with { Rotation = rotation.Rotate(rot) });
+            }
+
+            if (id < 0)
+            {
+                Debug.LogWarning($"Inventory full; failed to place item ({ui.name}).");
             }
         }
     }

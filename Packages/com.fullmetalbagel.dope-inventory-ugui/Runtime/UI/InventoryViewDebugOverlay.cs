@@ -7,14 +7,14 @@ using UnityEngine.UI;
 namespace DopeGrid.Inventory
 {
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(InventoryView))]
-    public class InventoryViewDebugOverlay : MonoBehaviour
+    public class InventoryViewDebugOverlay<TItem> : MonoBehaviour
+        where TItem : IInventoryItem
     {
         [SerializeField] private Color _indexColor = Color.red;
         [SerializeField] private Color _instanceColor = Color.blue;
         [SerializeField] private LabelMode _labelMode = LabelMode.ItemIndex;
 
-        private InventoryView _view = null!;
+        private InventoryView<TItem> _view = null!;
 
         private RectTransform? _root;
         private readonly List<Text> _itemTexts = new();
@@ -23,7 +23,7 @@ namespace DopeGrid.Inventory
 
         private void Awake()
         {
-            _view = GetComponent<InventoryView>();
+            _view = GetComponent<InventoryView<TItem>>();
         }
 
         private void Update()
@@ -87,9 +87,9 @@ namespace DopeGrid.Inventory
 
             // Count needed labels across all items
             var needed = 0;
-            for (int i = 0; i < inventory.ItemCount; i++)
+            foreach (var item in inventory)
             {
-                needed += inventory[i].Shape.OccupiedSpaceCount;
+                needed += item.Shape.OccupiedSpaceCount();
             }
 
             EnsureTextPool(_itemTexts, needed, _root!);
@@ -98,23 +98,23 @@ namespace DopeGrid.Inventory
             // Fill labels
             var index = 0;
             var fontSize = Mathf.Max(10, Mathf.RoundToInt(Mathf.Min(cellSize.x, cellSize.y) * 0.5f));
-            for (int i = 0; i < inventory.ItemCount; i++)
+            foreach (var item in inventory)
             {
-                var item = inventory[i];
                 var shape = item.Shape;
-                var origin = item.Position;
+                var origin = new int2(item.X, item.Y);
+                var itemData = item.Data;
                 for (int y = 0; y < shape.Height; y++)
                 {
                     for (int x = 0; x < shape.Width; x++)
                     {
-                        if (!shape.GetCell(x, y)) continue;
+                        if (!shape[x, y]) continue;
                         var text = _itemTexts[index++];
                         var rt = (RectTransform)text.transform;
                         rt.sizeDelta = cellSize;
                         var gridPos = new int2(origin.x + x, origin.y + y);
                         rt.anchoredPosition = new Vector2(gridPos.x * cellSize.x, -(gridPos.y * cellSize.y));
                         text.fontSize = fontSize;
-                        text.text = BuildLabel(i, item.InstanceId);
+                        text.text = BuildLabel(item.Id, item.Id);
                         text.gameObject.SetActive(true);
                     }
                 }
@@ -195,13 +195,13 @@ namespace DopeGrid.Inventory
         public void SetLabelMode(LabelMode mode) => _labelMode = mode;
         public void ToggleLabelMode() => _labelMode ^= LabelMode.InstanceId; // toggle instance id flag
 
-        private string BuildLabel(int itemIndex, InventoryItemInstanceId id)
+        private string BuildLabel(int itemIndex, int instanceId)
         {
             var showIndex = (_labelMode & LabelMode.ItemIndex) != 0;
             var showInstance = (_labelMode & LabelMode.InstanceId) != 0;
-            if (showIndex && showInstance) return $"{Colorize(itemIndex.ToString(), _indexColor)}\n{Colorize(id.ToString(), _instanceColor)}";
+            if (showIndex && showInstance) return $"{Colorize(itemIndex.ToString(), _indexColor)}\n{Colorize(instanceId.ToString(), _instanceColor)}";
             if (showIndex) return Colorize(itemIndex.ToString(), _indexColor);
-            if (showInstance) return Colorize(id.ToString(), _instanceColor);
+            if (showInstance) return Colorize(instanceId.ToString(), _instanceColor);
             return string.Empty;
         }
 

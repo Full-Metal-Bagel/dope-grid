@@ -12,7 +12,7 @@ internal sealed class InventoryViewSyncer : IDisposable
     private readonly SharedInventoryData _sharedInventoryData;
     private readonly Transform _parent;
     private readonly Vector2 _cellSize;
-    private readonly Dictionary<InventoryItemInstanceId, Image> _itemViews = new();
+    private readonly Dictionary<int, Image> _itemViews = new();
 
     public InventoryViewSyncer(SharedInventoryData sharedInventoryData, Transform parent, Vector2 cellSize)
     {
@@ -33,43 +33,42 @@ internal sealed class InventoryViewSyncer : IDisposable
         _itemViews.Clear();
     }
 
-    public void SyncViews(Inventory.ReadOnly inventory)
+    public void SyncViews<T>(IndexedGridBoard<T>.ReadOnly inventory) where T : IInventoryItem
     {
-        var seen = HashSetPool<InventoryItemInstanceId>.Get();
-        var toRemove = ListPool<InventoryItemInstanceId>.Get();
+        var seen = HashSetPool<int>.Get();
+        var toRemove = ListPool<int>.Get();
 
         try
         {
             // Iterate all items from model
-            for (int i = 0; i < inventory.ItemCount; i++)
+            foreach (var item in inventory)
             {
-                var item = inventory[i];
-
-                var instanceId = item.InstanceId;
-                seen.Add(instanceId);
+                seen.Add(item.Id);
+                var itemData = item.Data;
 
                 // Lookup UI definition by Guid
-                if (!_sharedInventoryData.Definitions.TryGetValue(item.DefinitionId, out var itemUI) || itemUI == null)
+                if (!_sharedInventoryData.Definitions.TryGetValue(itemData.DefinitionId, out var itemUI) || itemUI == null)
                     continue; // No UI—skip rendering
 
-                var image = GetOrCreateItemView(instanceId);
+                var image = GetOrCreateItemView(item.Id);
                 image.sprite = itemUI.Image;
                 image.raycastTarget = false;
                 image.preserveAspect = false;
 
                 // Compute target AABB (rotated shape) and pre-rotation rect size
                 var rotatedSize = new Vector2(item.Shape.Width * _cellSize.x, item.Shape.Height * _cellSize.y);
-                var preRotSize = item.Rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
+                var preRotSize = itemData.Rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
                     ? new Vector2(rotatedSize.y, rotatedSize.x)
                     : rotatedSize;
-                var pos = item.Position; // int2, top-left origin in model
+                var pos = new int2(item.X, item.Y);
                 var anchoredPos = GridToAnchoredPosition(pos);
 
                 var rt = (RectTransform)image.transform;
                 EnsureTopLeftAnchors(rt);
                 rt.sizeDelta = preRotSize;
-                var angleZ = item.Rotation.GetZRotation();
-                var offset = item.Rotation.GetRotationOffset(preRotSize);
+                var angleZ = itemData.Rotation.GetZRotation();
+                var (offsetX, offsetY) = itemData.Rotation.GetRotationOffset(preRotSize.x, preRotSize.y);
+                var offset = new Vector2(offsetX, offsetY);
                 rt.anchoredPosition = anchoredPos + offset;
                 rt.localEulerAngles = new Vector3(0f, 0f, angleZ);
             }
@@ -93,12 +92,12 @@ internal sealed class InventoryViewSyncer : IDisposable
         }
         finally
         {
-            HashSetPool<InventoryItemInstanceId>.Release(seen);
-            ListPool<InventoryItemInstanceId>.Release(toRemove);
+            HashSetPool<int>.Release(seen);
+            ListPool<int>.Release(toRemove);
         }
     }
 
-    private Image GetOrCreateItemView(InventoryItemInstanceId id)
+    private Image GetOrCreateItemView(int id)
     {
         if (_itemViews.TryGetValue(id, out var existing) && existing != null)
             return existing;

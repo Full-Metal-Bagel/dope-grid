@@ -4,35 +4,28 @@ using UnityEngine.EventSystems;
 namespace DopeGrid.Inventory
 {
     [RequireComponent(typeof(RectTransform))]
-    public class InventoryView : UIBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public class InventoryView<TItem> : UIBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+        where TItem : IInventoryItem
     {
         [SerializeField] private Color _placeableColor = new(0f, 1f, 0f, 0.35f);
         [SerializeField] private Color _blockedColor = new(1f, 0f, 0f, 0.35f);
 
         private static readonly Vector2 s_defaultCellSize = new(64f, 64f);
 
-        private Inventory _inventory;
+        private IndexedGridBoard<TItem> _inventory;
         private SharedInventoryData _sharedInventoryData = null!;
         private Vector2 _cellSize = s_defaultCellSize;
 
         private InventoryViewSyncer _viewSyncer = null!;
-        private InventoryViewDragPreviewController _viewDragPreviewController = null!;
-        private InventoryViewDragController _dragController = null!;
+        // private InventoryViewDragPreviewController _viewDragPreviewController = null!;
+        // private InventoryViewDragController _dragController = null!;
 
-        public Inventory.ReadOnly ReadOnlyInventory => _inventory;
+        public IndexedGridBoard<TItem>.ReadOnly ReadOnlyInventory => _inventory;
         public Vector2 CellSize => _cellSize;
-        public bool IsInitialized => _inventory.IsCreated;
+        public bool IsInitialized => !_inventory.IsZeroSize();
 
-        protected override void Awake()
+        public void Initialize(IndexedGridBoard<TItem> inventory, SharedInventoryData sharedInventoryData)
         {
-#if UNITY_EDITOR
-            gameObject.AddComponent<InventoryViewDebugOverlay>();
-#endif
-        }
-
-        public void Initialize(Inventory inventory, SharedInventoryData sharedInventoryData)
-        {
-            Debug.Assert(inventory.IsCreated, this);
             if (inventory.Width == 0 || inventory.Height == 0)
             {
                 Debug.LogError($"Inventory must be initialized with a size greater than zero. The provided inventory is {_inventory.Width}x{_inventory.Height}. Halting initialization.", this);
@@ -47,8 +40,8 @@ namespace DopeGrid.Inventory
             rectTransform.sizeDelta = new Vector2(_inventory.Width * _cellSize.x, _inventory.Height * _cellSize.y);
 
             _viewSyncer = new InventoryViewSyncer(_sharedInventoryData, transform, _cellSize);
-            _viewDragPreviewController = new InventoryViewDragPreviewController(_sharedInventoryData, rectTransform, _cellSize, _placeableColor, _blockedColor);
-            _dragController = new InventoryViewDragController(_sharedInventoryData, rectTransform, inventory, CellSize);
+            // _viewDragPreviewController = new InventoryViewDragPreviewController(_sharedInventoryData, rectTransform, _cellSize, _placeableColor, _blockedColor);
+            // _dragController = new InventoryViewDragController(_sharedInventoryData, rectTransform, inventory, CellSize);
         }
 
         private static Vector2 ResolveCellSize(RectTransform rectTransform, int gridWidth, int gridHeight)
@@ -74,47 +67,47 @@ namespace DopeGrid.Inventory
 
         public void SetDraggingItemRotation(RotationDegree rotation)
         {
-            _dragController.SetRotation(rotation);
+            // _dragController.SetRotation(rotation);
         }
 
-        public RotationDegree GetDraggingItemRotation()
-        {
-            return _dragController.GetRotation();
-        }
+        // public RotationDegree GetDraggingItemRotation()
+        // {
+        //     return _dragController.GetRotation();
+        // }
 
         private void Update()
         {
-            if (!_inventory.IsCreated) return;
+            if (!IsInitialized) return;
 
             var readOnlyInventory = _inventory.AsReadOnly();
             _viewSyncer.SyncViews(readOnlyInventory);
-            _viewDragPreviewController.UpdateDragPlacementPreview(_inventory);
+            // _viewDragPreviewController.UpdateDragPlacementPreview(_inventory);
         }
 
         protected override void OnDestroy()
         {
             base.OnDestroy();
             _viewSyncer?.Dispose();
-            _viewDragPreviewController?.Dispose();
-            _dragController?.Dispose();
+            // _viewDragPreviewController?.Dispose();
+            // _dragController?.Dispose();
         }
 
         void IBeginDragHandler.OnBeginDrag(PointerEventData eventData)
         {
             if (!IsInitialized) return;
-            _dragController.OnBeginDrag(eventData);
+            // _dragController.OnBeginDrag(eventData);
         }
 
         void IDragHandler.OnDrag(PointerEventData eventData)
         {
             if (!IsInitialized) return;
-            _dragController.OnDrag(eventData);
+            // _dragController.OnDrag(eventData);
         }
 
         void IEndDragHandler.OnEndDrag(PointerEventData eventData)
         {
             if (!IsInitialized) return;
-            _dragController.OnEndDrag(eventData);
+            // _dragController.OnEndDrag(eventData);
         }
     }
 }

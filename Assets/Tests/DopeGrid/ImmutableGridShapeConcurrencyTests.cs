@@ -276,6 +276,7 @@ public class ImmutableGridShapeConcurrencyStandardTests
 
     #endregion
 
+#if !UNITY_2019_1_OR_NEWER
     #region Task-based Async Tests
 
     [Test]
@@ -425,8 +426,8 @@ public class ImmutableGridShapeConcurrencyStandardTests
         Assert.That(totalSuccess, Is.GreaterThan(expectedMinSuccess),
             $"Total successful operations ({totalSuccess}) below expected minimum ({expectedMinSuccess})");
     }
-
     #endregion
+#endif
 
     #region Stress Tests
 

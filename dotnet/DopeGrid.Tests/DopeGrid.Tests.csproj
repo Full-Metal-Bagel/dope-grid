@@ -28,10 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="NUnit.Framework"/>
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="../../Assets/Tests/DopeGrid/**/*.cs"/>
     <Link Include="..\..\.editorconfig"/>
   </ItemGroup>

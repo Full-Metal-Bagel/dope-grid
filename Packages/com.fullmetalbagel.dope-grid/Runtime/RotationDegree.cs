@@ -27,6 +27,12 @@ public static class RotationDegreeExtensions
     }
 
     [Pure, MustUseReturnValue]
+    public static RotationDegree Rotate(this RotationDegree current, RotationDegree rotation)
+    {
+        return (RotationDegree)(((int)current + (int)rotation) % 4);
+    }
+
+    [Pure, MustUseReturnValue]
     public static RotationDegree GetPreviousClockwiseRotation(this RotationDegree current)
     {
         return current switch

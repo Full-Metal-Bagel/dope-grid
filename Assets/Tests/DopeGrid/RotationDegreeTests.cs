@@ -1,3 +1,5 @@
+using NUnit.Framework;
+
 namespace DopeGrid.Tests;
 
 [TestFixture]
@@ -161,5 +163,55 @@ public class RotationDegreeTests
         Assert.That((int)RotationDegree.Clockwise90, Is.EqualTo(1));
         Assert.That((int)RotationDegree.Clockwise180, Is.EqualTo(2));
         Assert.That((int)RotationDegree.Clockwise270, Is.EqualTo(3));
+    }
+
+    [Test]
+    public void Rotate_CombinesRotationsCorrectly()
+    {
+        // None + any rotation = that rotation
+        Assert.That(RotationDegree.None.Rotate(RotationDegree.None), Is.EqualTo(RotationDegree.None));
+        Assert.That(RotationDegree.None.Rotate(RotationDegree.Clockwise90), Is.EqualTo(RotationDegree.Clockwise90));
+        Assert.That(RotationDegree.None.Rotate(RotationDegree.Clockwise180), Is.EqualTo(RotationDegree.Clockwise180));
+        Assert.That(RotationDegree.None.Rotate(RotationDegree.Clockwise270), Is.EqualTo(RotationDegree.Clockwise270));
+
+        // 90 + rotations
+        Assert.That(RotationDegree.Clockwise90.Rotate(RotationDegree.None), Is.EqualTo(RotationDegree.Clockwise90));
+        Assert.That(RotationDegree.Clockwise90.Rotate(RotationDegree.Clockwise90), Is.EqualTo(RotationDegree.Clockwise180));
+        Assert.That(RotationDegree.Clockwise90.Rotate(RotationDegree.Clockwise180), Is.EqualTo(RotationDegree.Clockwise270));
+        Assert.That(RotationDegree.Clockwise90.Rotate(RotationDegree.Clockwise270), Is.EqualTo(RotationDegree.None));
+
+        // 180 + rotations
+        Assert.That(RotationDegree.Clockwise180.Rotate(RotationDegree.None), Is.EqualTo(RotationDegree.Clockwise180));
+        Assert.That(RotationDegree.Clockwise180.Rotate(RotationDegree.Clockwise90), Is.EqualTo(RotationDegree.Clockwise270));
+        Assert.That(RotationDegree.Clockwise180.Rotate(RotationDegree.Clockwise180), Is.EqualTo(RotationDegree.None));
+        Assert.That(RotationDegree.Clockwise180.Rotate(RotationDegree.Clockwise270), Is.EqualTo(RotationDegree.Clockwise90));
+
+        // 270 + rotations
+        Assert.That(RotationDegree.Clockwise270.Rotate(RotationDegree.None), Is.EqualTo(RotationDegree.Clockwise270));
+        Assert.That(RotationDegree.Clockwise270.Rotate(RotationDegree.Clockwise90), Is.EqualTo(RotationDegree.None));
+        Assert.That(RotationDegree.Clockwise270.Rotate(RotationDegree.Clockwise180), Is.EqualTo(RotationDegree.Clockwise90));
+        Assert.That(RotationDegree.Clockwise270.Rotate(RotationDegree.Clockwise270), Is.EqualTo(RotationDegree.Clockwise180));
+    }
+
+    [Test]
+    public void Rotate_FullCircleReturnsToOriginal()
+    {
+        var rotation = RotationDegree.Clockwise90;
+        var result = rotation.Rotate(RotationDegree.Clockwise270);
+        Assert.That(result, Is.EqualTo(RotationDegree.None));
+
+        rotation = RotationDegree.Clockwise180;
+        result = rotation.Rotate(RotationDegree.Clockwise180);
+        Assert.That(result, Is.EqualTo(RotationDegree.None));
+    }
+
+    [Test]
+    public void Rotate_IsCommutative()
+    {
+        // Rotating 90 then 180 should equal rotating 180 then 90
+        var result1 = RotationDegree.Clockwise90.Rotate(RotationDegree.Clockwise180);
+        var result2 = RotationDegree.Clockwise180.Rotate(RotationDegree.Clockwise90);
+        Assert.That(result1, Is.EqualTo(result2));
+        Assert.That(result1, Is.EqualTo(RotationDegree.Clockwise270));
     }
 }
