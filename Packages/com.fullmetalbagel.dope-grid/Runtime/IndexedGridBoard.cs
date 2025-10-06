@@ -6,6 +6,18 @@ namespace DopeGrid;
 
 public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, IDisposable, IEquatable<IndexedGridBoard<TItemData>>
 {
+    public readonly record struct ItemData(int Id, TItemData Data, ImmutableGridShape Shape, int X, int Y)
+    {
+        public int Id { get; } = Id;
+        public TItemData Data { get; } = Data;
+        public ImmutableGridShape Shape { get; } = Shape;
+        public int X { get; } = X;
+        public int Y { get; } = Y;
+
+        public bool IsValid => !IsInvalid;
+        public bool IsInvalid => Id < 0 || X < 0 || Y < 0 || Shape.IsZeroSize();
+    }
+
     private readonly ValueGridShape<int> _grid; // Stores item index at each cell (-1 for empty)
     private readonly ValueGridShape<int> _initializedGrid;
 
@@ -54,15 +66,15 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, ID
     public bool IsOccupied(int x, int y) => _grid.IsOccupied(x, y);
     public int this[int x, int y] => _grid[x, y];
 
-    public (int id, TItemData data, ImmutableGridShape shape, int x, int y) GetItemOnPosition(int x, int y)
+    public ItemData GetItemOnPosition(int x, int y)
     {
         return GetItemById(this[x, y]);
     }
 
-    public (int id, TItemData data, ImmutableGridShape shape, int x, int y) GetItemById(int id)
+    public ItemData GetItemById(int id)
     {
         var (positionX, positionY) = _itemPosition[id];
-        return (id, _items[id], _itemShapes[id], positionX, positionY);
+        return new ItemData(id, _items[id], _itemShapes[id], positionX, positionY);
     }
 
     public (int id, RotationDegree rotation) TryAddItem(TItemData data, ImmutableGridShape item)
@@ -183,12 +195,12 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, ID
 
         public Enumerator GetEnumerator() => new(this);
 
-        public (int id, TItemData data, ImmutableGridShape shape, int x, int y) GetItemOnPosition(int x, int y)
+        public ItemData GetItemOnPosition(int x, int y)
         {
             return _board.GetItemOnPosition(x, y);
         }
 
-        public (int id, TItemData data, ImmutableGridShape shape, int x, int y) GetItemById(int id)
+        public ItemData GetItemById(int id)
         {
             return _board.GetItemById(id);
         }
@@ -211,7 +223,7 @@ public readonly struct IndexedGridBoard<TItemData> : IReadOnlyGridShape<int>, ID
             _currentIndex = -1;
         }
 
-        public readonly (int id, TItemData data, ImmutableGridShape shape, int x, int y) Current
+        public readonly ItemData Current
         {
             get
             {

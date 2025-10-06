@@ -561,7 +561,7 @@ public class IndexedGridBoardTests
         // Remove middle item
         board.RemoveItem(index2);
 
-        var enumeratedItems = new List<(int index, ItemData data, ImmutableGridShape shape, int x, int y)>();
+        var enumeratedItems = new List<IndexedGridBoard<ItemData>.ItemData>();
         foreach (var item in board)
         {
             enumeratedItems.Add(item);
@@ -569,8 +569,8 @@ public class IndexedGridBoardTests
 
         Assert.That(enumeratedItems.Count, Is.EqualTo(2), "Should only enumerate active items");
 
-        var indices = enumeratedItems.Select(x => x.index).ToList();
-        var data = enumeratedItems.Select(x => x.data).ToList();
+        var indices = enumeratedItems.Select(x => x.Id).ToList();
+        var data = enumeratedItems.Select(x => x.Data).ToList();
 
         Assert.That(indices, Does.Contain(index1));
         Assert.That(indices, Does.Contain(index3));
@@ -627,14 +627,14 @@ public class IndexedGridBoardTests
         board.RemoveItem(index2);
 
         var readOnly = board.AsReadOnly();
-        var enumeratedItems = new List<(int index, ItemData data, ImmutableGridShape shape, int x, int y)>();
+        var enumeratedItems = new List<IndexedGridBoard<ItemData>.ItemData>();
         foreach (var item in readOnly)
         {
             enumeratedItems.Add(item);
         }
 
         Assert.That(enumeratedItems.Count, Is.EqualTo(1));
-        Assert.That(enumeratedItems[0].data, Is.EqualTo(item1));
+        Assert.That(enumeratedItems[0].Data, Is.EqualTo(item1));
     }
 
     [Test]
@@ -776,22 +776,22 @@ public class IndexedGridBoardTests
         var result4 = board.GetItemOnPosition(4, 3);
 
         // All should return the same item data
-        Assert.That(result1.data, Is.EqualTo(item));
-        Assert.That(result2.data, Is.EqualTo(item));
-        Assert.That(result3.data, Is.EqualTo(item));
-        Assert.That(result4.data, Is.EqualTo(item));
+        Assert.That(result1.Data, Is.EqualTo(item));
+        Assert.That(result2.Data, Is.EqualTo(item));
+        Assert.That(result3.Data, Is.EqualTo(item));
+        Assert.That(result4.Data, Is.EqualTo(item));
 
         // All should return the same ID
-        Assert.That(result1.id, Is.EqualTo(index));
-        Assert.That(result2.id, Is.EqualTo(index));
-        Assert.That(result3.id, Is.EqualTo(index));
-        Assert.That(result4.id, Is.EqualTo(index));
+        Assert.That(result1.Id, Is.EqualTo(index));
+        Assert.That(result2.Id, Is.EqualTo(index));
+        Assert.That(result3.Id, Is.EqualTo(index));
+        Assert.That(result4.Id, Is.EqualTo(index));
 
         // All should return the same position (origin of the shape)
-        Assert.That(result1.x, Is.EqualTo(1));
-        Assert.That(result2.x, Is.EqualTo(1));
-        Assert.That(result3.x, Is.EqualTo(1));
-        Assert.That(result4.x, Is.EqualTo(1));
+        Assert.That(result1.X, Is.EqualTo(1));
+        Assert.That(result2.X, Is.EqualTo(1));
+        Assert.That(result3.X, Is.EqualTo(1));
+        Assert.That(result4.X, Is.EqualTo(1));
     }
 
     [Test]
