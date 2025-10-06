@@ -17,7 +17,7 @@ namespace DopeGrid.Inventory
 
         private InventoryViewSyncer _viewSyncer = null!;
         // private InventoryViewDragPreviewController _viewDragPreviewController = null!;
-        // private InventoryViewDragController _dragController = null!;
+        private InventoryViewDragController _dragController = null!;
 
         public IndexedGridBoard.ReadOnly ReadOnlyInventory => _inventory;
         public Vector2 CellSize => _cellSize;
@@ -47,7 +47,7 @@ namespace DopeGrid.Inventory
 
             _viewSyncer = new InventoryViewSyncer(transform, _cellSize, _sharedInventoryData.Pool, ui);
             // _viewDragPreviewController = new InventoryViewDragPreviewController(_sharedInventoryData, rectTransform, _cellSize, _placeableColor, _blockedColor);
-            // _dragController = new InventoryViewDragController(_sharedInventoryData, rectTransform, inventory, CellSize);
+            _dragController = new InventoryViewDragController(_sharedInventoryData, rectTransform, inventory, CellSize, ui);
         }
 
         private static Vector2 ResolveCellSize(RectTransform rectTransform, int gridWidth, int gridHeight)
@@ -73,13 +73,13 @@ namespace DopeGrid.Inventory
 
         public void SetDraggingItemRotation(RotationDegree rotation)
         {
-            // _dragController.SetRotation(rotation);
+            _dragController.SetRotation(rotation);
         }
 
-        // public RotationDegree GetDraggingItemRotation()
-        // {
-        //     return _dragController.GetRotation();
-        // }
+        public RotationDegree GetDraggingItemRotation()
+        {
+            return _dragController.GetRotation();
+        }
 
         private void Update()
         {
@@ -95,25 +95,25 @@ namespace DopeGrid.Inventory
             base.OnDestroy();
             _viewSyncer?.Dispose();
             // _viewDragPreviewController?.Dispose();
-            // _dragController?.Dispose();
+            _dragController?.Dispose();
         }
 
         void IBeginDragHandler.OnBeginDrag(PointerEventData eventData)
         {
             if (!IsInitialized) return;
-            // _dragController.OnBeginDrag(eventData);
+            _dragController.OnBeginDrag(eventData);
         }
 
         void IDragHandler.OnDrag(PointerEventData eventData)
         {
             if (!IsInitialized) return;
-            // _dragController.OnDrag(eventData);
+            _dragController.OnDrag(eventData);
         }
 
         void IEndDragHandler.OnEndDrag(PointerEventData eventData)
         {
             if (!IsInitialized) return;
-            // _dragController.OnEndDrag(eventData);
+            _dragController.OnEndDrag(eventData);
         }
     }
 }

@@ -18,7 +18,7 @@ public interface IReadOnlyIndexedGridBoard : IReadOnlyGridBoard<int> { }
 
 public static class GridBoardExtension
 {
-    public static int GetItemIndex<T>(this T board, int x, int y)
+    public static int GetItemId<T>(this T board, int x, int y)
         where T : IReadOnlyIndexedGridBoard
     {
         return board[x, y];
@@ -27,6 +27,6 @@ public static class GridBoardExtension
     public static BoardItemData GetItemOnPosition<T>(this T board, int x, int y)
         where T : IReadOnlyIndexedGridBoard
     {
-        return board.GetItemById(board.GetItemIndex(x, y));
+        return board.GetItemById(board.GetItemId(x, y));
     }
 }

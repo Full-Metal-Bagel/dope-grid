@@ -50,11 +50,11 @@ internal sealed class InventoryViewSyncer : IDisposable
                 if (!_ui.HasUI(item.Id))
                     continue; // No UI—skip rendering
 
-                var sprite = _ui.GetItemSprite(item.Id);
+                var definition = _ui.GetItemDefinition(item.Id);
                 var rotation = _ui.GetItemRotation(item.Id);
 
                 var image = GetOrCreateItemView(item.Id);
-                image.sprite = sprite;
+                image.sprite = definition.Image;
                 image.raycastTarget = false;
                 image.preserveAspect = false;
 

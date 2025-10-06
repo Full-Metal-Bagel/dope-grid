@@ -10,15 +10,17 @@
 // internal sealed class InventoryViewDragPreviewController : IDisposable
 // {
 //     private readonly SharedInventoryData _sharedInventoryData;
+//     private readonly IInventoryUI _ui;
 //     private readonly RectTransform _view;
 //     private readonly Vector2 _cellSize;
 //     private readonly Color _placeableColor;
 //     private readonly Color _blockedColor;
 //     private readonly Dictionary<int, Image> _draggingViews = new();
 //
-//     public InventoryViewDragPreviewController(SharedInventoryData sharedInventoryData, RectTransform view, Vector2 cellSize, Color placeableColor, Color blockedColor)
+//     public InventoryViewDragPreviewController(SharedInventoryData sharedInventoryData, IInventoryUI ui, RectTransform view, Vector2 cellSize, Color placeableColor, Color blockedColor)
 //     {
 //         _sharedInventoryData = sharedInventoryData;
+//         _ui = ui;
 //         _view = view;
 //         _cellSize = cellSize;
 //         _placeableColor = placeableColor;
@@ -37,7 +39,7 @@
 //         _draggingViews.Clear();
 //     }
 //
-//     public void UpdateDragPlacementPreview<T>(IndexedGridBoard<T> inventory) where T : IInventoryItem
+//     public void UpdateDragPlacementPreview(IndexedGridBoard inventory)
 //     {
 //         var seen = HashSetPool<int>.Get();
 //         var toRemove = ListPool<int>.Get();

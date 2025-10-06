@@ -6,10 +6,9 @@ using UnityEngine;
 
 class InventoryUI : IInventoryUI
 {
-    public Dictionary<int, (Sprite image, RotationDegree rotation)> Items { get; } = new();
-
+    public Dictionary<int, (UIImageGridDefinitionData definition, RotationDegree rotation)> Items { get; } = new();
     public RotationDegree GetItemRotation(int id) => Items[id].rotation;
-    public Sprite GetItemSprite(int id) => Items[id].image;
+    public UIImageGridDefinitionData GetItemDefinition(int id) => Items[id].definition;
     public bool HasUI(int id) => Items.ContainsKey(id);
 }
 
@@ -76,7 +75,7 @@ public class TestInventoryView : MonoBehaviour
             }
             else
             {
-                inventoryUI.Items.Add(item.Id, (ui.Image, rotation.Rotate(rot)));
+                inventoryUI.Items.Add(item.Id, (ui.ToData(), rotation.Rotate(rot)));
             }
         }
         return inventoryUI;

@@ -81,11 +81,4 @@ public static class RotationDegreeExtensions
     {
         return rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270 ? (height, width) : (width, height);
     }
-    //
-    // public static void ApplyToRectTransform(this RotationDegree rotation, RectTransform transform, Vector2 size)
-    // {
-    //     var angleZ = rotation.GetZRotation();
-    //     transform.sizeDelta = rotation.CalculateRotatedSize(size);
-    //     transform.localEulerAngles = new Vector3(0f, 0f, angleZ);
-    // }
 }
