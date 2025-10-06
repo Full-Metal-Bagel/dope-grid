@@ -120,9 +120,7 @@ public class EdgeCaseTests
 
         var result = grid.CheckShapeCells<GridShape, GridShape, bool>(
             shape, -1, -1,
-            (gx, gy, value, _) => gx >= 0 && gy >= 0 && gx < 5 && gy < 5,
-            false
-        );
+            false, (gx, gy, value, _) => gx >= 0 && gy >= 0 && gx < 5 && gy < 5);
 
         Assert.That(result, Is.False);
     }

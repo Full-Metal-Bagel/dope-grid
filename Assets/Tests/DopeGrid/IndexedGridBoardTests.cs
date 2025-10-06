@@ -46,7 +46,7 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(5, 5);
         var shape = Shapes.ImmutableSingle();
 
-        var (item, rotation) = board.TryAddItem(shape);
+        var item = board.TryAddItem(shape);
 
         Assert.That(item.Id, Is.GreaterThanOrEqualTo(0));
         Assert.That(board.ItemCount, Is.EqualTo(1));
@@ -58,8 +58,8 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(1, 1);
         var shape = Shapes.ImmutableSingle();
 
-        var (item1, _) = board.TryAddItem(shape);
-        var (item2, _) = board.TryAddItem(shape);
+        var item1 = board.TryAddItem(shape);
+        var item2 = board.TryAddItem(shape);
 
         Assert.That(item1.Id, Is.GreaterThanOrEqualTo(0), "First item should be added");
         Assert.That(item2.Id, Is.EqualTo(-1), "Second item should fail");
@@ -72,10 +72,9 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(5, 5);
         var shape = Shapes.ImmutableSingle();
 
-        var (item, rotation) = board.TryAddItemAt(shape, 2, 3);
+        var item = board.TryAddItemAt(shape, 2, 3);
 
         Assert.That(item.Id, Is.GreaterThanOrEqualTo(0));
-        Assert.That(rotation, Is.EqualTo(RotationDegree.None));
         Assert.That(board.ItemCount, Is.EqualTo(1));
     }
 
@@ -85,10 +84,9 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(5, 5);
         var shape = Shapes.ImmutableLine(3);
 
-        var (item, rotation) = board.TryAddItemAt(shape, 4, 0);
+        var item = board.TryAddItemAt(shape, 4, 0);
 
         Assert.That(item.Id, Is.EqualTo(-1));
-        Assert.That(rotation, Is.EqualTo(RotationDegree.None));
         Assert.That(board.ItemCount, Is.EqualTo(0));
     }
 
@@ -98,8 +96,8 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(5, 5);
         var shape = Shapes.ImmutableSingle();
 
-        var (item1, _) = board.TryAddItemAt(shape, 2, 2);
-        var (item2, _) = board.TryAddItemAt(shape, 2, 2);
+        var item1 = board.TryAddItemAt(shape, 2, 2);
+        var item2 = board.TryAddItemAt(shape, 2, 2);
 
         Assert.That(item1.Id, Is.GreaterThanOrEqualTo(0));
         Assert.That(item2.Id, Is.EqualTo(-1));
@@ -111,7 +109,7 @@ public class IndexedGridBoardTests
     {
         using var board = new IndexedGridBoard(5, 5);
         var shape = Shapes.ImmutableSingle();
-        var (item, _) = board.TryAddItemAt(shape, 0, 0);
+        var item = board.TryAddItemAt(shape, 0, 0);
 
         Assert.That(board.IsOccupied(0, 0), Is.True, "Cell should be occupied before removal");
         Assert.That(board.ItemCount, Is.EqualTo(1));
@@ -140,13 +138,13 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(5, 5);
         var shape = Shapes.ImmutableSingle();
 
-        var (item1, _) = board.TryAddItemAt(shape, 0, 0);
+        var item1 = board.TryAddItemAt(shape, 0, 0);
         Assert.That(board.ItemCount, Is.EqualTo(1));
 
         board.RemoveItem(item1.Id);
         Assert.That(board.ItemCount, Is.EqualTo(0), "ItemCount should be 0 after removal");
 
-        var (item2, _) = board.TryAddItemAt(shape, 1, 1);
+        var item2 = board.TryAddItemAt(shape, 1, 1);
 
         Assert.That(item2.Id, Is.EqualTo(item1.Id), "Removed index should be reused");
         Assert.That(board.ItemCount, Is.EqualTo(1), "ItemCount should be 1 after re-adding");
@@ -198,7 +196,7 @@ public class IndexedGridBoardTests
     {
         using var board = new IndexedGridBoard(5, 5);
         var shape = Shapes.ImmutableSingle();
-        var (item, _) = board.TryAddItemAt(shape, 2, 2);
+        var item = board.TryAddItemAt(shape, 2, 2);
 
         var retrievedIndex = board[2, 2];
 
@@ -238,9 +236,9 @@ public class IndexedGridBoardTests
         var lShape = Shapes.ImmutableLShape();
         var tShape = Shapes.ImmutableTShape();
 
-        var (item1, _) = board.TryAddItemAt(line, 0, 0);
-        var (item2, _) = board.TryAddItemAt(lShape, 0, 1);
-        var (item3, _) = board.TryAddItemAt(tShape, 3, 0);
+        var item1 = board.TryAddItemAt(line, 0, 0);
+        var item2 = board.TryAddItemAt(lShape, 0, 1);
+        var item3 = board.TryAddItemAt(tShape, 3, 0);
 
         Assert.That(item1.Id, Is.GreaterThanOrEqualTo(0), "Line should be added");
         Assert.That(item2.Id, Is.GreaterThanOrEqualTo(0), "LShape should be added");
@@ -303,10 +301,9 @@ public class IndexedGridBoardTests
             board.TryAddItemAt(single, 2, y);
         }
 
-        var (item, rotation) = board.TryAddItem(shape);
+        var item = board.TryAddItem(shape);
 
-        Assert.That(item.Id, Is.GreaterThanOrEqualTo(0), "Should find a fit with rotation");
-        Assert.That(rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270, "A 90 or 270 degree rotation was expected.");
+        Assert.That(item.Id, Is.GreaterThanOrEqualTo(0), "Should find a fit");
     }
 
     [Test]
@@ -315,7 +312,7 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(5, 5);
         var shape = Shapes.ImmutableSingle();
 
-        var (item, _) = board.TryAddItemAt(shape, 1, 1);
+        var item = board.TryAddItemAt(shape, 1, 1);
         Assert.That(board.ItemCount, Is.EqualTo(1), "ItemCount should be 1 after adding one item");
 
         board.RemoveItem(item.Id);
@@ -330,7 +327,7 @@ public class IndexedGridBoardTests
         var shape = Shapes.ImmutableSingle();
 
         // Add first item
-        var (item1, _) = board.TryAddItemAt(shape, 0, 0);
+        var item1 = board.TryAddItemAt(shape, 0, 0);
         Assert.That(board.ItemCount, Is.EqualTo(1));
 
         // Remove first item
@@ -338,7 +335,7 @@ public class IndexedGridBoardTests
         Assert.That(board.ItemCount, Is.EqualTo(0), "ItemCount should be 0 after removal");
 
         // Add second item (reuses index)
-        var (item2, _) = board.TryAddItemAt(shape, 1, 1);
+        var item2 = board.TryAddItemAt(shape, 1, 1);
         Assert.That(item2.Id, Is.EqualTo(item1.Id), "Index should be reused");
         Assert.That(board.ItemCount, Is.EqualTo(1), "ItemCount back to 1");
     }
@@ -349,9 +346,9 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(5, 5);
         var shape = Shapes.ImmutableSingle();
 
-        var (item1, _) = board.TryAddItemAt(shape, 0, 0);
-        var (item2, _) = board.TryAddItemAt(shape, 1, 0);
-        var (item3, _) = board.TryAddItemAt(shape, 2, 0);
+        var item1 = board.TryAddItemAt(shape, 0, 0);
+        var item2 = board.TryAddItemAt(shape, 1, 0);
+        var item3 = board.TryAddItemAt(shape, 2, 0);
 
         Assert.That(board.ItemCount, Is.EqualTo(3));
 
@@ -450,7 +447,7 @@ public class IndexedGridBoardTests
         var itemShape = Shapes.ImmutableSingle();
 
         // Add item at position (2, 2)
-        var (item, _) = board.TryAddItemAt(itemShape, 2, 2);
+        var item = board.TryAddItemAt(itemShape, 2, 2);
         Assert.That(item.Id, Is.GreaterThanOrEqualTo(0), "Item should be added successfully");
         Assert.That(board.IsOccupied(2, 2), Is.True, "Cell should be occupied after adding item");
         Assert.That(board[2, 2], Is.EqualTo(item.Id), "Cell should contain the item index");
@@ -474,7 +471,7 @@ public class IndexedGridBoardTests
         Assert.That(initialFreeSpace, Is.EqualTo(25), "All cells should be free initially");
 
         // Add an item
-        var (item, _) = board.TryAddItemAt(itemShape, 1, 1);
+        var item = board.TryAddItemAt(itemShape, 1, 1);
         Assert.That(board.FreeSpace, Is.EqualTo(24), "Free space should decrease by 1");
 
         // Remove the item
@@ -491,14 +488,14 @@ public class IndexedGridBoardTests
         var itemShape = Shapes.ImmutableSingle();
 
         // Add first item
-        var (item1, _) = board.TryAddItemAt(itemShape, 2, 2);
+        var item1 = board.TryAddItemAt(itemShape, 2, 2);
         Assert.That(item1.Id, Is.GreaterThanOrEqualTo(0));
 
         // Remove first item
         board.RemoveItem(item1.Id);
 
         // Should be able to add second item at the same position
-        var (item2, _) = board.TryAddItemAt(itemShape, 2, 2);
+        var item2 = board.TryAddItemAt(itemShape, 2, 2);
         Assert.That(item2.Id, Is.GreaterThanOrEqualTo(0), "Should be able to reuse the slot after removal");
         var itemData = board.GetItemById(item2.Id);
         Assert.That(itemData.Id, Is.EqualTo(item2.Id));
@@ -521,9 +518,9 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(5, 5);
         var shape = Shapes.ImmutableSingle();
 
-        var (item1, _) = board.TryAddItemAt(shape, 0, 0);
-        var (item2, _) = board.TryAddItemAt(shape, 1, 0);
-        var (item3, _) = board.TryAddItemAt(shape, 2, 0);
+        var item1 = board.TryAddItemAt(shape, 0, 0);
+        var item2 = board.TryAddItemAt(shape, 1, 0);
+        var item3 = board.TryAddItemAt(shape, 2, 0);
 
         // Remove middle item
         board.RemoveItem(item2.Id);
@@ -562,8 +559,8 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(5, 5);
         var shape = Shapes.ImmutableSingle();
 
-        var (item1, _) = board.TryAddItemAt(shape, 0, 0);
-        var (item2, _) = board.TryAddItemAt(shape, 1, 0);
+        var item1 = board.TryAddItemAt(shape, 0, 0);
+        var item2 = board.TryAddItemAt(shape, 1, 0);
 
         board.RemoveItem(item1.Id);
         board.RemoveItem(item2.Id);
@@ -583,8 +580,8 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(5, 5);
         var shape = Shapes.ImmutableSingle();
 
-        var (item1, _) = board.TryAddItemAt(shape, 0, 0);
-        var (item2, _) = board.TryAddItemAt(shape, 1, 0);
+        var item1 = board.TryAddItemAt(shape, 0, 0);
+        var item2 = board.TryAddItemAt(shape, 1, 0);
         board.RemoveItem(item2.Id);
 
         var readOnly = board.AsReadOnly();
@@ -607,7 +604,7 @@ public class IndexedGridBoardTests
         var items = new List<BoardItemData>();
         for (int i = 0; i < 5; i++)
         {
-            var (item, _) = board.TryAddItemAt(shape, i, 0);
+            var item = board.TryAddItemAt(shape, i, 0);
             items.Add(item);
         }
 
@@ -636,11 +633,11 @@ public class IndexedGridBoardTests
         var shape = Shapes.ImmutableSingle();
 
         // Add 5 items
-        var (item0, _) = board.TryAddItemAt(shape, 0, 0);
-        var (item1, _) = board.TryAddItemAt(shape, 1, 0);
-        var (item2, _) = board.TryAddItemAt(shape, 2, 0);
-        var (item3, _) = board.TryAddItemAt(shape, 3, 0);
-        var (item4, _) = board.TryAddItemAt(shape, 4, 0);
+        var item0 = board.TryAddItemAt(shape, 0, 0);
+        var item1 = board.TryAddItemAt(shape, 1, 0);
+        var item2 = board.TryAddItemAt(shape, 2, 0);
+        var item3 = board.TryAddItemAt(shape, 3, 0);
+        var item4 = board.TryAddItemAt(shape, 4, 0);
 
         Assert.That(item0.Id, Is.EqualTo(0));
         Assert.That(item1.Id, Is.EqualTo(1));
@@ -656,9 +653,9 @@ public class IndexedGridBoardTests
         var reusedIndices = new HashSet<int>();
 
         // Add new items - should reuse freed indices (order unspecified)
-        var (newItem1, _) = board.TryAddItemAt(shape, 5, 0);
-        var (newItem2, _) = board.TryAddItemAt(shape, 6, 0);
-        var (newItem3, _) = board.TryAddItemAt(shape, 7, 0);
+        var newItem1 = board.TryAddItemAt(shape, 5, 0);
+        var newItem2 = board.TryAddItemAt(shape, 6, 0);
+        var newItem3 = board.TryAddItemAt(shape, 7, 0);
         reusedIndices.Add(newItem1.Id);
         reusedIndices.Add(newItem2.Id);
         reusedIndices.Add(newItem3.Id);
@@ -666,7 +663,7 @@ public class IndexedGridBoardTests
         Assert.That(reusedIndices, Is.EquivalentTo(new[] { 1, 2, 3 }), "Should reuse all freed indices");
 
         // Next item should get a new index
-        var (newItem, _) = board.TryAddItemAt(shape, 8, 0);
+        var newItem = board.TryAddItemAt(shape, 8, 0);
         Assert.That(newItem.Id, Is.EqualTo(5), "Should allocate new index after all free indices used");
     }
 
@@ -676,7 +673,7 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(10, 10);
         var shape = Shapes.ImmutableSingle();
 
-        var (item, _) = board.TryAddItemAt(shape, 3, 4);
+        var item = board.TryAddItemAt(shape, 3, 4);
 
         var itemData = board.GetItemById(item.Id);
 
@@ -692,7 +689,7 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(10, 10);
         var shape = Shapes.ImmutableLine(3);
 
-        var (item, _) = board.TryAddItemAt(shape, 2, 5);
+        var item = board.TryAddItemAt(shape, 2, 5);
 
         var itemData = board.GetItemById(item.Id);
 
@@ -708,7 +705,7 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(10, 10);
         var shape = Shapes.ImmutableSingle();
 
-        var (item, _) = board.TryAddItemAt(shape, 6, 7);
+        var item = board.TryAddItemAt(shape, 6, 7);
 
         var itemData = board.GetItemOnPosition(6, 7);
 
@@ -724,7 +721,7 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(10, 10);
         var shape = Shapes.ImmutableLine(4); // 4-cell horizontal line
 
-        var (item, _) = board.TryAddItemAt(shape, 1, 3);
+        var item = board.TryAddItemAt(shape, 1, 3);
 
         // Test getting item from different cells of the same shape
         var result1 = board.GetItemOnPosition(1, 3);
@@ -757,11 +754,11 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(10, 10);
         var shape = Shapes.ImmutableSingle();
 
-        var (item1, _) = board.TryAddItemAt(shape, 2, 2);
+        var item1 = board.TryAddItemAt(shape, 2, 2);
         board.RemoveItem(item1.Id);
 
         // Reuse the same index
-        var (item2, _) = board.TryAddItemAt(shape, 5, 5);
+        var item2 = board.TryAddItemAt(shape, 5, 5);
 
         var itemData = board.GetItemById(item2.Id);
 
@@ -776,7 +773,7 @@ public class IndexedGridBoardTests
         using var board = new IndexedGridBoard(10, 10);
         var shape = Shapes.ImmutableSingle();
 
-        var (item, _) = board.TryAddItemAt(shape, 4, 4);
+        var item = board.TryAddItemAt(shape, 4, 4);
         var readOnly = board.AsReadOnly();
 
         var itemData = readOnly.GetItemById(item.Id);

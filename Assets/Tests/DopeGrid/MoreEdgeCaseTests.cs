@@ -152,7 +152,7 @@ public class MoreEdgeCaseTests
         using var shape = new GridShape(2, 2);
 
         Assert.Throws<ArgumentNullException>(() =>
-            grid.CheckShapeCells<GridShape, GridShape, bool, int>(shape, 0, 0, null!, 0));
+            grid.CheckShapeCells<GridShape, GridShape, bool, int>(shape, 0, 0, 0, null!));
     }
 
     // Additional ValueGridShape tests

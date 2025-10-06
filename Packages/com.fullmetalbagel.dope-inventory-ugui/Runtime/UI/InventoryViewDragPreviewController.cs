@@ -78,11 +78,10 @@
                         continue;
                     }
 
-                    // TODO: can move
-                    var canPlace = inventory.CanPlaceItem(shape, gridPos.x, gridPos.y, default(int));
-                    // item.TargetInventory = inventory;
-                    // item.TargetPosition = gridPos;
-                    // item.LastFrame = Time.frameCount;
+                    var canPlace = inventory.CanMoveItem(item.ItemId, shape, gridPos.x, gridPos.y);
+                    item.TargetInventory = inventory;
+                    item.TargetPosition = gridPos;
+                    item.LastFrame = Time.frameCount;
 
                     // Mirror transform logic from SyncViews
                     var rotatedSize = new Vector2(shape.Width * _cellSize.x, shape.Height * _cellSize.y);

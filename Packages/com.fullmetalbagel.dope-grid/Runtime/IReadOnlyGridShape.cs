@@ -192,21 +192,7 @@ public static class ReadOnlyGridShapeExtensions
         where TGrid : IReadOnlyGridShape<TValue>
         where TShape : IReadOnlyGridShape<bool>
     {
-        if (x < 0 || y < 0 || x + shape.Width > grid.Width || y + shape.Height > grid.Height)
-            return false;
-
-        for (var sy = 0; sy < shape.Height; sy++)
-        for (var sx = 0; sx < shape.Width; sx++)
-        {
-            if (shape.IsOccupied(sx, sy))
-            {
-                var gx = x + sx;
-                var gy = y + sy;
-                if (grid.IsOccupied(gx, gy))
-                    return false;
-            }
-        }
-        return true;
+        return grid.CheckShapeCells(shape, x, y, grid, static (gx, gy, _, g) => !g.IsOccupied(gx, gy), _);
     }
 
     [Pure, MustUseReturnValue]
@@ -237,13 +223,19 @@ public static class ReadOnlyGridShapeExtensions
     }
 
     [Pure, MustUseReturnValue]
-    public static bool CheckShapeCells<TGrid, TShape, TValue>(this TGrid grid, TShape shape, int x, int y, Func<int, int, TValue, bool> cellPredicate)
+    public static bool CheckShapeCells<TGrid, TShape, TValue>(this TGrid grid, TShape shape, int x, int y, Func<int, int, TValue, bool> cellPredicate, TValue _ = default!)
         where TGrid : IReadOnlyGridShape<TValue>
         where TShape : IReadOnlyGridShape<bool>
-        => CheckShapeCells<TGrid, TShape, TValue, Func<int, int, TValue, bool>>(grid, shape, x, y, static (gx, gy, value, pred) => pred(gx, gy, value), cellPredicate);
+        => CheckShapeCells<TGrid, TShape, TValue, Func<int, int, TValue, bool>>(grid, shape, x, y, cellPredicate, static (gx, gy, value, pred) => pred(gx, gy, value));
 
     [Pure, MustUseReturnValue]
-    public static bool CheckShapeCells<TGrid, TShape, TValue, TData>(this TGrid grid, TShape shape, int x, int y, Func<int, int, TValue, TData, bool> cellPredicate, TData data)
+    public static bool CheckShapeCells<TGrid, TShape, TValue, TData>(this TGrid grid,
+        TShape shape,
+        int x,
+        int y,
+        TData data,
+        Func<int, int, TValue, TData, bool> cellPredicate,
+        TValue _ = default!)
         where TGrid : IReadOnlyGridShape<TValue>
         where TShape : IReadOnlyGridShape<bool>
     {
@@ -256,7 +248,7 @@ public static class ReadOnlyGridShapeExtensions
             {
                 var gx = x + sx;
                 var gy = y + sy;
-                if (!Contains(grid, gx, gy))
+                if (!grid.Contains(gx, gy))
                     return false;
                 if (!cellPredicate(gx, gy, grid[gx, gy], data))
                     return false;
@@ -364,17 +356,18 @@ public static class ReadOnlyBoolGridShapeExtensions
         Func<int, int, bool, bool> cellPredicate)
         where TGrid : IReadOnlyGridShape<bool>
         where TShape : IReadOnlyGridShape<bool>
-    => grid.CheckShapeCells(shape, x, y, static (gx, gy, value, pred) => pred(gx, gy, value), cellPredicate);
+    => grid.CheckShapeCells(shape, x, y, cellPredicate, static (gx, gy, value, pred) => pred(gx, gy, value));
 
     [Pure, MustUseReturnValue]
     public static bool CheckShapeCells<TGrid, TShape, TData>(this TGrid grid,
         TShape shape,
-        int x, int y,
-        Func<int, int, bool, TData, bool> cellPredicate,
-        TData data)
+        int x,
+        int y,
+        TData data,
+        Func<int, int, bool, TData, bool> cellPredicate)
         where TGrid : IReadOnlyGridShape<bool>
         where TShape : IReadOnlyGridShape<bool>
-    => grid.CheckShapeCells<TGrid, TShape, bool, TData>(shape, x, y, cellPredicate, data);
+    => grid.CheckShapeCells<TGrid, TShape, bool, TData>(shape, x, y, data, cellPredicate);
 
     [Pure, MustUseReturnValue]
     public static (int x, int y) FindFirstFitWithFixedRotation<TGrid, TShape>(this TGrid grid, TShape shape)

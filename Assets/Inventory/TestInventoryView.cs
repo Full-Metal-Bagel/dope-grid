@@ -31,7 +31,7 @@ public class TestInventoryView : MonoBehaviour
         BuildDefinitionsMap();
         var inventoryUI = PopulateSampleItems();
 
-        _view.Initialize(new Inventory(_inventory), _shared.SharedInventoryData, inventoryUI);
+        _view.Initialize(new NaiveInventory(_inventory), _shared.SharedInventoryData, inventoryUI);
     }
 
     private void BuildDefinitionsMap()
@@ -68,14 +68,14 @@ public class TestInventoryView : MonoBehaviour
             var rotation = rotations[rotationIndex];
             rotationIndex = (rotationIndex + 1) % rotations.Length;
 
-            var (item, rot) = _inventory.TryAddItem(shape.GetRotatedShape(rotation));
+            var item = _inventory.TryAddItem(shape.GetRotatedShape(rotation));
             if (item.IsInvalid)
             {
                 Debug.LogWarning($"Inventory full; failed to place item ({ui.name}).");
             }
             else
             {
-                inventoryUI.Items.Add(item.Id, (ui.ToData(), rotation.Rotate(rot)));
+                inventoryUI.Items.Add(item.Id, (ui.ToData(), rotation));
             }
         }
         return inventoryUI;

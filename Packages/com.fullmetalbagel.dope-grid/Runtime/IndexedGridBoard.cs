@@ -60,25 +60,15 @@ public readonly struct IndexedGridBoard : IIndexedGridBoard, IReadOnlyIndexedGri
         return item.IsValid ? item : BoardItemData.Invalid;
     }
 
-    public (BoardItemData item, RotationDegree rotation) TryAddItem(ImmutableGridShape shape)
+    public BoardItemData TryAddItem(ImmutableGridShape shape)
     {
-        var (x, y, rotation) = _grid.FindFirstFitWithFreeRotation(shape, default(int));
-        if (x >= 0)
-        {
-            var item = AddItemAt(shape.GetRotatedShape(rotation), x, y);
-            return (item, rotation);
-        }
-
-        return (BoardItemData.Invalid, RotationDegree.None);
+        var (x, y) = _grid.FindFirstFitWithFixedRotation(shape, default(int));
+        return x >= 0 ? AddItemAt(shape, x, y) : BoardItemData.Invalid;
     }
 
-    public (BoardItemData item, RotationDegree rotation) TryAddItemAt(ImmutableGridShape shape, int x, int y)
+    public BoardItemData TryAddItemAt(ImmutableGridShape shape, int x, int y)
     {
-        if (_grid.CanPlaceItem(shape, x, y, default(int)))
-        {
-            return (AddItemAt(shape, x, y), RotationDegree.None);
-        }
-        return (BoardItemData.Invalid, RotationDegree.None);
+        return _grid.CanPlaceItem(shape, x, y, default(int)) ? AddItemAt(shape, x, y) : BoardItemData.Invalid;
     }
 
     private BoardItemData AddItemAt(ImmutableGridShape itemShape, int x, int y)

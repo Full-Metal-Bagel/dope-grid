@@ -64,8 +64,7 @@ internal sealed class InventoryViewDragController : IDisposable
         var definition = _inventoryUI.GetItemDefinition(item.Id);
         var rotation = _inventoryUI.GetItemRotation(item.Id);
 
-        _draggingItem = new DraggingItem(_ghost.rectTransform, definition, rotation);
-        // _draggingItem.SourceInventory = _inventory;
+        _draggingItem = new DraggingItem(_inventory, item.Id, _ghost.rectTransform, definition, rotation);
         _sharedInventoryData.DraggingItems.Add(_draggingItem);
 
         if (_ghost == null) return;
@@ -94,35 +93,16 @@ internal sealed class InventoryViewDragController : IDisposable
     {
         if (_draggingItem != null)
         {
-            // // Check if we have a valid target position from the most recent frame
-            // if (Time.frameCount - _draggingItem.LastFrame <= 1 && _draggingItem.TargetInventory.IsCreated)
-            // {
-            //     var targetPos = _draggingItem.TargetPosition;
-            //     var sourceInventory = _draggingItem.SourceInventory;
-            //     var targetInventory = _draggingItem.TargetInventory;
-            //
-            //     // Check if it's the same inventory by comparing the underlying native containers
-            //     var isSameInventory = sourceInventory.IsSame(targetInventory);
-            //
-            //     if (isSameInventory)
-            //     {
-            //         // Same inventory - move the item with updated rotation using atomic operation
-            //         sourceInventory.TryMoveItem(_draggingItem.InstanceId, targetPos, _draggingItem.Rotation);
-            //     }
-            //     else
-            //     {
-            //         // Cross-inventory move - get item, remove from source, add to target
-            //         var item = sourceInventory.GetItemByInstanceId(_draggingItem.InstanceId);
-            //         if (item.IsValid)
-            //         {
-            //             var newItem = new InventoryItem(_draggingItem.InstanceId, item.Definition, _draggingItem.Rotation, targetPos);
-            //             if (targetInventory.TryPlaceItem(newItem))
-            //             {
-            //                 sourceInventory.RemoveItem(_draggingItem.InstanceId);
-            //             }
-            //         }
-            //     }
-            // }
+            // Check if we have a valid target position from the most recent frame
+            if (Time.frameCount - _draggingItem.LastFrame <= 1 && _draggingItem.TargetInventory != null)
+            {
+                var sourceInventory = _draggingItem.SourceInventory;
+                var targetInventory = _draggingItem.TargetInventory;
+                var targetPos = _draggingItem.TargetPosition;
+                var itemId = _draggingItem.ItemId;
+                var shape = _draggingItem.Shape;
+                targetInventory.TryMoveItem(sourceInventory, itemId, shape, targetPos.x, targetPos.y);
+            }
 
             _sharedInventoryData.DraggingItems.Remove(_draggingItem);
             _draggingItem = null;

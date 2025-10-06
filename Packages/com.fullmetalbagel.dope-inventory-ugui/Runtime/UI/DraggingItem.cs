@@ -15,14 +15,16 @@ public class DraggingItem
     public RectTransform View { get; }
     public RotationDegree Rotation { get; set; }
 
-    // public Inventory SourceInventory { get; set; } = default;
-    // public Inventory TargetInventory { get; set; } = default;
-    // public int2 TargetPosition { get; set; } = default;
-    // public int LastFrame { get; set; } = 0;
+    public IInventory SourceInventory { get; }
+    public int ItemId { get; }
+    public IInventory? TargetInventory { get; set; }
+    public int2 TargetPosition { get; set; } = default;
+    public int LastFrame { get; set; } = 0;
 
-    public DraggingItem(RectTransform view, UIImageGridDefinitionData definition, RotationDegree rotation = RotationDegree.None)
+    public DraggingItem(IInventory inventory, int itemId, RectTransform view, UIImageGridDefinitionData definition, RotationDegree rotation = RotationDegree.None)
     {
-        // InstanceId = id;
+        SourceInventory = inventory;
+        ItemId = itemId;
         UIDefinition = definition;
         View = view;
         Rotation = rotation;
