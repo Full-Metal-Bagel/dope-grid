@@ -56,8 +56,8 @@ internal sealed class InventoryViewDragController : IDisposable
         var item = _inventory.GetItemOnPosition(gx, gy);
         if (item.IsInvalid) return;
         var itemInstanceId = _inventory.GetItemInstanceId(item.Id);
-
-        _draggingItem = new DraggingItem(itemInstanceId, _ghost.rectTransform);
+        var rotation = _inventory.GetRotation(itemInstanceId);
+        _draggingItem = new DraggingItem(itemInstanceId, _ghost.rectTransform, rotation);
         _inventory.DraggingItems.Add(_draggingItem);
 
         if (_ghost == null) return;
@@ -107,12 +107,12 @@ internal sealed class InventoryViewDragController : IDisposable
         }
     }
 
-    public RotationDegree GetRotation()
+    public RotationDegree GetDraggingItemRotation()
     {
         return _draggingItem?.Rotation ?? RotationDegree.None;
     }
 
-    public void SetRotation(RotationDegree rotation)
+    public void SetDraggingItemRotation(RotationDegree rotation)
     {
         if (_draggingItem == null) return;
 
@@ -124,6 +124,7 @@ internal sealed class InventoryViewDragController : IDisposable
     {
         if (_draggingItem == null) return;
         var shape = _inventory.GetShape(_draggingItem.ItemInstanceId);
+        shape = shape.GetRotatedShape(_draggingItem.Rotation);
         var (width, height) = shape.Bound;
         var size = new Vector2(_cellSize.x * width, _cellSize.y * height) ;
         ApplyToRectTransform(_draggingItem.Rotation, _draggingItem.View, size);

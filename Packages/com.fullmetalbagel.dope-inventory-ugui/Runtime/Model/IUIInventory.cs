@@ -16,3 +16,13 @@ public interface IUIInventory : IGameInventory
     Image GetImage();
     void ReleaseImage(Image item);
 }
+
+public static class UIInventoryExtensions
+{
+    public static ImmutableGridShape GetRotatedShape(this IUIInventory inventory, Guid itemInstanceId)
+    {
+        var shape = inventory.GetShape(itemInstanceId);
+        var rotation = inventory.GetRotation(itemInstanceId);
+        return shape.GetRotatedShape(rotation);
+    }
+}

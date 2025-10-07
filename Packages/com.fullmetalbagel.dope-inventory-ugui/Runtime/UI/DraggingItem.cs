@@ -15,9 +15,10 @@ public sealed class DraggingItem
     public int2 TargetPosition { get; set; } = default;
     public int LastFrame { get; set; } = 0;
 
-    public DraggingItem(Guid itemInstanceId, RectTransform view)
+    public DraggingItem(Guid itemInstanceId, RectTransform view, RotationDegree rotation)
     {
         ItemInstanceId = itemInstanceId;
         View = view;
+        Rotation = rotation;
     }
 }

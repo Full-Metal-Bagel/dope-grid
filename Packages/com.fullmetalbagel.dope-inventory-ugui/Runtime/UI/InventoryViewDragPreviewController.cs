@@ -53,8 +53,9 @@
                     if (!sprite) continue;
 
                     var shape = _inventory.GetShape(item.ItemInstanceId);
+                    shape = shape.GetRotatedShape(item.Rotation);
                     var (width, height) = shape.Bound;
-                    var gridPos = _view.GetGridPosition(_cellSize, width, height, _view.position);
+                    var gridPos = _view.GetGridPosition(_cellSize, width, height, item.View.position);
 
                     // Get or create preview view
                     if (!_draggingViews.TryGetValue(item, out var preview) || preview == null)

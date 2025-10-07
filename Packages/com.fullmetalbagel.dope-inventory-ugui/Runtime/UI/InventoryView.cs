@@ -72,12 +72,12 @@ namespace DopeGrid.Inventory
 
         public void SetDraggingItemRotation(RotationDegree rotation)
         {
-            _dragController.SetRotation(rotation);
+            _dragController.SetDraggingItemRotation(rotation);
         }
 
         public RotationDegree GetDraggingItemRotation()
         {
-            return _dragController.GetRotation();
+            return _dragController.GetDraggingItemRotation();
         }
 
         private void Update()

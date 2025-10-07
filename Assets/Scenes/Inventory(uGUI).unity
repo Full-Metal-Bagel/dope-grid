@@ -409,8 +409,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 738009267}
-  - component: {fileID: 738009272}
   - component: {fileID: 738009271}
+  - component: {fileID: 738009272}
+  - component: {fileID: 738009273}
   - component: {fileID: 738009269}
   - component: {fileID: 738009268}
   m_Layer: 5
@@ -489,7 +490,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 834434dce45c4d348879a1213cd1a192, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _view: {fileID: 0}
+  _view: {fileID: 738009272}
   _width: 6
   _height: 6
   _uiItems:
@@ -515,6 +516,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _placeableColor: {r: 0, g: 1, b: 0, a: 0.35}
   _blockedColor: {r: 1, g: 0, b: 0, a: 0.35}
+--- !u!114 &738009273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 738009266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5cd8487a26f84144942409232a04faa6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -616,8 +629,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1908836746}
-  - component: {fileID: 1908836751}
   - component: {fileID: 1908836748}
+  - component: {fileID: 1908836751}
+  - component: {fileID: 1908836752}
   - component: {fileID: 1908836750}
   - component: {fileID: 1908836749}
   m_Layer: 5
@@ -658,7 +672,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 834434dce45c4d348879a1213cd1a192, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _view: {fileID: 0}
+  _view: {fileID: 1908836751}
   _width: 6
   _height: 6
   _uiItems:
@@ -722,6 +736,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _placeableColor: {r: 0, g: 1, b: 0, a: 0.35}
   _blockedColor: {r: 1, g: 0, b: 0, a: 0.35}
+--- !u!114 &1908836752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1908836745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdc526583f94f4ee89ac24fd46e5f4ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _rotateAction: {fileID: 7066071255635626034, guid: 6ae0ff956ec2c4e13b9ecf861997ac1a, type: 3}
+  _scrollAction: {fileID: 3744722716466425730, guid: 6ae0ff956ec2c4e13b9ecf861997ac1a, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
