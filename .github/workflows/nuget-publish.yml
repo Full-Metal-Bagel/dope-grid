@@ -49,7 +49,7 @@ jobs:
       run: dotnet build dotnet/DopeGrid/DopeGrid.csproj --configuration Release --no-restore
 
     - name: Run tests
-      run: dotnet test dotnet/DopeGrid.Tests/DopeGrid.Tests.csproj --configuration Release --no-build --verbosity normal
+      run: dotnet test dotnet/DopeGrid.Tests/DopeGrid.Tests.csproj --configuration Release --verbosity normal
 
     - name: Pack
       run: dotnet pack dotnet/DopeGrid/DopeGrid.csproj --configuration Release --no-build --output ./nupkg
