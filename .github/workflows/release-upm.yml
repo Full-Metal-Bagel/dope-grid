@@ -34,7 +34,9 @@ jobs:
       - name: Create Release for OpenUPM (${{ matrix.name }})
         uses: quabug/create-upm-release@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use a Personal Access Token so the created release triggers downstream workflows
+          # Create repo secret RELEASE_PAT with at least 'repo' scope
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
         with:
           target: main
           upm_tag_prefix: ${{ matrix.tag_prefix }}
