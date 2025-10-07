@@ -27,7 +27,7 @@ public class TestInventoryView : MonoBehaviour
 
         var rotations = new[]
         {
-            RotationDegree.None,
+            RotationDegree.Clockwise0,
             RotationDegree.Clockwise90,
             RotationDegree.Clockwise180,
             RotationDegree.Clockwise270

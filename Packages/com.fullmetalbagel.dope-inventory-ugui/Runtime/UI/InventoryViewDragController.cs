@@ -109,7 +109,7 @@ internal sealed class InventoryViewDragController : IDisposable
 
     public RotationDegree GetDraggingItemRotation()
     {
-        return _draggingItem?.Rotation ?? RotationDegree.None;
+        return _draggingItem?.Rotation ?? RotationDegree.Clockwise0;
     }
 
     public void SetDraggingItemRotation(RotationDegree rotation)
