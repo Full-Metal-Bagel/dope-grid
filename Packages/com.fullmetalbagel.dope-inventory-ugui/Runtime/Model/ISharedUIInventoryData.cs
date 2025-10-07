@@ -15,7 +15,7 @@ public interface ISharedUIInventoryData
 
 public class SharedUIInventoryData : ISharedUIInventoryData
 {
-    public Dictionary<Guid/*definition id*/, Sprite> ItemSpriteMap { get; } = new();
+    public Dictionary<Guid, Sprite> ItemSpriteMap { get; } = new();
     public IList<DraggingItem> DraggingItems { get; } = new List<DraggingItem>();
     public Sprite GetSprite(Guid itemInstanceId) => ItemSpriteMap[itemInstanceId];
 }
