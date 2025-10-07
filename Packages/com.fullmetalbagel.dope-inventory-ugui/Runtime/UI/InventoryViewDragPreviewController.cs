@@ -84,18 +84,17 @@
                     item.TargetPosition = gridPos;
                     item.LastFrame = Time.frameCount;
 
-                    // Mirror transform logic from SyncViews
-                    var rotatedSize = new Vector2(shape.Width * _cellSize.x, shape.Height * _cellSize.y);
-                    var preRotSize = item.Rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
-                        ? new Vector2(rotatedSize.y, rotatedSize.x)
-                        : rotatedSize;
+                    // Get unrotated shape for image sizing
+                    var unrotatedShape = _inventory.GetShape(item.ItemInstanceId);
+                    var unrotatedSize = new Vector2(unrotatedShape.Width * _cellSize.x, unrotatedShape.Height * _cellSize.y);
+
                     var anchoredPos = GridToAnchoredPosition(gridPos);
                     var angleZ = item.Rotation.GetZRotation();
-                    var (offsetX, offsetY) = item.Rotation.GetRotationOffset(preRotSize.x, preRotSize.y);
+                    var (offsetX, offsetY) = item.Rotation.GetRotationOffset(unrotatedSize.x, unrotatedSize.y);
                     var offset = new Vector2(offsetX, offsetY);
 
                     var rt = (RectTransform)preview.transform;
-                    rt.sizeDelta = preRotSize;
+                    rt.sizeDelta = unrotatedSize;
                     rt.anchoredPosition = anchoredPos + offset;
                     rt.localEulerAngles = new Vector3(0f, 0f, angleZ);
                     rt.SetAsLastSibling();

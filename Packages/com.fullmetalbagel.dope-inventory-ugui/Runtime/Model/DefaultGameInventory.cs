@@ -30,7 +30,8 @@ public sealed class DefaultGameInventory : IGameInventory, IDisposable
     public bool CanMoveItem(Guid itemInstanceId, int x, int y, RotationDegree rotation)
     {
         var item = GetItem(itemInstanceId);
-        var shape = _shared.GetRotatedShape(itemInstanceId);
+        var shape = _shared.GetShape(itemInstanceId);
+        shape = shape.GetRotatedShape(rotation);
         return item.IsInvalid ?
             // move item from other inventory
             _board.CanPlaceItem(shape, x, y, default(int)) :
