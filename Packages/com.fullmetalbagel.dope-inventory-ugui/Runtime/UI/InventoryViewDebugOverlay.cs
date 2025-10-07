@@ -88,7 +88,8 @@ namespace DopeGrid.Inventory
             var needed = 0;
             foreach (var item in inventory)
             {
-                needed += item.Shape.OccupiedSpaceCount();
+                var shape = inventory.GetShape(item);
+                needed += shape.OccupiedSpaceCount();
             }
 
             EnsureTextPool(_itemTexts, needed, _root!);
@@ -97,8 +98,9 @@ namespace DopeGrid.Inventory
             // Fill labels
             var index = 0;
             var fontSize = Mathf.Max(10, Mathf.RoundToInt(Mathf.Min(cellSize.x, cellSize.y) * 0.5f));
-            foreach (var item in inventory)
+            foreach (var itemInstanceId in inventory)
             {
+                var item = inventory.GetItem(itemInstanceId);
                 var shape = item.Shape;
                 var origin = new int2(item.X, item.Y);
                 for (int y = 0; y < shape.Height; y++)

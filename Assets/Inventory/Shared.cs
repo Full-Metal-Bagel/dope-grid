@@ -3,5 +3,6 @@ using UnityEngine;
 
 public class Shared : MonoBehaviour
 {
-    public SharedInventoryData SharedInventoryData { get; } = new();
+    public SharedInventoryData SharedData { get; } = new();
+    public SharedUIInventoryData SharedUIData { get; } = new();
 }

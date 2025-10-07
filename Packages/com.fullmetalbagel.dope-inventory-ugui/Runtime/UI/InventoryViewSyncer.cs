@@ -9,16 +9,14 @@ namespace DopeGrid.Inventory;
 
 internal sealed class InventoryViewSyncer : IDisposable
 {
-    private readonly IInventoryItemViewPool _pool;
-    private readonly IInventoryUI _ui;
+    private readonly IUIInventory _inventory;
     private readonly Transform _parent;
     private readonly Vector2 _cellSize;
     private readonly Dictionary<int, Image> _itemViews = new();
 
-    public InventoryViewSyncer(Transform parent, Vector2 cellSize, IInventoryItemViewPool pool, IInventoryUI ui)
+    public InventoryViewSyncer(IUIInventory inventory, Transform parent, Vector2 cellSize)
     {
-        _pool = pool;
-        _ui = ui;
+        _inventory = inventory;
         _parent = parent;
         _cellSize = cellSize;
     }
@@ -29,13 +27,13 @@ internal sealed class InventoryViewSyncer : IDisposable
         {
             if (kv.Value != null)
             {
-                _pool.Release(kv.Value);
+                _inventory.ReleaseImage(kv.Value);
             }
         }
         _itemViews.Clear();
     }
 
-    public void SyncViews(IInventory inventory)
+    public void SyncViews()
     {
         var seen = HashSetPool<int>.Get();
         var toRemove = ListPool<int>.Get();
@@ -43,18 +41,16 @@ internal sealed class InventoryViewSyncer : IDisposable
         try
         {
             // Iterate all items from model
-            foreach (var item in inventory)
+            foreach (var itemInstanceId in _inventory)
             {
+                var item = _inventory.GetItem(itemInstanceId);
                 seen.Add(item.Id);
 
-                if (!_ui.HasUI(item.Id))
-                    continue; // No UI—skip rendering
-
-                var definition = _ui.GetItemDefinition(item.Id);
-                var rotation = _ui.GetItemRotation(item.Id);
+                var sprite = _inventory.GetSprite(itemInstanceId);
+                var rotation = _inventory.GetRotation(itemInstanceId);
 
                 var image = GetOrCreateItemView(item.Id);
-                image.sprite = definition.Image;
+                image.sprite = sprite;
                 image.raycastTarget = false;
                 image.preserveAspect = false;
 
@@ -88,7 +84,7 @@ internal sealed class InventoryViewSyncer : IDisposable
                 var image = _itemViews[id];
                 if (image != null)
                 {
-                    _pool.Release(image);
+                    _inventory.ReleaseImage(image);
                 }
                 _itemViews.Remove(id);
             }
@@ -105,7 +101,7 @@ internal sealed class InventoryViewSyncer : IDisposable
         if (_itemViews.TryGetValue(id, out var existing) && existing != null)
             return existing;
 
-        var image = _pool.Get();
+        var image = _inventory.GetImage();
 #if UNITY_EDITOR
         image.name = $"Item_{id}";
 #endif

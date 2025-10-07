@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace DopeGrid.Inventory
@@ -11,9 +12,8 @@ namespace DopeGrid.Inventory
 
         private static readonly Vector2 s_defaultCellSize = new(64f, 64f);
 
-        public IInventory Inventory { get; private set; } = null!;
-        private IInventoryUI _inventoryUI = null!;
-        private SharedInventoryData _sharedInventoryData = null!;
+        public IUIInventory Inventory { get; private set; } = null!;
+
         private Vector2 _cellSize = s_defaultCellSize;
 
         private InventoryViewSyncer _viewSyncer = null!;
@@ -30,7 +30,7 @@ namespace DopeGrid.Inventory
         }
 #endif
 
-        public void Initialize(IInventory inventory, SharedInventoryData sharedInventoryData, IInventoryUI ui)
+        public void Initialize(IUIInventory inventory)
         {
             if (inventory.IsZeroSize())
             {
@@ -39,16 +39,14 @@ namespace DopeGrid.Inventory
             }
 
             Inventory = inventory;
-            _inventoryUI = ui;
-            _sharedInventoryData = sharedInventoryData;
 
             var rectTransform = (RectTransform)transform;
             _cellSize = ResolveCellSize(rectTransform, Inventory.Width, Inventory.Height);
             rectTransform.sizeDelta = new Vector2(Inventory.Width * _cellSize.x, Inventory.Height * _cellSize.y);
 
-            _viewSyncer = new InventoryViewSyncer(transform, _cellSize, _sharedInventoryData.Pool, ui);
-            _viewDragPreviewController = new InventoryViewDragPreviewController(_sharedInventoryData, rectTransform, _cellSize, _placeableColor, _blockedColor);
-            _dragController = new InventoryViewDragController(_sharedInventoryData, rectTransform, inventory, CellSize, ui);
+            _viewSyncer = new InventoryViewSyncer(Inventory, transform, _cellSize);
+            _viewDragPreviewController = new InventoryViewDragPreviewController(Inventory, rectTransform, _cellSize, _placeableColor, _blockedColor);
+            _dragController = new InventoryViewDragController(Inventory, rectTransform, CellSize);
         }
 
         private static Vector2 ResolveCellSize(RectTransform rectTransform, int gridWidth, int gridHeight)
@@ -86,9 +84,8 @@ namespace DopeGrid.Inventory
         {
             if (!IsInitialized) return;
 
-            var readOnlyInventory = Inventory;
-            _viewSyncer.SyncViews(readOnlyInventory);
-            _viewDragPreviewController.UpdateDragPlacementPreview(Inventory, _inventoryUI);
+            _viewSyncer.SyncViews();
+            _viewDragPreviewController.UpdateDragPlacementPreview();
         }
 
         protected override void OnDestroy()

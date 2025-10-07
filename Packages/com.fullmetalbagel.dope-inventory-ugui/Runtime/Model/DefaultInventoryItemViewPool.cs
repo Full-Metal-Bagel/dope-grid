@@ -5,13 +5,7 @@ using UnityEngine.UI;
 
 namespace DopeGrid.Inventory;
 
-public interface IInventoryItemViewPool
-{
-    Image Get();
-    void Release(Image item);
-}
-
-public class DefaultInventoryItemViewPool : IInventoryItemViewPool
+public class DefaultInventoryItemViewPool
 {
     private static readonly Lazy<Transform> s_root;
     private static readonly ObjectPool<Image> s_pool = new(

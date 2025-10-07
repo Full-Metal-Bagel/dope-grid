@@ -1,18 +1,7 @@
 using System;
-using System.Collections.Generic;
 using DopeGrid;
 using DopeGrid.Inventory;
 using UnityEngine;
-
-class InventoryUI : IInventoryUI
-{
-    private readonly Dictionary<int, (UIImageGridDefinitionData definition, RotationDegree rotation)> _items = new();
-
-    public bool HasUI(int id) => _items.ContainsKey(id);
-    public RotationDegree GetItemRotation(int id) => _items[id].rotation;
-    public UIImageGridDefinitionData GetItemDefinition(int id) => _items[id].definition;
-    public void AddOrUpdateItem(int id, UIImageGridDefinitionData definition, RotationDegree rotation) => _items[id] = (definition, rotation);
-}
 
 public class TestInventoryView : MonoBehaviour
 {
@@ -21,34 +10,19 @@ public class TestInventoryView : MonoBehaviour
     [SerializeField] private int _height = 6;
     [SerializeField] private UIImageGridDefinition[] _uiItems = Array.Empty<UIImageGridDefinition>();
 
-    private IndexedGridBoard _inventory;
-    private Shared _shared;
+    private DefaultGameInventory _inventory;
 
     private void Start()
     {
-        _shared = GetComponentInParent<Shared>();
-        // Create an inventory; dispose on destroy
-        _inventory = new IndexedGridBoard(_width, _height);
-
-        BuildDefinitionsMap();
-        var inventoryUI = PopulateSampleItems();
-
-        _view.Initialize(new NaiveInventory(_inventory), _shared.SharedInventoryData, inventoryUI);
+        var shared = GetComponentInParent<Shared>();
+        _inventory = new DefaultGameInventory(_width, _height, shared.SharedData);
+        var inventoryUI = PopulateSampleItems(_inventory, shared);
+        _view.Initialize(inventoryUI);
     }
 
-    private void BuildDefinitionsMap()
+    private IUIInventory PopulateSampleItems(IGameInventory inventory, Shared shared)
     {
-        foreach (var ui in _uiItems)
-        {
-            if (ui == null) continue;
-            if (!Guid.TryParse(ui.Id, out var guid)) continue;
-            _shared.SharedInventoryData.Definitions[guid] = ui.ToData();
-        }
-    }
-
-    private IInventoryUI PopulateSampleItems()
-    {
-        var inventoryUI = new InventoryUI();
+        var inventoryUI = new DefaultUIInventory(inventory, shared.SharedData, shared.SharedUIData);
         if (_uiItems == null || _uiItems.Length == 0) return inventoryUI;
 
         var rotations = new[]
@@ -63,21 +37,20 @@ public class TestInventoryView : MonoBehaviour
         foreach (var ui in _uiItems)
         {
             if (ui == null) continue;
-            if (!Guid.TryParse(ui.Id, out var guid)) continue;
 
             // Build model item from UI shape
             var shape = ui.Shape.ToImmutableGridShape();
             var rotation = rotations[rotationIndex];
             rotationIndex = (rotationIndex + 1) % rotations.Length;
+            var id = Guid.NewGuid();
+            shared.SharedData.ItemRotationMap[id] = rotation;
+            shared.SharedData.ItemShapeMap[id] = shape;
+            shared.SharedUIData.ItemSpriteMap[id] = ui.Image;
 
-            var item = _inventory.TryAddItem(shape.GetRotatedShape(rotation));
-            if (item.IsInvalid)
+            var added = _inventory.TryMoveItem(id, rotation);
+            if (!added)
             {
                 Debug.LogWarning($"Inventory full; failed to place item ({ui.name}).");
-            }
-            else
-            {
-                inventoryUI.AddOrUpdateItem(item.Id, ui.ToData(), rotation);
             }
         }
         return inventoryUI;

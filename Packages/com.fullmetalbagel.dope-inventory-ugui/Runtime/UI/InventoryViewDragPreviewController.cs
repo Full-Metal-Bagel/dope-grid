@@ -9,16 +9,16 @@
 
     internal sealed class InventoryViewDragPreviewController : IDisposable
     {
-        private readonly SharedInventoryData _sharedInventoryData;
+        private readonly IUIInventory _inventory;
         private readonly RectTransform _view;
         private readonly Vector2 _cellSize;
         private readonly Color _placeableColor;
         private readonly Color _blockedColor;
         private readonly Dictionary<DraggingItem, Image> _draggingViews = new();
 
-        public InventoryViewDragPreviewController(SharedInventoryData sharedInventoryData, RectTransform view, Vector2 cellSize, Color placeableColor, Color blockedColor)
+        public InventoryViewDragPreviewController(IUIInventory inventory, RectTransform view, Vector2 cellSize, Color placeableColor, Color blockedColor)
         {
-            _sharedInventoryData = sharedInventoryData;
+            _inventory = inventory;
             _view = view;
             _cellSize = cellSize;
             _placeableColor = placeableColor;
@@ -31,35 +31,35 @@
             {
                 if (kv.Value != null)
                 {
-                    _sharedInventoryData.Pool.Release(kv.Value);
+                    _inventory.ReleaseImage(kv.Value);
                 }
             }
             _draggingViews.Clear();
         }
 
-        public void UpdateDragPlacementPreview(IInventory inventory, IInventoryUI inventoryUI)
+        public void UpdateDragPlacementPreview()
         {
             var seen = HashSetPool<DraggingItem>.Get();
             var toRemove = ListPool<DraggingItem>.Get();
 
             try
             {
-                for (int i = 0; i < _sharedInventoryData.DraggingItems.Count; i++)
+                for (int i = 0; i < _inventory.DraggingItems.Count; i++)
                 {
-                    var item = _sharedInventoryData.DraggingItems[i];
-                    // var itemData = item.Data;
+                    var item = _inventory.DraggingItems[i];
                     seen.Add(item);
 
-                    var sprite = item.Image;
+                    var sprite = _inventory.GetSprite(item.ItemInstanceId);
                     if (!sprite) continue;
 
-                    var shape = item.Shape;
-                    var gridPos = item.GetGridPosition(_view, _cellSize);
+                    var shape = _inventory.GetShape(item.ItemInstanceId);
+                    var (width, height) = shape.Bound;
+                    var gridPos = _view.GetGridPosition(_cellSize, width, height, _view.position);
 
                     // Get or create preview view
                     if (!_draggingViews.TryGetValue(item, out var preview) || preview == null)
                     {
-                        preview = _sharedInventoryData.Pool.Get();
+                        preview = _inventory.GetImage();
     #if UNITY_EDITOR
                         preview.name = "__placement_preview__";
     #endif
@@ -71,16 +71,15 @@
 
                     // Only show preview if the item is within inventory bounds
                     if (gridPos.x < 0 || gridPos.y < 0 ||
-                        gridPos.x + shape.Width > inventory.Width ||
-                        gridPos.y + shape.Height > inventory.Height)
+                        gridPos.x + shape.Width > _inventory.Width ||
+                        gridPos.y + shape.Height > _inventory.Height)
                     {
                         preview.gameObject.SetActive(false);
                         continue;
                     }
 
-                    var canPlace = inventory.CanMoveItem(item.ItemId, shape, gridPos.x, gridPos.y);
-                    item.TargetInventory = inventory;
-                    item.TargetInventoryUI = inventoryUI;
+                    var canPlace = _inventory.CanMoveItem(item.ItemInstanceId, gridPos.x, gridPos.y, item.Rotation);
+                    item.TargetInventory = _inventory;
                     item.TargetPosition = gridPos;
                     item.LastFrame = Time.frameCount;
 
@@ -118,7 +117,7 @@
                 {
                     var key = toRemove[i];
                     var img = _draggingViews[key];
-                    if (img != null) _sharedInventoryData.Pool.Release(img);
+                    if (img != null) _inventory.ReleaseImage(img);
                     _draggingViews.Remove(key);
                 }
             }
