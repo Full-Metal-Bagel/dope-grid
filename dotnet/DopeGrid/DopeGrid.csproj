@@ -39,7 +39,7 @@
     <ItemGroup>
         <Compile Include="../../Packages/com.fullmetalbagel.dope-grid/Runtime/**/*.cs" />
         <Link Include="../../.editorconfig" />
-        <None Include="../../README.md" Pack="true" PackagePath="/" />
+        <None Include="../../Packages/com.fullmetalbagel.dope-grid/README.md" Pack="true" PackagePath="/" />
     </ItemGroup>
 
     <ItemGroup>
