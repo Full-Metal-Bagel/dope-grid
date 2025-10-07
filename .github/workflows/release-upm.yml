@@ -20,11 +20,11 @@ jobs:
         include:
           - name: Dope Grid
             package_path: Packages/com.fullmetalbagel.dope-grid
-            tag_prefix: v
+            tag_prefix: dope-grid/v
             unitypackage_name: com.fullmetalbagel.dope-grid
           - name: Dope Inventory (uGUI)
             package_path: Packages/com.fullmetalbagel.dope-inventory-ugui
-            tag_prefix: v
+            tag_prefix: dope-inventory-ugui/v
             unitypackage_name: com.fullmetalbagel.dope-inventory-ugui
 
     steps:
