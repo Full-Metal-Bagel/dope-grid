@@ -25,9 +25,16 @@ jobs:
     - name: Extract version from tag
       id: extract_version
       run: |
-        if [ "${{ github.event_name }}" == "release" ]; then
-          VERSION="${{ github.event.release.tag_name }}"
-          # Remove 'v' prefix if present
+        if [ "${{ github.event_name }}" = "release" ]; then
+          TAG="${{ github.event.release.tag_name }}"
+          # Support tags like:
+          # - dope-grid/v1.0.0
+          # - dope-inventory-ugui/v1.2.3
+          # Also tolerate tags like:
+          # - com.fullmetalbagel.dope-grid@1.0.0
+          # Extract the part after the last '/' or '@', then strip a leading 'v'.
+          VERSION="${TAG##*/}"
+          VERSION="${VERSION##*@}"
           VERSION="${VERSION#v}"
         else
           VERSION="${{ inputs.version }}"
