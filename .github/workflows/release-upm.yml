@@ -1,0 +1,44 @@
+name: Publish UPM Packages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Packages/**/package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  upm-release:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Dope Grid
+            package_path: Packages/com.fullmetalbagel.dope-grid
+            tag_prefix: dope-grid/v
+            unitypackage_name: com.fullmetalbagel.dope-grid
+          - name: Dope Inventory (uGUI)
+            package_path: Packages/com.fullmetalbagel.dope-inventory-ugui
+            tag_prefix: dope-inventory-ugui/v
+            unitypackage_name: com.fullmetalbagel.dope-inventory-ugui
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create Release for OpenUPM (${{ matrix.name }})
+        uses: quabug/create-upm-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          target: main
+          upm_tag_prefix: ${{ matrix.tag_prefix }}
+          upm_package_path: ${{ matrix.package_path }}
+          create_unitypackage: true
+          unitypackage_name: ${{ matrix.unitypackage_name }}
+

@@ -1,0 +1,65 @@
+name: Publish to NuGet
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    # Only run for release events with tag starting with 'dope-grid/'
+    if: ${{ github.event_name != 'release' || startsWith(github.event.release.tag_name, 'dope-grid/') }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Extract version from tag
+      id: extract_version
+      run: |
+        if [ "${{ github.event_name }}" = "release" ]; then
+          TAG="${{ github.event.release.tag_name }}"
+          # Expected format: dope-grid/vX.Y.Z
+          VERSION="${TAG#dope-grid/}"
+          VERSION="${VERSION#v}"
+        else
+          VERSION="${{ inputs.version }}"
+        fi
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "Publishing version: $VERSION"
+
+    - name: Update version in csproj
+      run: |
+        sed -i "s/<Version>.*<\/Version>/<Version>${{ steps.extract_version.outputs.VERSION }}<\/Version>/" dotnet/DopeGrid/DopeGrid.csproj
+
+    - name: Restore dependencies
+      run: dotnet restore dotnet/DopeGrid/DopeGrid.csproj
+
+    - name: Build
+      run: dotnet build dotnet/DopeGrid/DopeGrid.csproj --configuration Release --no-restore
+
+    - name: Run tests
+      run: dotnet test dotnet/DopeGrid.Tests/DopeGrid.Tests.csproj --configuration Release --no-build --verbosity normal
+
+    - name: Pack
+      run: dotnet pack dotnet/DopeGrid/DopeGrid.csproj --configuration Release --no-build --output ./nupkg
+
+    - name: Publish to NuGet
+      run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: nuget-packages
+        path: ./nupkg/*.nupkg

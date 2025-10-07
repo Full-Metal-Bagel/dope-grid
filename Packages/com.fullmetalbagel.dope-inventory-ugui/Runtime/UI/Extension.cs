@@ -1,5 +1,4 @@
 using JetBrains.Annotations;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -8,7 +7,7 @@ namespace DopeGrid.Inventory;
 public static class Extension
 {
     [Pure, MustUseReturnValue]
-    public static int2 GetGridPosition(this RectTransform transform, float2 cellSize, int shapeWidth, int shapeHeight, Vector2 worldPosition)
+    public static Vector2Int GetGridPosition(this RectTransform transform, Vector2 cellSize, int shapeWidth, int shapeHeight, Vector2 worldPosition)
     {
         // Convert from Canvas coordinates (center pivot) to InventoryView coordinates (top-left pivot)
         var localPosInInventory = transform.InverseTransformPoint(worldPosition);
@@ -28,7 +27,7 @@ public static class Extension
         var gridX = Mathf.RoundToInt(fromTopLeft.x / cellSize.x);
         var gridY = Mathf.RoundToInt(fromTopLeft.y / cellSize.y);
 
-        return new int2(gridX, gridY);
+        return new Vector2Int(gridX, gridY);
     }
 
     [Pure]
