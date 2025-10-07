@@ -12,11 +12,20 @@ on:
 
 jobs:
   publish:
+    permissions:
+      id-token: write  # enable GitHub OIDC token issuance for this job
     # Only run for release events with tag starting with 'dope-grid/'
     if: ${{ github.event_name != 'release' || startsWith(github.event.release.tag_name, 'dope-grid/') }}
     runs-on: ubuntu-latest
 
     steps:
+    # Get a short-lived NuGet API key
+    - name: NuGet login (OIDC → temp API key)
+      uses: NuGet/login@v1
+      id: login
+      with:
+        user: ${{ secrets.NUGET_USER }}
+
     - uses: actions/checkout@v4
 
     - name: Setup .NET
@@ -55,7 +64,7 @@ jobs:
       run: dotnet pack dotnet/DopeGrid/DopeGrid.csproj --configuration Release --no-build --output ./nupkg
 
     - name: Publish to NuGet
-      run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
