@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -102,7 +101,7 @@ namespace DopeGrid.Inventory
             {
                 var item = inventory.GetItem(itemInstanceId);
                 var shape = item.Shape;
-                var origin = new int2(item.X, item.Y);
+                var origin = new Vector2Int(item.X, item.Y);
                 for (int y = 0; y < shape.Height; y++)
                 {
                     for (int x = 0; x < shape.Width; x++)
@@ -111,7 +110,7 @@ namespace DopeGrid.Inventory
                         var text = _itemTexts[index++];
                         var rt = (RectTransform)text.transform;
                         rt.sizeDelta = cellSize;
-                        var gridPos = new int2(origin.x + x, origin.y + y);
+                        var gridPos = new Vector2Int(origin.x + x, origin.y + y);
                         rt.anchoredPosition = new Vector2(gridPos.x * cellSize.x, -(gridPos.y * cellSize.y));
                         text.fontSize = fontSize;
                         text.text = BuildLabel(index, item.Id);
@@ -127,7 +126,7 @@ namespace DopeGrid.Inventory
             var cellSize = _view.CellSize;
             var width = inventory!.Width;
             var height = inventory.Height;
-            var needed = math.max(0, width * height);
+            var needed = Mathf.Max(0, width * height);
 
             EnsureTextPool(_emptyTexts, needed, _root!);
             DeactivateSurplus(_emptyTexts, needed);

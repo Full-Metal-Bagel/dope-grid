@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.UI;
@@ -59,7 +58,7 @@ internal sealed class InventoryViewSyncer : IDisposable
                 var preRotSize = rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
                     ? new Vector2(rotatedSize.y, rotatedSize.x)
                     : rotatedSize;
-                var pos = new int2(item.X, item.Y);
+                var pos = new Vector2Int(item.X, item.Y);
                 var anchoredPos = GridToAnchoredPosition(pos);
 
                 var rt = (RectTransform)image.transform;
@@ -123,7 +122,7 @@ internal sealed class InventoryViewSyncer : IDisposable
         rt.pivot = new Vector2(0, 1);
     }
 
-    private Vector2 GridToAnchoredPosition(int2 gridPos)
+    private Vector2 GridToAnchoredPosition(Vector2Int gridPos)
     {
         // Top-left origin: X grows right, Y grows down
         return new Vector2(gridPos.x * _cellSize.x, -(gridPos.y * _cellSize.y));

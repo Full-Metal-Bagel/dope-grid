@@ -21,7 +21,7 @@
         <!-- NuGet Package Metadata -->
         <PackageId>DopeGrid</PackageId>
         <Version>1.0.0</Version>
-        <Authors>Full Metal Bagel</Authors>
+        <Authors>quabug</Authors>
         <Company>Full Metal Bagel</Company>
         <Product>Dope Grid</Product>
         <Description>High-performance 2D grid library with efficient bit-array based shapes, inventory system, and transformation support. Supports rotation, flipping, and collision detection for game inventories and grid-based systems.</Description>

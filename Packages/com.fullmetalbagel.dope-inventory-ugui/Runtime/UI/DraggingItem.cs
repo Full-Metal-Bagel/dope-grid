@@ -1,5 +1,4 @@
 using System;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace DopeGrid.Inventory;
@@ -12,7 +11,7 @@ public sealed class DraggingItem
     public RotationDegree Rotation { get; set; }
 
     public IUIInventory? TargetInventory { get; set; }
-    public int2 TargetPosition { get; set; } = default;
+    public Vector2Int TargetPosition { get; set; } = default;
     public int LastFrame { get; set; } = 0;
 
     public DraggingItem(Guid itemInstanceId, RectTransform view, RotationDegree rotation)

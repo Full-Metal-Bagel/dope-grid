@@ -7,9 +7,5 @@
     "url": "https://github.com/Full-Metal-Bagel/dope-grid.git",
     "type": "git"
   },
-  "dependencies": {
-    "com.unity.collections": "2.1.4",
-    "com.unity.mathematics": "1.2.6"
-  },
   "hideInEditor": true
 }
