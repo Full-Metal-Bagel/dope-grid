@@ -120,7 +120,7 @@ public class UncoveredLinesTests
     {
         var invalidRotation = (RotationDegree)999;
         var result = invalidRotation.GetNextClockwiseRotation();
-        Assert.That(result, Is.EqualTo(RotationDegree.None));
+        Assert.That(result, Is.EqualTo(RotationDegree.Clockwise0));
     }
 
     // RotationDegreeExtensions line 38 - Invalid enum in GetPreviousClockwiseRotation
@@ -129,7 +129,7 @@ public class UncoveredLinesTests
     {
         var invalidRotation = (RotationDegree)999;
         var result = invalidRotation.GetPreviousClockwiseRotation();
-        Assert.That(result, Is.EqualTo(RotationDegree.None));
+        Assert.That(result, Is.EqualTo(RotationDegree.Clockwise0));
     }
 
     // RotationDegreeExtensions line 49 - Invalid enum in GetZRotation

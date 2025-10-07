@@ -86,7 +86,7 @@ namespace DopeGrid.Inventory
 
             // Count needed labels across all items
             var needed = 0;
-            foreach (var item in inventory)
+            foreach (var item in inventory!)
             {
                 var shape = inventory.GetShape(item);
                 needed += shape.OccupiedSpaceCount();
@@ -114,7 +114,7 @@ namespace DopeGrid.Inventory
                         var gridPos = new int2(origin.x + x, origin.y + y);
                         rt.anchoredPosition = new Vector2(gridPos.x * cellSize.x, -(gridPos.y * cellSize.y));
                         text.fontSize = fontSize;
-                        text.text = BuildLabel(item.Id, item.Id);
+                        text.text = BuildLabel(index, item.Id);
                         text.gameObject.SetActive(true);
                     }
                 }
@@ -125,7 +125,7 @@ namespace DopeGrid.Inventory
         {
             var inventory = _view.Inventory;
             var cellSize = _view.CellSize;
-            var width = inventory.Width;
+            var width = inventory!.Width;
             var height = inventory.Height;
             var needed = math.max(0, width * height);
 

@@ -180,7 +180,7 @@ public class ShapesTests
     public void GetRotatedShape_None_ReturnsSameShape()
     {
         var original = Shapes.ImmutableSingle();
-        var rotated = original.GetRotatedShape(RotationDegree.None);
+        var rotated = original.GetRotatedShape(RotationDegree.Clockwise0);
 
         Assert.That(rotated.Id, Is.EqualTo(original.Id));
     }

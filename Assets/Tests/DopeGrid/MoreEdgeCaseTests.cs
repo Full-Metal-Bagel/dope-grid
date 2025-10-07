@@ -110,7 +110,7 @@ public class MoreEdgeCaseTests
     [Test]
     public void RotationDegree_CalculateRotatedSize_AllDegrees()
     {
-        var (w1, h1) = RotationDegree.None.CalculateRotatedSize(4, 6);
+        var (w1, h1) = RotationDegree.Clockwise0.CalculateRotatedSize(4, 6);
         Assert.That(w1, Is.EqualTo(4));
         Assert.That(h1, Is.EqualTo(6));
 

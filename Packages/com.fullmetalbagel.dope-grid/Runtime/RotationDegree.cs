@@ -5,7 +5,6 @@ namespace DopeGrid;
 
 public enum RotationDegree
 {
-    None = 0,
     Clockwise0 = 0,
     Clockwise90 = 1,
     Clockwise180 = 2,
@@ -19,11 +18,11 @@ public static class RotationDegreeExtensions
     {
         return current switch
         {
-            RotationDegree.None => RotationDegree.Clockwise90,
+            RotationDegree.Clockwise0 => RotationDegree.Clockwise90,
             RotationDegree.Clockwise90 => RotationDegree.Clockwise180,
             RotationDegree.Clockwise180 => RotationDegree.Clockwise270,
-            RotationDegree.Clockwise270 => RotationDegree.None,
-            _ => RotationDegree.None
+            RotationDegree.Clockwise270 => RotationDegree.Clockwise0,
+            _ => RotationDegree.Clockwise0
         };
     }
 
@@ -38,18 +37,18 @@ public static class RotationDegreeExtensions
     {
         return current switch
         {
-            RotationDegree.None => RotationDegree.Clockwise270,
-            RotationDegree.Clockwise90 => RotationDegree.None,
+            RotationDegree.Clockwise0 => RotationDegree.Clockwise270,
+            RotationDegree.Clockwise90 => RotationDegree.Clockwise0,
             RotationDegree.Clockwise180 => RotationDegree.Clockwise90,
             RotationDegree.Clockwise270 => RotationDegree.Clockwise180,
-            _ => RotationDegree.None
+            _ => RotationDegree.Clockwise0
         };
     }
 
     [Pure, MustUseReturnValue]
     public static float GetZRotation(this RotationDegree rotation) => rotation switch
     {
-        RotationDegree.None => 0f,
+        RotationDegree.Clockwise0 => 0f,
         RotationDegree.Clockwise90 => -90f,
         RotationDegree.Clockwise180 => -180f,
         RotationDegree.Clockwise270 => -270f,
@@ -61,7 +60,7 @@ public static class RotationDegreeExtensions
     {
         return rotation switch
         {
-            RotationDegree.None => (0f, 0f),
+            RotationDegree.Clockwise0 => (0f, 0f),
             RotationDegree.Clockwise90 => (height, 0f),
             RotationDegree.Clockwise180 => (width, -height),
             RotationDegree.Clockwise270 => (0f, -width),

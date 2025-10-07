@@ -212,7 +212,7 @@ public static class ReadOnlyGridShapeExtensions
 
         var rotation = rotateCount switch
         {
-            0 => RotationDegree.None,
+            0 => RotationDegree.Clockwise0,
             1 => RotationDegree.Clockwise90,
             2 => RotationDegree.Clockwise180,
             3 => RotationDegree.Clockwise270,

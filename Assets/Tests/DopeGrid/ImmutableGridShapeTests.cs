@@ -218,7 +218,7 @@ public class ImmutableGridShapeTests
     {
         var immutable = Shapes.ImmutableLine(3);
 
-        var rotated0 = immutable.GetRotatedShape(RotationDegree.None);
+        var rotated0 = immutable.GetRotatedShape(RotationDegree.Clockwise0);
         Assert.That(rotated0.Id, Is.EqualTo(immutable.Id));
 
         var rotated90 = immutable.GetRotatedShape(RotationDegree.Clockwise90);

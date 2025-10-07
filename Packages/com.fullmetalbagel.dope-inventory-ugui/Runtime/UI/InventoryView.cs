@@ -12,7 +12,7 @@ namespace DopeGrid.Inventory
 
         private static readonly Vector2 s_defaultCellSize = new(64f, 64f);
 
-        public IUIInventory Inventory { get; private set; } = null!;
+        public IUIInventory? Inventory { get; private set; }
 
         private Vector2 _cellSize = s_defaultCellSize;
 
@@ -21,7 +21,7 @@ namespace DopeGrid.Inventory
         private InventoryViewDragController _dragController = null!;
 
         public Vector2 CellSize => _cellSize;
-        public bool IsInitialized => !Inventory.IsZeroSize();
+        public bool IsInitialized => Inventory != null;
 
 #if UNITY_EDITOR
         protected override void Awake()
@@ -34,7 +34,7 @@ namespace DopeGrid.Inventory
         {
             if (inventory.IsZeroSize())
             {
-                Debug.LogError($"Inventory must be initialized with a size greater than zero. The provided inventory is {Inventory.Width}x{Inventory.Height}. Halting initialization.", this);
+                Debug.LogError($"Inventory must be initialized with a size greater than zero. The provided inventory is {inventory.Width}x{inventory.Height}. Halting initialization.", this);
                 return;
             }
 
