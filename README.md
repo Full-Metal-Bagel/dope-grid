@@ -1,174 +1,106 @@
-# Dope Grid
+# Dope Inventory
 
-A high-performance, thread-safe grid system
+A high-performance Unity 2D grid inventory system with drag-and-drop support, item rotation, and stacking.
 
 ## Features
 
-- **High Performance**: Leverages Unity's Burst compiler and Job System for maximum performance
-- **Thread-Safe**: Immutable grid shapes with concurrent caching for safe parallel operations
-- **Memory Efficient**: Bit-packed storage with optimized native collections
-- **Flexible Transformations**: Support for rotation, flipping, and trimming operations
-- **Unity Native**: Seamlessly integrates with native collections
+- **2D Grid-Based Inventory:** Efficient grid system using span-based bit arrays and unsafe pointers
+- **Drag & Drop:** Intuitive item dragging between multiple inventories with visual feedback
+- **Item Rotation:** Press R while dragging to rotate items (90°/180°/270°)
+- **Collision Detection:** Real-time placement validation using shape overlap checks
+- **Object Pooling:** Minimized GC allocations through pooling of shapes and UI elements
+- **uGUI Integration:** Ready-to-use Unity UI components
 
-## Core Components
+## Quick Start
 
-### GridShape
-Mutable 2D grid structure representing occupied/empty cells. Optimized for Unity's native collections and Burst compilation.
+### Requirements
 
-```csharp
-using DopeGrid.Native;
-using Unity.Collections;
+- Unity 2022.3 or later
 
-// Create a 5x5 grid
-var shape = new GridShape(5, 5, Allocator.Temp);
+### Demo Scene
 
-// Set cells using indexer syntax
-shape[2, 2] = true; // Set center cell
-shape[1, 1] = true; // Set another cell
+Open `Assets/Scenes/Inventory(uGUI).unity` to see a working example.
 
-// Perform transformations
-var rotated = shape.Rotate(RotationDegree.Clockwise90);
-var flipped = shape.Flip(FlipAxis.Horizontal);
-var trimmed = shape.Trim(); // Remove empty borders
+## Architecture
 
-// Don't forget to dispose
-shape.Dispose();
-rotated.Dispose();
-flipped.Dispose();
-trimmed.Dispose();
+### Packages
+
+This repository contains two Unity packages:
+
+#### DopeGrid (`com.fullmetalbagel.dope-grid`)
+Low-level grid shape library providing:
+- `IGridShape<T>`: Interface for mutable grid shapes with typed cell values
+- `ImmutableGridShape`: Memory-efficient readonly grid shapes using bit arrays
+- `IndexedGridBoard`: Grid container managing multiple items with collision detection
+- Grid transformations (rotation, flipping, trimming)
+
+#### DopeInventory (`com.fullmetalbagel.dope-inventory-ugui`)
+uGUI-based inventory system built on DopeGrid:
+- `IGameInventory`/`IUIInventory`: Inventory model interfaces with GUID-based item tracking
+- `InventoryView`: Main MonoBehaviour for inventory UI
+- `InventoryViewDragController`: Drag-and-drop interaction handling
+- `InventoryItemViewPool`: Object pooling for UI elements
+
+### Key Components
+
+**InventoryView** (`Packages/com.fullmetalbagel.dope-inventory-ugui/Runtime/UI/InventoryView.cs`)
+Main component orchestrating inventory UI, handling user input, and synchronizing model-view state.
+
+**IGameInventory** (`Packages/com.fullmetalbagel.dope-inventory-ugui/Runtime/Model/IGameInventory.cs`)
+Core inventory model interface managing item placement, movement, and removal with collision detection.
+
+**IndexedGridBoard** (`Packages/com.fullmetalbagel.dope-grid/Runtime/IndexedGridBoard.cs`)
+Grid container storing item IDs per cell, providing efficient spatial queries and collision checking.
+
+## Development
+
+### Running Tests
+
+**Unity Tests:**
+```bash
+# Open Test Runner in Unity Editor
+# Window > General > Test Runner
+# Click "Run All" for EditMode or PlayMode tests
 ```
 
-### ImmutableGridShape
-Thread-safe, cached immutable version of GridShape. Ensures identical shapes share the same ID across threads.
+**.NET Tests (faster, no Unity dependency):**
+```bash
+cd dotnet
+dotnet test DopeGrid.sln
 
-```csharp
-// Create immutable shape from mutable one
-var shape = new GridShape(3, 3, Allocator.Temp);
-shape[1, 1] = true;
+# With coverage
+dotnet test --collect:"XPlat Code Coverage"
 
-var immutable = ImmutableGridShape.GetOrCreateImmutable(shape);
-
-// Transform operations return new immutable instances
-var rotated = immutable.Rotate(RotationDegree.Clockwise90);
-var flipped = immutable.Flip(FlipAxis.Vertical);
-
-// Shape IDs are consistent across threads
-int shapeId = immutable.ShapeId;
-
-shape.Dispose();
+# Specific test
+dotnet test --filter "FullyQualifiedName~TestName"
 ```
 
-### GridContainer
-Container for managing multiple grid items with placement, rotation, and collision detection.
+### Code Style
 
-```csharp
-using DopeGrid.Native;
-using Unity.Collections;
+- C# 10+ with nullable reference types enabled
+- Unsafe code and pointers for performance-critical grid operations
+- Pure functions marked with `[Pure, MustUseReturnValue]`
+- Strict analyzer rules with `TreatWarningsAsErrors`
 
-// Create a 10x10 container
-var container = new GridContainer(10, 10, Allocator.Temp);
+### Project Structure
 
-// Create an item shape
-var itemShape = new GridShape(2, 2, Allocator.Temp);
-itemShape.SetAll(true);
-
-// Try to place item at position (3, 3)
-if (container.TryAddItem(3, 3, itemShape, out int itemId))
-{
-    // Item placed successfully
-
-    // Check if position is occupied
-    bool occupied = container.IsOccupied(3, 3);
-
-    // Remove item
-    container.RemoveItem(itemId);
-}
-
-container.Dispose();
-itemShape.Dispose();
 ```
-
-### SpanBitArray / ReadOnlySpanBitArray
-Low-level bit manipulation structures for efficient storage of grid cell states.
-
-```csharp
-using DopeGrid.Core;
-
-// Create bit array with 64 bits
-var bitArray = new SpanBitArray(stackalloc ulong[1]);
-
-// Set and get bits
-bitArray[5] = true;
-bool isSet = bitArray[5];
-
-// Count set bits
-int count = bitArray.CountSetBits();
-
-// Create read-only view
-var readOnly = new ReadOnlySpanBitArray(bitArray.Data);
+Packages/
+├── com.fullmetalbagel.dope-grid/          # Low-level grid library
+│   ├── Runtime/                            # Grid shapes, boards, transformations
+│   └── Editor/                             # Editor utilities
+├── com.fullmetalbagel.dope-inventory-ugui/ # Inventory UI system
+│   ├── Runtime/
+│   │   ├── Model/                          # Inventory model layer
+│   │   ├── UI/                             # UI components
+│   │   └── Input/                          # Input abstraction
+Assets/
+├── Scenes/                                 # Demo scenes
+└── Tests/                                  # Unity test cases
+dotnet/
+└── DopeGrid/                               # Standalone .NET project (same source)
 ```
-
-## Job System Integration
-
-The library is designed for efficient parallel processing with Unity Jobs:
-
-```csharp
-using Unity.Jobs;
-using Unity.Burst;
-using Unity.Collections;
-
-[BurstCompile]
-public struct GridProcessingJob : IJobParallelFor
-{
-    [ReadOnly] public NativeArray<ImmutableGridShape> shapes;
-    public NativeArray<int> results;
-
-    public void Execute(int index)
-    {
-        var shape = shapes[index];
-        // Process shape - immutable shapes are thread-safe
-        results[index] = shape.Width * shape.Height;
-    }
-}
-```
-
-## Performance Considerations
-
-- **Always Dispose**: Native collections must be properly disposed to avoid memory leaks
-- **Use Appropriate Allocators**:
-  - `Allocator.Temp` for short-lived data (1 frame)
-  - `Allocator.TempJob` for job data (4 frames)
-  - `Allocator.Persistent` for long-lived data
-- **Trim Before Caching**: Always trim shapes before creating immutable versions for optimal deduplication
-- **Batch Operations**: Use job system for processing multiple shapes in parallel
-
-## Testing
-
-Tests are included in `Assets/Tests/` and can be run through Unity's Test Runner:
-
-1. Open Unity Editor
-2. Navigate to Window > General > Test Runner
-3. Run all tests or filter by namespace
-
-Test coverage includes:
-- Core bit array operations
-- Grid shape transformations
-- Immutable shape caching and thread safety
-- Concurrent operations via Job System
-- Burst-compiled job tests
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Contributing
-
-Contributions are welcome! Please ensure:
-- All tests pass
-- Code follows existing conventions
-- Native collections are properly disposed
-- Thread safety is maintained for immutable types
-
-## Support
-
-For issues, questions, or feature requests, please visit the [GitHub repository](https://github.com/Full-Metal-Bagel/dope-grid).
+MIT License - see [LICENSE](LICENSE) for details.
