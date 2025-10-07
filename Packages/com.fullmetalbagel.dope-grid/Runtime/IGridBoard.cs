@@ -2,6 +2,7 @@ namespace DopeGrid;
 
 public interface IGridBoard<out T> : IReadOnlyGridShape<T>
 {
+    BoardItemData GetItemById(int id);
     BoardItemData TryAddItem(ImmutableGridShape item);
     BoardItemData TryAddItemAt(ImmutableGridShape shape, int x, int y);
     BoardItemData RemoveItem(int id);
