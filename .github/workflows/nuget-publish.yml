@@ -12,6 +12,8 @@ on:
 
 jobs:
   publish:
+    # Only run for release events with tag starting with 'dope-grid/'
+    if: ${{ github.event_name != 'release' || startsWith(github.event.release.tag_name, 'dope-grid/') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -27,14 +29,8 @@ jobs:
       run: |
         if [ "${{ github.event_name }}" = "release" ]; then
           TAG="${{ github.event.release.tag_name }}"
-          # Support tags like:
-          # - dope-grid/v1.0.0
-          # - dope-inventory-ugui/v1.2.3
-          # Also tolerate tags like:
-          # - com.fullmetalbagel.dope-grid@1.0.0
-          # Extract the part after the last '/' or '@', then strip a leading 'v'.
-          VERSION="${TAG##*/}"
-          VERSION="${VERSION##*@}"
+          # Expected format: dope-grid/vX.Y.Z
+          VERSION="${TAG#dope-grid/}"
           VERSION="${VERSION#v}"
         else
           VERSION="${{ inputs.version }}"
