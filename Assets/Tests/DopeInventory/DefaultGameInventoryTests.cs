@@ -1,8 +1,7 @@
 using System;
-using DopeGrid.Inventory;
 using NUnit.Framework;
 
-namespace DopeGrid.Tests.DopeInventory
+namespace DopeGrid.Inventory.Tests
 {
     [TestFixture]
     public class DefaultGameInventoryTests
