@@ -101,7 +101,7 @@ public sealed class DefaultGameInventory : IGameInventory, IDisposable
     {
         var itemId = GetItemId(itemInstanceId);
         var removed = _board.RemoveItem(itemId);
-        if (removed.IsInvalid) throw new ArgumentException();
+        if (removed.IsInvalid) throw new ArgumentException("something off");
 
         _itemInstanceIdMap[itemInstanceId] = -1;
         _itemInstanceList[itemId] = Guid.Empty;
@@ -113,7 +113,7 @@ public sealed class DefaultGameInventory : IGameInventory, IDisposable
     private void ForceAddItem(Guid itemInstanceId, ImmutableGridShape shape, int x, int y, RotationDegree rotation)
     {
         var added = _board.TryAddItemAt(shape, x, y);
-        if (added.IsInvalid) throw new ArgumentException();
+        if (added.IsInvalid) throw new ArgumentException("something off");
 
         _itemInstanceIdMap[itemInstanceId] = added.Id;
         while (_itemInstanceList.Count <= added.Id)
