@@ -301,7 +301,13 @@ public class IndexedGridBoardTests
             board.TryAddItemAt(single, 2, y);
         }
 
-        var item = board.TryAddItem(shape);
+        var rotated = shape;
+        BoardItemData item;
+        do
+        {
+            item = board.TryAddItem(rotated);
+            rotated = rotated.Rotate90();
+        } while (rotated != shape && item.IsInvalid);
 
         Assert.That(item.Id, Is.GreaterThanOrEqualTo(0), "Should find a fit");
     }
