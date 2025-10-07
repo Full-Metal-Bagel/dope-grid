@@ -9,14 +9,14 @@ namespace DopeGrid.Inventory;
 
 internal sealed class InventoryViewSyncer : IDisposable
 {
-    private readonly SharedInventoryData _sharedInventoryData;
+    private readonly IUIInventory _inventory;
     private readonly Transform _parent;
     private readonly Vector2 _cellSize;
-    private readonly Dictionary<InventoryItemInstanceId, Image> _itemViews = new();
+    private readonly Dictionary<int, Image> _itemViews = new();
 
-    public InventoryViewSyncer(SharedInventoryData sharedInventoryData, Transform parent, Vector2 cellSize)
+    public InventoryViewSyncer(IUIInventory inventory, Transform parent, Vector2 cellSize)
     {
-        _sharedInventoryData = sharedInventoryData;
+        _inventory = inventory;
         _parent = parent;
         _cellSize = cellSize;
     }
@@ -27,49 +27,47 @@ internal sealed class InventoryViewSyncer : IDisposable
         {
             if (kv.Value != null)
             {
-                _sharedInventoryData.Pool.Release(kv.Value);
+                _inventory.ReleaseImage(kv.Value);
             }
         }
         _itemViews.Clear();
     }
 
-    public void SyncViews(Inventory.ReadOnly inventory)
+    public void SyncViews()
     {
-        var seen = HashSetPool<InventoryItemInstanceId>.Get();
-        var toRemove = ListPool<InventoryItemInstanceId>.Get();
+        var seen = HashSetPool<int>.Get();
+        var toRemove = ListPool<int>.Get();
 
         try
         {
             // Iterate all items from model
-            for (int i = 0; i < inventory.ItemCount; i++)
+            foreach (var itemInstanceId in _inventory)
             {
-                var item = inventory[i];
+                var item = _inventory.GetItem(itemInstanceId);
+                seen.Add(item.Id);
 
-                var instanceId = item.InstanceId;
-                seen.Add(instanceId);
+                var sprite = _inventory.GetSprite(itemInstanceId);
+                var rotation = _inventory.GetRotation(itemInstanceId);
 
-                // Lookup UI definition by Guid
-                if (!_sharedInventoryData.Definitions.TryGetValue(item.DefinitionId, out var itemUI) || itemUI == null)
-                    continue; // No UI—skip rendering
-
-                var image = GetOrCreateItemView(instanceId);
-                image.sprite = itemUI.Image;
+                var image = GetOrCreateItemView(item.Id);
+                image.sprite = sprite;
                 image.raycastTarget = false;
                 image.preserveAspect = false;
 
                 // Compute target AABB (rotated shape) and pre-rotation rect size
                 var rotatedSize = new Vector2(item.Shape.Width * _cellSize.x, item.Shape.Height * _cellSize.y);
-                var preRotSize = item.Rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
+                var preRotSize = rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270
                     ? new Vector2(rotatedSize.y, rotatedSize.x)
                     : rotatedSize;
-                var pos = item.Position; // int2, top-left origin in model
+                var pos = new int2(item.X, item.Y);
                 var anchoredPos = GridToAnchoredPosition(pos);
 
                 var rt = (RectTransform)image.transform;
                 EnsureTopLeftAnchors(rt);
                 rt.sizeDelta = preRotSize;
-                var angleZ = item.Rotation.GetZRotation();
-                var offset = item.Rotation.GetRotationOffset(preRotSize);
+                var angleZ = rotation.GetZRotation();
+                var (offsetX, offsetY) = rotation.GetRotationOffset(preRotSize.x, preRotSize.y);
+                var offset = new Vector2(offsetX, offsetY);
                 rt.anchoredPosition = anchoredPos + offset;
                 rt.localEulerAngles = new Vector3(0f, 0f, angleZ);
             }
@@ -86,24 +84,24 @@ internal sealed class InventoryViewSyncer : IDisposable
                 var image = _itemViews[id];
                 if (image != null)
                 {
-                    _sharedInventoryData.Pool.Release(image);
+                    _inventory.ReleaseImage(image);
                 }
                 _itemViews.Remove(id);
             }
         }
         finally
         {
-            HashSetPool<InventoryItemInstanceId>.Release(seen);
-            ListPool<InventoryItemInstanceId>.Release(toRemove);
+            HashSetPool<int>.Release(seen);
+            ListPool<int>.Release(toRemove);
         }
     }
 
-    private Image GetOrCreateItemView(InventoryItemInstanceId id)
+    private Image GetOrCreateItemView(int id)
     {
         if (_itemViews.TryGetValue(id, out var existing) && existing != null)
             return existing;
 
-        var image = _sharedInventoryData.Pool.Get();
+        var image = _inventory.GetImage();
 #if UNITY_EDITOR
         image.name = $"Item_{id}";
 #endif

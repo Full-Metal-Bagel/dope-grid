@@ -8,7 +8,7 @@ namespace DopeGrid.Inventory;
 public static class Extension
 {
     [Pure, MustUseReturnValue]
-    public static GridPosition GetGridPosition(this RectTransform transform, float2 cellSize, int shapeWidth, int shapeHeight, Vector2 worldPosition)
+    public static int2 GetGridPosition(this RectTransform transform, float2 cellSize, int shapeWidth, int shapeHeight, Vector2 worldPosition)
     {
         // Convert from Canvas coordinates (center pivot) to InventoryView coordinates (top-left pivot)
         var localPosInInventory = transform.InverseTransformPoint(worldPosition);

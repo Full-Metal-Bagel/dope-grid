@@ -1,5 +1,6 @@
 using System;
 using DopeGrid;
+using NUnit.Framework;
 
 namespace DopeGrid.Tests;
 
@@ -22,7 +23,7 @@ public class UtilityTests
     [Test]
     public void RotationDegree_CalculateRotatedSize_WorksCorrectly()
     {
-        var (w1, h1) = RotationDegree.None.CalculateRotatedSize(3, 5);
+        var (w1, h1) = RotationDegree.Clockwise0.CalculateRotatedSize(3, 5);
         Assert.That(w1, Is.EqualTo(3));
         Assert.That(h1, Is.EqualTo(5));
 

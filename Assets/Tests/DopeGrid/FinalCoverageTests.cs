@@ -1,5 +1,6 @@
 using System;
 using DopeGrid;
+using NUnit.Framework;
 
 namespace DopeGrid.Tests;
 
@@ -244,17 +245,17 @@ public class FinalCoverageTests
     [Test]
     public void RotationDegree_GetNextClockwiseRotation_AllDegrees()
     {
-        Assert.That(RotationDegree.None.GetNextClockwiseRotation(), Is.EqualTo(RotationDegree.Clockwise90));
+        Assert.That(RotationDegree.Clockwise0.GetNextClockwiseRotation(), Is.EqualTo(RotationDegree.Clockwise90));
         Assert.That(RotationDegree.Clockwise90.GetNextClockwiseRotation(), Is.EqualTo(RotationDegree.Clockwise180));
         Assert.That(RotationDegree.Clockwise180.GetNextClockwiseRotation(), Is.EqualTo(RotationDegree.Clockwise270));
-        Assert.That(RotationDegree.Clockwise270.GetNextClockwiseRotation(), Is.EqualTo(RotationDegree.None));
+        Assert.That(RotationDegree.Clockwise270.GetNextClockwiseRotation(), Is.EqualTo(RotationDegree.Clockwise0));
     }
 
     [Test]
     public void RotationDegree_GetPreviousClockwiseRotation_AllDegrees()
     {
-        Assert.That(RotationDegree.None.GetPreviousClockwiseRotation(), Is.EqualTo(RotationDegree.Clockwise270));
-        Assert.That(RotationDegree.Clockwise90.GetPreviousClockwiseRotation(), Is.EqualTo(RotationDegree.None));
+        Assert.That(RotationDegree.Clockwise0.GetPreviousClockwiseRotation(), Is.EqualTo(RotationDegree.Clockwise270));
+        Assert.That(RotationDegree.Clockwise90.GetPreviousClockwiseRotation(), Is.EqualTo(RotationDegree.Clockwise0));
         Assert.That(RotationDegree.Clockwise180.GetPreviousClockwiseRotation(), Is.EqualTo(RotationDegree.Clockwise90));
         Assert.That(RotationDegree.Clockwise270.GetPreviousClockwiseRotation(), Is.EqualTo(RotationDegree.Clockwise180));
     }
@@ -262,7 +263,7 @@ public class FinalCoverageTests
     [Test]
     public void RotationDegree_GetZRotation_AllDegrees()
     {
-        Assert.That(RotationDegree.None.GetZRotation(), Is.EqualTo(0f));
+        Assert.That(RotationDegree.Clockwise0.GetZRotation(), Is.EqualTo(0f));
         Assert.That(RotationDegree.Clockwise90.GetZRotation(), Is.EqualTo(-90f));
         Assert.That(RotationDegree.Clockwise180.GetZRotation(), Is.EqualTo(-180f));
         Assert.That(RotationDegree.Clockwise270.GetZRotation(), Is.EqualTo(-270f));

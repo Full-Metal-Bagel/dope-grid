@@ -1,5 +1,6 @@
 using System;
 using DopeGrid;
+using NUnit.Framework;
 
 namespace DopeGrid.Tests;
 
@@ -148,7 +149,7 @@ public class ReadOnlyBoolGridShapeExtensionsTests
         shape[0, 0] = true;
 
         var occupied = true;
-        var result = grid.CheckShapeCells(shape, 1, 1, (gx, gy, value, occ) => !value || grid[gx, gy] != occ, occupied);
+        var result = grid.CheckShapeCells(shape, 1, 1, occupied, (gx, gy, value, occ) => !value || grid[gx, gy] != occ);
 
         Assert.That(result, Is.False);
     }

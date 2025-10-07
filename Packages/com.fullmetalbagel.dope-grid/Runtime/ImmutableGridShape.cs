@@ -35,7 +35,7 @@ public readonly record struct ImmutableGridShape(int Id) : IReadOnlyGridShape<bo
     {
         return rotation switch
         {
-            RotationDegree.None => this,
+            RotationDegree.Clockwise0 => this,
             RotationDegree.Clockwise90 => Rotate90(),
             RotationDegree.Clockwise180 => Rotate90().Rotate90(),
             RotationDegree.Clockwise270 => Rotate90().Rotate90().Rotate90(),

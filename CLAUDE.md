@@ -4,79 +4,120 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Unity project for the Dope Grid inventory system, a high-performance grid-based data structure library with native Unity support, Burst compilation, and Job System integration.
+**Dope Inventory** is a Unity-based 2D grid inventory system with drag-and-drop support, item rotation, and stacking. The project consists of two main Unity packages:
+
+1. **DopeGrid** (`com.fullmetalbagel.dope-grid`): Low-level grid shape library providing efficient 2D grid operations using span-based bit arrays and unsafe pointers
+2. **DopeInventory** (`com.fullmetalbagel.dope-inventory-ugui`): uGUI-based inventory system built on top of DopeGrid
+
+Additionally, there's a standalone .NET project under `dotnet/DopeGrid/` that shares the same source code with the Unity package for cross-platform testing.
 
 ## Development Commands
 
 ### Unity Testing
-Tests are run through Unity's Test Runner. Since this is a Unity project:
-- Open the project in Unity Editor (2022.3 or later)
-- Open Test Runner: Window > General > Test Runner
-- Run all tests or filter specific test assemblies/namespaces
-- For command-line testing: Use Unity's batch mode with `-runTests` flag
+```bash
+# Run tests in Unity Editor (from Unity Editor's Test Runner window)
+# Window > General > Test Runner
+# Click "Run All" for EditMode or PlayMode tests
+```
 
-### Building
-This is a Unity package project. Building happens through Unity:
-- Unity automatically compiles C# scripts when files change
-- Package is defined in `Packages/com.fullmetalbagel.dope-grid/package.json`
-- Assembly definitions control compilation boundaries (`.asmdef` files)
+### .NET Testing
+```bash
+# Run standalone .NET tests (faster, no Unity dependency)
+cd dotnet
+dotnet test DopeGrid.sln
+
+# Run tests with coverage
+dotnet test DopeGrid.sln --collect:"XPlat Code Coverage"
+
+# Run specific test
+dotnet test --filter "FullyQualifiedName~TestName"
+```
+
+### Unity Project
+```bash
+# Open in Unity (version 2022.3+)
+# Open the project root directory in Unity Hub
+
+# Build Unity project
+# File > Build Settings > Build
+```
 
 ## Architecture
 
-### Package Structure
-The main package `com.fullmetalbagel.dope-grid` is organized into three assemblies:
+### DopeGrid Core Architecture
 
-1. **DopeGrid.Core** (`Runtime/Core/`)
-   - Foundation types like `SpanBitArray`, `ReadOnlySpanBitArray`
-   - Utility classes and enums (`FlipAxis`, `RotationDegree`)
-   - No Unity dependencies, pure C# implementation
+**Grid Shape Abstraction:**
+- `IReadOnlyGridShape`: Base interface for immutable grid shapes with width/height and occupancy checking
+- `IGridShape<T>`: Mutable grid shapes storing typed values per cell
+- `ImmutableGridShape`: Readonly struct-based shape using span bit arrays for memory efficiency
+- `GridShape`: Mutable grid shape with pooling support
+- `SpanBitArray`/`ReadOnlySpanBitArray`: Efficient bit-level storage for grid cell occupancy
 
-2. **DopeGrid.Native** (`Runtime/Native/`)
-   - Unity-native implementations using Burst and Job System
-   - Key types: `GridShape`, `ImmutableGridShape`, `GridContainer`
-   - Thread-safe immutable shape caching system
-   - Optimized for parallel processing with Unity Jobs
+**Grid Board (Container):**
+- `IGridBoard<T>`: Interface for grid containers that manage multiple items
+- `IndexedGridBoard`: Concrete implementation storing item IDs per cell (int-based)
+- `BoardItemData`: Value type containing item position, shape reference, and ID
+- Board handles collision detection when adding/moving items using shape overlap checks
 
-3. **DopeGrid.Standard** (`Runtime/Standard/`)
-   - Standard C# implementations without Unity dependencies
+**Transformations:**
+- `RotationDegree`: Enum for 90/180/270 degree rotations
+- `FlipAxis`: Horizontal/Vertical flipping
+- All transformations are performed through extension methods in `GridShapeExtension`
 
-### Key Concepts
+### DopeInventory Architecture
 
-**GridShape**: Mutable 2D grid structure representing occupied/empty cells. Uses native collections for high performance.
+**Model Layer:**
+- `IGameInventory`: Core inventory interface extending `IReadOnlyIndexedGridBoard` with GUID-based item tracking
+- `IUIInventory`: UI-specific inventory interface adding sprite and image pooling
+- `DefaultGameInventory`/`DefaultUIInventory`: Default implementations with rotation state management
 
-**ImmutableGridShape**: Thread-safe, cached immutable version of GridShape. Uses a static repository pattern to ensure identical shapes share the same ID across threads. Critical for concurrent operations in Unity Job System.
+**View Layer:**
+- `InventoryView`: Main MonoBehaviour orchestrating the inventory UI
+- `InventoryViewSyncer`: Synchronizes model changes to view (item placement/removal)
+- `InventoryViewDragController`: Handles drag-and-drop interactions
+- `InventoryViewDragPreviewController`: Manages visual feedback during dragging
+- `DraggingItem`: Value type representing an item being dragged
 
-**SpanBitArray/ReadOnlySpanBitArray**: Low-level bit manipulation structures for efficient storage of grid cell states.
+**Input Abstraction:**
+- `InventoryViewInput`: Interface for input handling (mouse/touch)
+- `InventoryViewLegacyInput`: Legacy Unity Input implementation
 
-**GridContainer**: Container for managing multiple grid items with placement, rotation, and collision detection.
+**Object Pooling:**
+- `DefaultInventoryItemViewPool`: Pools UI Image components for items
+- `SharedData`: Holds references to pooled/shared resources across inventories
 
-### Testing Architecture
+### Key Design Patterns
 
-Tests are in `Assets/Tests/` and cover:
-- Core bit array operations
-- Grid shape transformations (rotation, flip, trim)
-- Immutable shape caching and thread safety
-- Concurrent operations via Unity Job System
-- Burst-compiled job tests
+1. **Composition Over Inheritance:** Grid shapes use interfaces and extension methods rather than deep hierarchies
+2. **Struct-Based Immutability:** `ImmutableGridShape` and `BoardItemData` are readonly structs to minimize allocations
+3. **Object Pooling:** Both grid shapes and UI images use pooling to reduce GC pressure
+4. **Interface Segregation:** Clean separation between readonly (`IReadOnly*`) and mutable (`I*`) interfaces
 
-### Thread Safety
+### Critical Files
 
-The `ImmutableGridShape` system is designed for thread-safe operations:
-- Static shape repository with concurrent dictionary
-- GetOrCreateImmutable() ensures shape deduplication
-- All transformations return new immutable instances
-- Safe for use in parallel jobs and multi-threaded contexts
+- **DopeGrid Core:**
+  - `Packages/com.fullmetalbagel.dope-grid/Runtime/IGridShape.cs` - Shape interface and transformations
+  - `Packages/com.fullmetalbagel.dope-grid/Runtime/IGridBoard.cs` - Board container interface
+  - `Packages/com.fullmetalbagel.dope-grid/Runtime/IndexedGridBoard.cs` - Board implementation
+  - `Packages/com.fullmetalbagel.dope-grid/Runtime/ImmutableGridShape.cs` - Immutable shape implementation
 
-## Dependencies
+- **DopeInventory:**
+  - `Packages/com.fullmetalbagel.dope-inventory-ugui/Runtime/Model/IGameInventory.cs` - Core inventory model
+  - `Packages/com.fullmetalbagel.dope-inventory-ugui/Runtime/Model/IUIInventory.cs` - UI inventory interface
+  - `Packages/com.fullmetalbagel.dope-inventory-ugui/Runtime/UI/InventoryView.cs` - Main view component
 
-- Unity 2022.3+
-- Unity Collections 2.1.4
-- Unity Mathematics 1.2.6
+### Code Style Notes
 
-## Important Notes
+- Uses C# 10+ features (`record`, pattern matching, range operators)
+- Heavy use of `unsafe` code and pointers for performance-critical grid operations
+- Pure functions marked with `[Pure, MustUseReturnValue]` (JetBrains.Annotations)
+- Strict null safety (`#nullable enable`)
+- Project uses `.editorconfig` with strict analyzer rules (`TreatWarningsAsErrors`)
 
-- Always trim shapes before creating immutable versions to ensure proper deduplication
-- Use `Allocator.TempJob` for temporary native collections in jobs
-- Dispose native collections properly to avoid memory leaks
-- The project uses Unity's native collections and job system extensively - be familiar with their constraints
-- never generate .meta file
+### Dual-Build Strategy
+
+The DopeGrid library maintains two build configurations:
+1. **Unity package** (`Packages/com.fullmetalbagel.dope-grid/`) - Uses Unity's test framework, includes Unity-specific features
+2. **.NET project** (`dotnet/DopeGrid/`) - References the same source files via wildcard includes, uses NUnit, faster test iteration
+
+When modifying core grid code, ensure changes work in both Unity and standalone .NET contexts.

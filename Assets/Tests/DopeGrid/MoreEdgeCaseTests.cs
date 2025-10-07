@@ -1,5 +1,6 @@
 using System;
 using DopeGrid;
+using NUnit.Framework;
 
 namespace DopeGrid.Tests;
 
@@ -109,7 +110,7 @@ public class MoreEdgeCaseTests
     [Test]
     public void RotationDegree_CalculateRotatedSize_AllDegrees()
     {
-        var (w1, h1) = RotationDegree.None.CalculateRotatedSize(4, 6);
+        var (w1, h1) = RotationDegree.Clockwise0.CalculateRotatedSize(4, 6);
         Assert.That(w1, Is.EqualTo(4));
         Assert.That(h1, Is.EqualTo(6));
 
@@ -151,7 +152,7 @@ public class MoreEdgeCaseTests
         using var shape = new GridShape(2, 2);
 
         Assert.Throws<ArgumentNullException>(() =>
-            grid.CheckShapeCells<GridShape, GridShape, bool, int>(shape, 0, 0, null!, 0));
+            grid.CheckShapeCells<GridShape, GridShape, bool, int>(shape, 0, 0, 0, null!));
     }
 
     // Additional ValueGridShape tests

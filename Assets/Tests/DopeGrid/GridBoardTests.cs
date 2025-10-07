@@ -1,7 +1,9 @@
 using System;
-using DopeGrid;
+using NUnit.Framework;
 
 namespace DopeGrid.Tests;
+
+#pragma warning disable CS0618 // Type or member is obsolete
 
 [TestFixture]
 public class GridBoardTests

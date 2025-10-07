@@ -7,7 +7,6 @@ using UnityEngine.UI;
 namespace DopeGrid.Inventory
 {
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(InventoryView))]
     public class InventoryViewDebugOverlay : MonoBehaviour
     {
         [SerializeField] private Color _indexColor = Color.red;
@@ -82,14 +81,15 @@ namespace DopeGrid.Inventory
 
         private void UpdateItemIndices()
         {
-            var inventory = _view.ReadOnlyInventory;
+            var inventory = _view.Inventory;
             var cellSize = _view.CellSize;
 
             // Count needed labels across all items
             var needed = 0;
-            for (int i = 0; i < inventory.ItemCount; i++)
+            foreach (var item in inventory!)
             {
-                needed += inventory[i].Shape.OccupiedSpaceCount;
+                var shape = inventory.GetShape(item);
+                needed += shape.OccupiedSpaceCount();
             }
 
             EnsureTextPool(_itemTexts, needed, _root!);
@@ -98,23 +98,23 @@ namespace DopeGrid.Inventory
             // Fill labels
             var index = 0;
             var fontSize = Mathf.Max(10, Mathf.RoundToInt(Mathf.Min(cellSize.x, cellSize.y) * 0.5f));
-            for (int i = 0; i < inventory.ItemCount; i++)
+            foreach (var itemInstanceId in inventory)
             {
-                var item = inventory[i];
+                var item = inventory.GetItem(itemInstanceId);
                 var shape = item.Shape;
-                var origin = item.Position;
+                var origin = new int2(item.X, item.Y);
                 for (int y = 0; y < shape.Height; y++)
                 {
                     for (int x = 0; x < shape.Width; x++)
                     {
-                        if (!shape.GetCell(x, y)) continue;
+                        if (!shape[x, y]) continue;
                         var text = _itemTexts[index++];
                         var rt = (RectTransform)text.transform;
                         rt.sizeDelta = cellSize;
                         var gridPos = new int2(origin.x + x, origin.y + y);
                         rt.anchoredPosition = new Vector2(gridPos.x * cellSize.x, -(gridPos.y * cellSize.y));
                         text.fontSize = fontSize;
-                        text.text = BuildLabel(i, item.InstanceId);
+                        text.text = BuildLabel(index, item.Id);
                         text.gameObject.SetActive(true);
                     }
                 }
@@ -123,9 +123,9 @@ namespace DopeGrid.Inventory
 
         private void UpdateEmptyCells()
         {
-            var inventory = _view.ReadOnlyInventory;
+            var inventory = _view.Inventory;
             var cellSize = _view.CellSize;
-            var width = inventory.Width;
+            var width = inventory!.Width;
             var height = inventory.Height;
             var needed = math.max(0, width * height);
 
@@ -137,13 +137,12 @@ namespace DopeGrid.Inventory
             {
                 var x = i % width;
                 var y = i / width;
-                var value = inventory.Grid[x, y];
+                var isEmpty = !inventory.IsOccupied(x, y);
                 var text = _emptyTexts[i];
                 var rt = (RectTransform)text.transform;
                 rt.sizeDelta = cellSize;
                 rt.anchoredPosition = new Vector2(x * cellSize.x, -(y * cellSize.y));
                 text.fontSize = fs;
-                var isEmpty = value == -1;
                 text.text = isEmpty ? "-1" : string.Empty;
                 text.gameObject.SetActive(isEmpty);
             }
@@ -195,13 +194,13 @@ namespace DopeGrid.Inventory
         public void SetLabelMode(LabelMode mode) => _labelMode = mode;
         public void ToggleLabelMode() => _labelMode ^= LabelMode.InstanceId; // toggle instance id flag
 
-        private string BuildLabel(int itemIndex, InventoryItemInstanceId id)
+        private string BuildLabel(int itemIndex, int instanceId)
         {
             var showIndex = (_labelMode & LabelMode.ItemIndex) != 0;
             var showInstance = (_labelMode & LabelMode.InstanceId) != 0;
-            if (showIndex && showInstance) return $"{Colorize(itemIndex.ToString(), _indexColor)}\n{Colorize(id.ToString(), _instanceColor)}";
+            if (showIndex && showInstance) return $"{Colorize(itemIndex.ToString(), _indexColor)}\n{Colorize(instanceId.ToString(), _instanceColor)}";
             if (showIndex) return Colorize(itemIndex.ToString(), _indexColor);
-            if (showInstance) return Colorize(id.ToString(), _instanceColor);
+            if (showInstance) return Colorize(instanceId.ToString(), _instanceColor);
             return string.Empty;
         }
 

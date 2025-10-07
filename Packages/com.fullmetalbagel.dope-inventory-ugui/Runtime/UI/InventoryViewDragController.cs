@@ -1,5 +1,4 @@
 using System;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -8,23 +7,21 @@ namespace DopeGrid.Inventory;
 
 internal sealed class InventoryViewDragController : IDisposable
 {
-    private readonly SharedInventoryData _sharedInventoryData;
     private readonly Canvas _canvas;
     private readonly RectTransform _inventoryTransform;
-    private readonly Inventory _inventory;
+    private readonly IUIInventory _inventory;
     private readonly Vector2 _cellSize;
     private Image _ghost;
     private DraggingItem? _draggingItem;
 
-    public InventoryViewDragController(SharedInventoryData sharedInventoryData, RectTransform inventoryTransform, Inventory inventory, Vector2 cellSize)
+    public InventoryViewDragController(IUIInventory inventory, RectTransform inventoryTransform, Vector2 cellSize)
     {
-        _sharedInventoryData = sharedInventoryData;
         _inventoryTransform = inventoryTransform;
         _inventory = inventory;
         _cellSize = cellSize;
         _canvas = inventoryTransform.GetComponentInParent<Canvas>();
         if (_canvas == null) throw new InvalidOperationException("InventoryView must be under a Canvas");
-        _ghost = _sharedInventoryData.Pool.Get();
+        _ghost = _inventory.GetImage();
 #if UNITY_EDITOR
         _ghost.name = "__ghost__";
 #endif
@@ -43,7 +40,7 @@ internal sealed class InventoryViewDragController : IDisposable
     {
         if (_ghost != null)
         {
-            _sharedInventoryData.Pool.Release(_ghost);
+            _inventory.ReleaseImage(_ghost);
             _ghost = null!;
         }
     }
@@ -56,14 +53,12 @@ internal sealed class InventoryViewDragController : IDisposable
         var gy = Mathf.FloorToInt(fromTopLeft.y / _cellSize.y);
         if (gx < 0 || gy < 0 || gx >= _inventory.Width || gy >= _inventory.Height) return;
 
-        var item = _inventory.GetItemAt(new int2(gx, gy));
+        var item = _inventory.GetItemOnPosition(gx, gy);
         if (item.IsInvalid) return;
-        var sprite = _sharedInventoryData.TryGetSprite(item.DefinitionId);
-        if (!sprite) return;
-
-        _draggingItem = new DraggingItem(item.InstanceId, item.Definition, _ghost.rectTransform, item.Rotation);
-        _draggingItem.SourceInventory = _inventory;
-        _sharedInventoryData.DraggingItems.Add(_draggingItem);
+        var itemInstanceId = _inventory.GetItemInstanceId(item.Id);
+        var rotation = _inventory.GetRotation(itemInstanceId);
+        _draggingItem = new DraggingItem(itemInstanceId, _ghost.rectTransform, rotation);
+        _inventory.DraggingItems.Add(_draggingItem);
 
         if (_ghost == null) return;
         UpdateDraggingItemRotation();
@@ -71,7 +66,7 @@ internal sealed class InventoryViewDragController : IDisposable
         {
             ((RectTransform)_ghost.transform).anchoredPosition = canvasLocal;
         }
-        _ghost.sprite = sprite;
+        _ghost.sprite = _inventory.GetSprite(itemInstanceId);
         _ghost.raycastTarget = false;
         _ghost.gameObject.SetActive(true);
         _ghost.transform.SetAsLastSibling();
@@ -92,36 +87,17 @@ internal sealed class InventoryViewDragController : IDisposable
         if (_draggingItem != null)
         {
             // Check if we have a valid target position from the most recent frame
-            if (Time.frameCount - _draggingItem.LastFrame <= 1 && _draggingItem.TargetInventory.IsCreated)
+            if (Time.frameCount - _draggingItem.LastFrame <= 1 && _draggingItem.TargetInventory != null)
             {
-                var targetPos = _draggingItem.TargetPosition;
-                var sourceInventory = _draggingItem.SourceInventory;
-                var targetInventory = _draggingItem.TargetInventory;
-
-                // Check if it's the same inventory by comparing the underlying native containers
-                var isSameInventory = sourceInventory.IsSame(targetInventory);
-
-                if (isSameInventory)
-                {
-                    // Same inventory - move the item with updated rotation using atomic operation
-                    sourceInventory.TryMoveItem(_draggingItem.InstanceId, targetPos, _draggingItem.Rotation);
-                }
-                else
-                {
-                    // Cross-inventory move - get item, remove from source, add to target
-                    var item = sourceInventory.GetItemByInstanceId(_draggingItem.InstanceId);
-                    if (item.IsValid)
-                    {
-                        var newItem = new InventoryItem(_draggingItem.InstanceId, item.Definition, _draggingItem.Rotation, targetPos);
-                        if (targetInventory.TryPlaceItem(newItem))
-                        {
-                            sourceInventory.RemoveItem(_draggingItem.InstanceId);
-                        }
-                    }
-                }
+                _draggingItem.TargetInventory.TryMoveItem(
+                    _draggingItem.ItemInstanceId,
+                    _draggingItem.TargetPosition.x,
+                    _draggingItem.TargetPosition.y,
+                    _draggingItem.Rotation
+                );
             }
 
-            _sharedInventoryData.DraggingItems.Remove(_draggingItem);
+            _inventory.DraggingItems.Remove(_draggingItem);
             _draggingItem = null;
         }
 
@@ -131,12 +107,12 @@ internal sealed class InventoryViewDragController : IDisposable
         }
     }
 
-    public RotationDegree GetRotation()
+    public RotationDegree GetDraggingItemRotation()
     {
-        return _draggingItem?.Rotation ?? RotationDegree.None;
+        return _draggingItem?.Rotation ?? RotationDegree.Clockwise0;
     }
 
-    public void SetRotation(RotationDegree rotation)
+    public void SetDraggingItemRotation(RotationDegree rotation)
     {
         if (_draggingItem == null) return;
 
@@ -147,8 +123,18 @@ internal sealed class InventoryViewDragController : IDisposable
     private void UpdateDraggingItemRotation()
     {
         if (_draggingItem == null) return;
-        var (width, height) = _draggingItem.Shape.Bound;
+        var shape = _inventory.GetShape(_draggingItem.ItemInstanceId);
+        shape = shape.GetRotatedShape(_draggingItem.Rotation);
+        var (width, height) = shape.Bound;
         var size = new Vector2(_cellSize.x * width, _cellSize.y * height) ;
-        _draggingItem.Rotation.ApplyToRectTransform(_draggingItem.View, size);
+        ApplyToRectTransform(_draggingItem.Rotation, _draggingItem.View, size);
+    }
+
+    private static void ApplyToRectTransform(RotationDegree rotation, RectTransform transform, Vector2 size)
+    {
+        var angleZ = rotation.GetZRotation();
+        var (x, y) = rotation.CalculateRotatedSize(size.x, size.y);
+        transform.sizeDelta = new Vector2(x, y);
+        transform.localEulerAngles = new Vector3(0f, 0f, angleZ);
     }
 }

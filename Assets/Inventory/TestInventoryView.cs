@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
 using DopeGrid;
 using DopeGrid.Inventory;
-using DopeGrid.Native;
-using Unity.Mathematics;
 using UnityEngine;
 
 public class TestInventoryView : MonoBehaviour
@@ -13,60 +10,50 @@ public class TestInventoryView : MonoBehaviour
     [SerializeField] private int _height = 6;
     [SerializeField] private UIImageGridDefinition[] _uiItems = Array.Empty<UIImageGridDefinition>();
 
-    private Inventory _inventory;
-    private Items _items;
+    private DefaultGameInventory _inventory;
 
     private void Start()
     {
-        _items = GetComponentInParent<Items>();
-        // Create an inventory; dispose on destroy
-        _inventory = new Inventory(_width, _height);
-
-        BuildDefinitionsMap();
-        PopulateSampleItems();
-
-        if (_view != null)
-        {
-            _view.Initialize(_inventory, _items.SharedInventoryData);
-        }
+        var shared = GetComponentInParent<Shared>();
+        _inventory = new DefaultGameInventory(_width, _height, shared.SharedData);
+        var inventoryUI = PopulateSampleItems(_inventory, shared);
+        _view.Initialize(inventoryUI);
     }
 
-    private void BuildDefinitionsMap()
+    private IUIInventory PopulateSampleItems(IGameInventory inventory, Shared shared)
     {
-        foreach (var ui in _uiItems)
-        {
-            if (ui == null) continue;
-            if (!Guid.TryParse(ui.Id, out var guid)) continue;
-            _items.SharedInventoryData.Definitions[guid] = ui.ToData();
-        }
-    }
-
-    private void PopulateSampleItems()
-    {
-        if (_uiItems == null || _uiItems.Length == 0) return;
+        var inventoryUI = new DefaultUIInventory(inventory, shared.SharedData, shared.SharedUIData);
+        if (_uiItems == null || _uiItems.Length == 0) return inventoryUI;
 
         var rotations = new[]
         {
-            RotationDegree.None,
+            RotationDegree.Clockwise0,
             RotationDegree.Clockwise90,
             RotationDegree.Clockwise180,
             RotationDegree.Clockwise270
         };
 
+        var rotationIndex = 0;
         foreach (var ui in _uiItems)
         {
             if (ui == null) continue;
-            if (!Guid.TryParse(ui.Id, out var guid)) continue;
 
-            // Build model item definition from UI shape
-            var instanceId = _items.NextItemInstanceId;
-            var itemDef = new ItemDefinition(guid, ui.Shape.ToImmutableGridShape());
+            // Build model item from UI shape
+            var shape = ui.Shape.ToImmutableGridShape();
+            var rotation = rotations[rotationIndex];
+            rotationIndex = (rotationIndex + 1) % rotations.Length;
+            var id = Guid.NewGuid();
+            shared.SharedData.ItemRotationMap[id] = rotation;
+            shared.SharedData.ItemShapeMap[id] = shape;
+            shared.SharedUIData.ItemSpriteMap[id] = ui.Image;
 
-            if (!_inventory.TryAutoPlaceItem(instanceId, itemDef, out _))
+            var added = _inventory.TryMoveItem(id, rotation);
+            if (!added)
             {
-                Debug.LogWarning($"Inventory full; failed to place item instance {instanceId} ({ui.name}).");
+                Debug.LogWarning($"Inventory full; failed to place item ({ui.name}).");
             }
         }
+        return inventoryUI;
     }
 
     private void OnDestroy()

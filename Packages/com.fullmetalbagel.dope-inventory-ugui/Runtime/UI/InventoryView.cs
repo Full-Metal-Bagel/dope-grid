@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace DopeGrid.Inventory
@@ -11,44 +12,41 @@ namespace DopeGrid.Inventory
 
         private static readonly Vector2 s_defaultCellSize = new(64f, 64f);
 
-        private Inventory _inventory;
-        private SharedInventoryData _sharedInventoryData = null!;
+        public IUIInventory? Inventory { get; private set; }
+
         private Vector2 _cellSize = s_defaultCellSize;
 
         private InventoryViewSyncer _viewSyncer = null!;
         private InventoryViewDragPreviewController _viewDragPreviewController = null!;
         private InventoryViewDragController _dragController = null!;
 
-        public Inventory.ReadOnly ReadOnlyInventory => _inventory;
         public Vector2 CellSize => _cellSize;
-        public bool IsInitialized => _inventory.IsCreated;
+        public bool IsInitialized => Inventory != null;
 
+#if UNITY_EDITOR
         protected override void Awake()
         {
-#if UNITY_EDITOR
             gameObject.AddComponent<InventoryViewDebugOverlay>();
-#endif
         }
+#endif
 
-        public void Initialize(Inventory inventory, SharedInventoryData sharedInventoryData)
+        public void Initialize(IUIInventory inventory)
         {
-            Debug.Assert(inventory.IsCreated, this);
-            if (inventory.Width == 0 || inventory.Height == 0)
+            if (inventory.IsZeroSize())
             {
-                Debug.LogError($"Inventory must be initialized with a size greater than zero. The provided inventory is {_inventory.Width}x{_inventory.Height}. Halting initialization.", this);
+                Debug.LogError($"Inventory must be initialized with a size greater than zero. The provided inventory is {inventory.Width}x{inventory.Height}. Halting initialization.", this);
                 return;
             }
 
-            _inventory = inventory;
-            _sharedInventoryData = sharedInventoryData;
+            Inventory = inventory;
 
             var rectTransform = (RectTransform)transform;
-            _cellSize = ResolveCellSize(rectTransform, _inventory.Width, _inventory.Height);
-            rectTransform.sizeDelta = new Vector2(_inventory.Width * _cellSize.x, _inventory.Height * _cellSize.y);
+            _cellSize = ResolveCellSize(rectTransform, Inventory.Width, Inventory.Height);
+            rectTransform.sizeDelta = new Vector2(Inventory.Width * _cellSize.x, Inventory.Height * _cellSize.y);
 
-            _viewSyncer = new InventoryViewSyncer(_sharedInventoryData, transform, _cellSize);
-            _viewDragPreviewController = new InventoryViewDragPreviewController(_sharedInventoryData, rectTransform, _cellSize, _placeableColor, _blockedColor);
-            _dragController = new InventoryViewDragController(_sharedInventoryData, rectTransform, inventory, CellSize);
+            _viewSyncer = new InventoryViewSyncer(Inventory, transform, _cellSize);
+            _viewDragPreviewController = new InventoryViewDragPreviewController(Inventory, rectTransform, _cellSize, _placeableColor, _blockedColor);
+            _dragController = new InventoryViewDragController(Inventory, rectTransform, CellSize);
         }
 
         private static Vector2 ResolveCellSize(RectTransform rectTransform, int gridWidth, int gridHeight)
@@ -74,21 +72,20 @@ namespace DopeGrid.Inventory
 
         public void SetDraggingItemRotation(RotationDegree rotation)
         {
-            _dragController.SetRotation(rotation);
+            _dragController.SetDraggingItemRotation(rotation);
         }
 
         public RotationDegree GetDraggingItemRotation()
         {
-            return _dragController.GetRotation();
+            return _dragController.GetDraggingItemRotation();
         }
 
         private void Update()
         {
-            if (!_inventory.IsCreated) return;
+            if (!IsInitialized) return;
 
-            var readOnlyInventory = _inventory.AsReadOnly();
-            _viewSyncer.SyncViews(readOnlyInventory);
-            _viewDragPreviewController.UpdateDragPlacementPreview(_inventory);
+            _viewSyncer.SyncViews();
+            _viewDragPreviewController.UpdateDragPlacementPreview();
         }
 
         protected override void OnDestroy()

@@ -39,14 +39,21 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
         Array.Fill(_values, _emptyValue, 0, Size);
     }
 
-    public ValueGridShape<T> Clone() => AsReadOnly().Clone();
-    public void CopyTo(ValueGridShape<T> other) => AsReadOnly().CopyTo(other);
+    public void CopyTo(ValueGridShape<T> other) => _values.AsSpan().CopyTo(other._values);
+    public ValueGridShape<T> Clone()
+    {
+        var clone = new ValueGridShape<T>(Width, Height, _emptyValue);
+        CopyTo(clone);
+        return clone;
+    }
 
     public void Dispose()
     {
         if (_values.Length == 0) return;
         ArrayPool<T>.Return(_values);
     }
+
+    public bool IsSame(ValueGridShape<T> other) => ReferenceEquals(_values, other._values);
 
     public override int GetHashCode() => throw new NotSupportedException("GetHashCode() on GridShape and GridShape.ReadOnly is not supported.");
     [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations")]
@@ -57,36 +64,21 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
     public static bool operator !=(ValueGridShape<T> left, ValueGridShape<T> right) => !left.Equals(right);
 
     public static implicit operator ReadOnly(ValueGridShape<T> value) => value.AsReadOnly();
-    public ReadOnly AsReadOnly() => new(Width, Height, _values!, _emptyValue);
-    public ReadOnly AsBoolReadOnly() => new(Width, Height, _values!, _emptyValue);
+    public ReadOnly AsReadOnly() => new(this);
 
     // TODO: better be `ref struct`, but can't have interface until C# 13
     public readonly struct ReadOnly : IReadOnlyGridShape<T>, IEquatable<ReadOnly>
     {
-        public int Width { get; }
-        public int Height { get; }
+        private readonly ValueGridShape<T> _shape;
+        public int Width => _shape.Width;
+        public int Height => _shape.Height;
 
-        private readonly ReadOnlyMemory<T> _values;
-        private readonly T _emptyValue;
-
-        internal ReadOnly(int width, int height, ReadOnlyMemory<T> values, T emptyValue)
-        {
-            Width = width;
-            Height = height;
-            _values = values;
-            _emptyValue = emptyValue;
-        }
-
-        public T this[int x, int y] => _values.Span[this.GetIndex(x, y)];
-        public bool IsOccupied(int x, int y) => !this[x, y].Equals(_emptyValue);
-
-        public void CopyTo(ValueGridShape<T> other) => _values.CopyTo(other._values);
-        public ValueGridShape<T> Clone()
-        {
-            var clone = new ValueGridShape<T>(Width, Height, _emptyValue);
-            CopyTo(clone);
-            return clone;
-        }
+        internal ReadOnly(ValueGridShape<T> shape) => _shape = shape;
+        public T this[int x, int y] => _shape[x, y];
+        public bool IsOccupied(int x, int y) => _shape.IsOccupied(x, y);
+        public bool IsSame(ReadOnly other) => _shape.IsSame(other._shape);
+        public void CopyTo(ValueGridShape<T> other) => _shape.CopyTo(other);
+        public ValueGridShape<T> Clone() => _shape.Clone();
 
         public bool Equals(ReadOnly other) => this.IsValuesEquals(other, default(T));
         public static bool operator ==(ReadOnly left, ReadOnly right) => left.Equals(right);

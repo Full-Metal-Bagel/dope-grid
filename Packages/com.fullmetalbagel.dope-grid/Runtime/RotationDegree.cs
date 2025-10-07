@@ -5,7 +5,7 @@ namespace DopeGrid;
 
 public enum RotationDegree
 {
-    None = 0,
+    Clockwise0 = 0,
     Clockwise90 = 1,
     Clockwise180 = 2,
     Clockwise270 = 3
@@ -18,12 +18,18 @@ public static class RotationDegreeExtensions
     {
         return current switch
         {
-            RotationDegree.None => RotationDegree.Clockwise90,
+            RotationDegree.Clockwise0 => RotationDegree.Clockwise90,
             RotationDegree.Clockwise90 => RotationDegree.Clockwise180,
             RotationDegree.Clockwise180 => RotationDegree.Clockwise270,
-            RotationDegree.Clockwise270 => RotationDegree.None,
-            _ => RotationDegree.None
+            RotationDegree.Clockwise270 => RotationDegree.Clockwise0,
+            _ => RotationDegree.Clockwise0
         };
+    }
+
+    [Pure, MustUseReturnValue]
+    public static RotationDegree Rotate(this RotationDegree current, RotationDegree rotation)
+    {
+        return (RotationDegree)(((int)current + (int)rotation) % 4);
     }
 
     [Pure, MustUseReturnValue]
@@ -31,18 +37,18 @@ public static class RotationDegreeExtensions
     {
         return current switch
         {
-            RotationDegree.None => RotationDegree.Clockwise270,
-            RotationDegree.Clockwise90 => RotationDegree.None,
+            RotationDegree.Clockwise0 => RotationDegree.Clockwise270,
+            RotationDegree.Clockwise90 => RotationDegree.Clockwise0,
             RotationDegree.Clockwise180 => RotationDegree.Clockwise90,
             RotationDegree.Clockwise270 => RotationDegree.Clockwise180,
-            _ => RotationDegree.None
+            _ => RotationDegree.Clockwise0
         };
     }
 
     [Pure, MustUseReturnValue]
     public static float GetZRotation(this RotationDegree rotation) => rotation switch
     {
-        RotationDegree.None => 0f,
+        RotationDegree.Clockwise0 => 0f,
         RotationDegree.Clockwise90 => -90f,
         RotationDegree.Clockwise180 => -180f,
         RotationDegree.Clockwise270 => -270f,
@@ -54,7 +60,7 @@ public static class RotationDegreeExtensions
     {
         return rotation switch
         {
-            RotationDegree.None => (0f, 0f),
+            RotationDegree.Clockwise0 => (0f, 0f),
             RotationDegree.Clockwise90 => (height, 0f),
             RotationDegree.Clockwise180 => (width, -height),
             RotationDegree.Clockwise270 => (0f, -width),
@@ -75,11 +81,4 @@ public static class RotationDegreeExtensions
     {
         return rotation is RotationDegree.Clockwise90 or RotationDegree.Clockwise270 ? (height, width) : (width, height);
     }
-    //
-    // public static void ApplyToRectTransform(this RotationDegree rotation, RectTransform transform, Vector2 size)
-    // {
-    //     var angleZ = rotation.GetZRotation();
-    //     transform.sizeDelta = rotation.CalculateRotatedSize(size);
-    //     transform.localEulerAngles = new Vector3(0f, 0f, angleZ);
-    // }
 }
