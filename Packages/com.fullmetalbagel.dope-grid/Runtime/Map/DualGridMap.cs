@@ -77,6 +77,27 @@ public readonly struct DualGridMap<T> : IDualGridMap<T, ValueGridShape<byte>, Va
         visualLayer.Values.Fill(0x0F);
     }
 
+    public (T x0y0, T x1y0, T x0y1, T x1y1) GetVisualValue(int x, int y)
+    {
+        // Values of the four world cells adjacent to vertex (x, y)
+        // Order: (x-1,y-1), (x,y-1), (x-1,y), (x,y)
+        var tl = WorldGrid.Contains(x - 1, y - 1) ? WorldGrid[x - 1, y - 1] : default;
+        var tr = WorldGrid.Contains(x, y - 1) ? WorldGrid[x, y - 1] : default;
+        var bl = WorldGrid.Contains(x - 1, y) ? WorldGrid[x - 1, y] : default;
+        var br = WorldGrid.Contains(x, y) ? WorldGrid[x, y] : default;
+        return (tl, tr, bl, br);
+    }
+
+    public (T x0y0, T x1y0, T x0y1, T x1y1) GetVisualValues(int x, int y)
+    {
+        // Same ordering as GetVisualValue
+        var tl = WorldGrid.Contains(x - 1, y - 1) ? WorldGrid[x - 1, y - 1] : default;
+        var tr = WorldGrid.Contains(x, y - 1) ? WorldGrid[x, y - 1] : default;
+        var bl = WorldGrid.Contains(x - 1, y) ? WorldGrid[x - 1, y] : default;
+        var br = WorldGrid.Contains(x, y) ? WorldGrid[x, y] : default;
+        return (tl, tr, bl, br);
+    }
+
     public ValueGridShape<byte>.ReadOnly GetVisualLayer(T value)
     {
         return GetOrCreateVisualLayer(value);

@@ -81,6 +81,15 @@ public readonly struct CompactDualGridMap<T> : IDualGridMap<T, ValueGridShape4Bi
         return GetOrCreateVisualLayer(value);
     }
 
+    public (T x0y0, T x1y0, T x0y1, T x1y1) GetVisualValues(int x, int y)
+    {
+        var tl = WorldGrid.Contains(x - 1, y - 1) ? WorldGrid[x - 1, y - 1] : default;
+        var tr = WorldGrid.Contains(x, y - 1) ? WorldGrid[x, y - 1] : default;
+        var bl = WorldGrid.Contains(x - 1, y) ? WorldGrid[x - 1, y] : default;
+        var br = WorldGrid.Contains(x, y) ? WorldGrid[x, y] : default;
+        return (tl, tr, bl, br);
+    }
+
     ValueGridShape4Bits IDualGridMap<T, ValueGridShape4Bits, ValueGridShape4Bits.ReadOnly>.GetOrCreateVisualLayer(T value)
     {
         return GetOrCreateVisualLayer(value);
