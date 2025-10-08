@@ -8,11 +8,11 @@ public class DualGridMapTests
 {
     private static byte ExpectedMaskForVertex(int vx, int vy, int width, int height, int[,] world, int defaultValue, int target)
     {
-        // Bit layout around a vertex (vx, vy):
-        // bit 0: (vx-1, vy-1) top-left
-        // bit 1: (vx,   vy-1) top-right
-        // bit 2: (vx-1, vy  ) bottom-left
-        // bit 3: (vx,   vy  ) bottom-right
+        // Sequential counter layout per vertex nibble (matching SetWorldValue's bit ordering):
+        // bit 0: (vx,   vy  ) bottom-right (BR)
+        // bit 1: (vx-1, vy  ) bottom-left  (BL)
+        // bit 2: (vx,   vy-1) top-right    (TR)
+        // bit 3: (vx-1, vy-1) top-left     (TL)
         byte mask = 0;
 
         bool IsEqual(int cx, int cy)
@@ -22,10 +22,10 @@ public class DualGridMapTests
             return world[cx, cy] == target;
         }
 
-        if (IsEqual(vx - 1, vy - 1)) mask |= 1 << 0;
-        if (IsEqual(vx,     vy - 1)) mask |= 1 << 1;
-        if (IsEqual(vx - 1, vy    )) mask |= 1 << 2;
-        if (IsEqual(vx,     vy    )) mask |= 1 << 3;
+        if (IsEqual(vx,     vy    )) mask |= 1 << 0; // BR
+        if (IsEqual(vx - 1, vy    )) mask |= 1 << 1; // BL
+        if (IsEqual(vx,     vy - 1)) mask |= 1 << 2; // TR
+        if (IsEqual(vx - 1, vy - 1)) mask |= 1 << 3; // TL
 
         return mask;
     }
@@ -139,22 +139,42 @@ public class DualGridMapTests
     [Test]
     public void MultipleAdjacentCells_ComposesNibbleBits()
     {
+        // Explanation of this case in ASCII:
+        // - World: 4x3, default=0 (D), target value=9 (V)
+        // - We set two adjacent cells to V: (1,1) and (2,1)
+        // - Visual layers are vertex grids (w+1)x(h+1); each vertex stores a 4-bit nibble
+        //   Bit layout at a vertex (vx, vy) under sequential mapping: BR=1, BL=2, TR=4, TL=8
+        //       BR -> (vx,   vy  )
+        //       BL -> (vx-1, vy  )
+        //       TR -> (vx,   vy-1)
+        //       TL -> (vx-1, vy-1)
+        //
+        // Local region around the shared vertex (2,1):
+        //
+        //      x=1  x=2
+        //     +---+---+
+        // y=0 | D | D |
+        //     +---*---+  *=>(2,1)
+        // y=1 | V | V |
+        //     +---+---+
+        //
+        // Therefore at vertex (2,1):
+        //   Default layer bits: BL(2) | BR(1) = 3 (0b0011)
+        //   Value layer bits:   TL(8) | TR(4) = 12 (0b1100)
+        // The assertions below check these exact masks.
         const int w = 4, h = 3, def = 0, val = 9;
         var grid = new DualGridMap<int>(w, h, def);
-        int[,] world = new int[w, h];
 
-        grid[1, 1] = val; world[1, 1] = val;
-        grid[2, 1] = val; world[2, 1] = val;
+        grid[1, 1] = val;
+        grid[2, 1] = val;
 
         var defLayer = grid.GetVisualLayer(def);
         var valLayer = grid.GetVisualLayer(val);
 
         // Check around shared vertex (2,1)
         int vx = 2, vy = 1;
-        var expectedDef = ExpectedMaskForVertex(vx, vy, w, h, world, def, def);
-        var expectedVal = ExpectedMaskForVertex(vx, vy, w, h, world, def, val);
-        Assert.That(defLayer[vx, vy], Is.EqualTo(expectedDef));
-        Assert.That(valLayer[vx, vy], Is.EqualTo(expectedVal));
+        Assert.That(defLayer[vx, vy], Is.EqualTo(0b1100));
+        Assert.That(valLayer[vx, vy], Is.EqualTo(0b0011));
     }
 
     [Test]
@@ -205,4 +225,3 @@ public class DualGridMapTests
         Assert.That(grid[1, 1], Is.EqualTo(7));
     }
 }
-

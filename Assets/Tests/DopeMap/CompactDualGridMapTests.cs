@@ -30,11 +30,12 @@ public class CompactDualGridMapTests
         var oldLayer = map.GetVisualLayer(0);
         var newLayer = map.GetVisualLayer(1);
 
-        // Expect: four vertices flipped with bit masks 1,2,4,8 respectively
-        Assert.That(oldLayer[0, 0], Is.EqualTo(0x0F ^ 0x01)); // 0x0E
-        Assert.That(oldLayer[1, 0], Is.EqualTo(0x0F ^ 0x02)); // 0x0D
-        Assert.That(oldLayer[0, 1], Is.EqualTo(0x0F ^ 0x04)); // 0x0B
-        Assert.That(oldLayer[1, 1], Is.EqualTo(0x0F ^ 0x08)); // 0x07
+        // Expect: four vertices flipped with bit masks 1,2,4,8 respectively (sequential mapping)
+        // (x,y)->bit0(BR), (x+1,y)->bit1(BL), (x,y+1)->bit2(TR), (x+1,y+1)->bit3(TL)
+        Assert.That(oldLayer[0, 0], Is.EqualTo(0x0F ^ 0x01)); // BR -> 0x0E
+        Assert.That(oldLayer[1, 0], Is.EqualTo(0x0F ^ 0x02)); // BL -> 0x0D
+        Assert.That(oldLayer[0, 1], Is.EqualTo(0x0F ^ 0x04)); // TR -> 0x0B
+        Assert.That(oldLayer[1, 1], Is.EqualTo(0x0F ^ 0x08)); // TL -> 0x07
 
         Assert.That(newLayer[0, 0], Is.EqualTo(0x01));
         Assert.That(newLayer[1, 0], Is.EqualTo(0x02));
@@ -73,4 +74,3 @@ public class CompactDualGridMapTests
         }
     }
 }
-
