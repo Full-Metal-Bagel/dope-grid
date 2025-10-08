@@ -65,7 +65,7 @@ public readonly struct ValueGridShape4Bits : IReadOnlyGridShape<byte>, IGridShap
         Array.Fill(_values, combined, 0, ValueSize);
     }
 
-    public void CopyTo(ValueGridShape4Bits other) => _values.AsSpan(Size).CopyTo(other._values);
+    public void CopyTo(ValueGridShape4Bits other) => _values.AsSpan(0, ValueSize).CopyTo(other._values);
     public ValueGridShape4Bits Clone()
     {
         var clone = new ValueGridShape4Bits(Width, Height, _emptyValue);

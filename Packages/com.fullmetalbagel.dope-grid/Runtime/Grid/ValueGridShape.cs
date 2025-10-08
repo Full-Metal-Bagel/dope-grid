@@ -40,7 +40,7 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
         Array.Fill(_values, _emptyValue, 0, Size);
     }
 
-    public void CopyTo(ValueGridShape<T> other) => _values.AsSpan(Size).CopyTo(other._values);
+    public void CopyTo(ValueGridShape<T> other) => _values.AsSpan(0, Size).CopyTo(other._values);
     public ValueGridShape<T> Clone()
     {
         var clone = new ValueGridShape<T>(Width, Height, _emptyValue);
