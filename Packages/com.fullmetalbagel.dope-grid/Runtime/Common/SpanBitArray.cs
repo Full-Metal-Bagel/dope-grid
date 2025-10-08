@@ -8,6 +8,8 @@ public readonly ref struct SpanBitArray
     public int BitLength { get; }
     public bool IsEmpty => BitLength == 0;
 
+    public SpanBitArray(Span<byte> bytes) : this(bytes, bytes.Length * 8) { }
+
     public SpanBitArray(Span<byte> bytes, int bitLength)
     {
         if (bitLength < 0)
