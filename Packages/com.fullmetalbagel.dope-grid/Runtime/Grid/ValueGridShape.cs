@@ -11,6 +11,7 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
 
     private readonly T[] _values = Array.Empty<T>();
     private readonly T _emptyValue = default;
+    public Span<T> Values => _values.AsSpan();
 
     public int Size => Width * Height;
 
@@ -39,7 +40,7 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
         Array.Fill(_values, _emptyValue, 0, Size);
     }
 
-    public void CopyTo(ValueGridShape<T> other) => _values.AsSpan().CopyTo(other._values);
+    public void CopyTo(ValueGridShape<T> other) => _values.AsSpan(0, Size).CopyTo(other._values);
     public ValueGridShape<T> Clone()
     {
         var clone = new ValueGridShape<T>(Width, Height, _emptyValue);
@@ -72,6 +73,7 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
         private readonly ValueGridShape<T> _shape;
         public int Width => _shape.Width;
         public int Height => _shape.Height;
+        public ReadOnlySpan<T> Values => _shape.Values;
 
         internal ReadOnly(ValueGridShape<T> shape) => _shape = shape;
         public T this[int x, int y] => _shape[x, y];
