@@ -36,7 +36,7 @@ public class DualGridMapTests
         const int w = 3, h = 2, def = 0;
         var grid = new DualGridMap<int>(w, h, def);
 
-        var defaultLayer = grid.GetLayerGrid(def);
+        var defaultLayer = grid.GetVisualLayer(def);
         Assert.That(defaultLayer.Width, Is.EqualTo(w + 1));
         Assert.That(defaultLayer.Height, Is.EqualTo(h + 1));
 
@@ -53,7 +53,7 @@ public class DualGridMapTests
         const int w = 4, h = 3, def = 0, other = 7;
         var grid = new DualGridMap<int>(w, h, def);
 
-        var otherLayer = grid.GetLayerGrid(other);
+        var otherLayer = grid.GetVisualLayer(other);
         for (int y = 0; y <= h; y++)
         for (int x = 0; x <= w; x++)
         {
@@ -69,11 +69,11 @@ public class DualGridMapTests
         int[,] world = new int[w, h];
 
         int cx = 2, cy = 2;
-        grid.SetWorldValue(cx, cy, val);
+        grid[cx, cy] = val;
         world[cx, cy] = val;
 
-        var defLayer = grid.GetLayerGrid(def);
-        var valLayer = grid.GetLayerGrid(val);
+        var defLayer = grid.GetVisualLayer(def);
+        var valLayer = grid.GetVisualLayer(val);
 
         for (int vy = cy; vy <= cy + 1; vy++)
         for (int vx = cx; vx <= cx + 1; vx++)
@@ -97,11 +97,11 @@ public class DualGridMapTests
         int[,] world = new int[w, h];
 
         int cx = 0, cy = 0;
-        grid.SetWorldValue(cx, cy, val);
+        grid[cx, cy] = val;
         world[cx, cy] = val;
 
-        var defLayer = grid.GetLayerGrid(def);
-        var valLayer = grid.GetLayerGrid(val);
+        var defLayer = grid.GetVisualLayer(def);
+        var valLayer = grid.GetVisualLayer(val);
 
         for (int vy = cy; vy <= cy + 1; vy++)
         for (int vx = cx; vx <= cx + 1; vx++)
@@ -120,13 +120,13 @@ public class DualGridMapTests
         var grid = new DualGridMap<int>(w, h, def);
         int[,] world = new int[w, h];
 
-        grid.SetWorldValue(1, 1, val);
+        grid[1, 1] = val;
         world[1, 1] = val;
-        grid.SetWorldValue(1, 1, def);
+        grid[1, 1] = def;
         world[1, 1] = def;
 
-        var defLayer = grid.GetLayerGrid(def);
-        var valLayer = grid.GetLayerGrid(val);
+        var defLayer = grid.GetVisualLayer(def);
+        var valLayer = grid.GetVisualLayer(val);
 
         for (int y = 0; y <= h; y++)
         for (int x = 0; x <= w; x++)
@@ -143,11 +143,11 @@ public class DualGridMapTests
         var grid = new DualGridMap<int>(w, h, def);
         int[,] world = new int[w, h];
 
-        grid.SetWorldValue(1, 1, val); world[1, 1] = val;
-        grid.SetWorldValue(2, 1, val); world[2, 1] = val;
+        grid[1, 1] = val; world[1, 1] = val;
+        grid[2, 1] = val; world[2, 1] = val;
 
-        var defLayer = grid.GetLayerGrid(def);
-        var valLayer = grid.GetLayerGrid(val);
+        var defLayer = grid.GetVisualLayer(def);
+        var valLayer = grid.GetVisualLayer(val);
 
         // Check around shared vertex (2,1)
         int vx = 2, vy = 1;
@@ -164,11 +164,14 @@ public class DualGridMapTests
         var grid = new DualGridMap<int>(w, h, def);
         int[,] world = new int[w, h];
 
-        grid.SetWorldValue(1, 1, a); world[1, 1] = a;
-        grid.SetWorldValue(1, 1, b); world[1, 1] = b;
+        grid[1, 1] = a;
+        world[1, 1] = a;
 
-        var aLayer = grid.GetLayerGrid(a);
-        var bLayer = grid.GetLayerGrid(b);
+        grid[1, 1] = b;
+        world[1, 1] = b;
+
+        var aLayer = grid.GetVisualLayer(a);
+        var bLayer = grid.GetVisualLayer(b);
 
         for (int vy = 1; vy <= 2; vy++)
         for (int vx = 1; vx <= 2; vx++)
@@ -186,7 +189,7 @@ public class DualGridMapTests
     {
         const int w = 0, h = 0, def = 0;
         var grid = new DualGridMap<int>(w, h, def);
-        var defLayer = grid.GetLayerGrid(def);
+        var defLayer = grid.GetVisualLayer(def);
 
         Assert.That(defLayer.Width, Is.EqualTo(1));
         Assert.That(defLayer.Height, Is.EqualTo(1));
@@ -197,9 +200,9 @@ public class DualGridMapTests
     public void GetWorldValue_ReturnsLatest()
     {
         var grid = new DualGridMap<int>(2, 2, 0);
-        Assert.That(grid.GetWorldValue(1, 1), Is.EqualTo(0));
-        grid.SetWorldValue(1, 1, 7);
-        Assert.That(grid.GetWorldValue(1, 1), Is.EqualTo(7));
+        Assert.That(grid[1, 1], Is.EqualTo(0));
+        grid[1, 1] = 7;
+        Assert.That(grid[1, 1], Is.EqualTo(7));
     }
 }
 

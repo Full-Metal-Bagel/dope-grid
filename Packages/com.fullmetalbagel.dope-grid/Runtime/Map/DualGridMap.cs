@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DopeGrid.Map;
 
-public readonly struct DualGridMap<T> : IDualGridMap<T, ValueGridShape<byte>>, IEquatable<DualGridMap<T>>, IDisposable
+public readonly struct DualGridMap<T> : IDualGridMap<T, ValueGridShape<byte>, ValueGridShape<byte>.ReadOnly>, IEquatable<DualGridMap<T>>, IDisposable
     where T : unmanaged, IEquatable<T>
 {
     public ValueGridShape<T> WorldGrid { get; }
@@ -18,7 +18,7 @@ public readonly struct DualGridMap<T> : IDualGridMap<T, ValueGridShape<byte>>, I
     public T this[int x, int y]
     {
         get => WorldGrid[x, y];
-        set => this.SetWorldValue(x, y, value, default(ValueGridShape<byte>));
+        set => this.SetWorldValue<DualGridMap<T>, T, ValueGridShape<byte>, ValueGridShape<byte>.ReadOnly>(x, y, value);
     }
 
     public DualGridMap(int width, int height, T defaultValue = default)
@@ -45,7 +45,7 @@ public readonly struct DualGridMap<T> : IDualGridMap<T, ValueGridShape<byte>>, I
         return _visualLayers[layerIndex];
     }
 
-    ValueGridShape<byte> IDualGridMap<T, ValueGridShape<byte>>.GetOrCreateVisualLayer(T value)
+    ValueGridShape<byte> IDualGridMap<T, ValueGridShape<byte>, ValueGridShape<byte>.ReadOnly>.GetOrCreateVisualLayer(T value)
     {
         return GetOrCreateVisualLayer(value);
     }

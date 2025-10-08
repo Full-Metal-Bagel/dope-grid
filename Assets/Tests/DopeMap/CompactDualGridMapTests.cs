@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using DopeGrid.Map;
 
-namespace DopeGrid.Tests.Map;
+namespace DopeGrid.Tests;
 
 [TestFixture]
 public class CompactDualGridMapTests
@@ -10,7 +10,7 @@ public class CompactDualGridMapTests
     public void DefaultLayerInitializedWithAllOnes()
     {
         var map = new CompactDualGridMap<int>(width: 2, height: 2, defaultValue: 0);
-        var layer = map.GetReadOnlyVisualLayer(0);
+        var layer = map.GetVisualLayer(0);
 
         for (int y = 0; y <= map.Height; y++)
         for (int x = 0; x <= map.Width; x++)
@@ -27,8 +27,8 @@ public class CompactDualGridMapTests
         // Act: change a single world cell
         map[0, 0] = 1;
 
-        var oldLayer = map.GetReadOnlyVisualLayer(0);
-        var newLayer = map.GetReadOnlyVisualLayer(1);
+        var oldLayer = map.GetVisualLayer(0);
+        var newLayer = map.GetVisualLayer(1);
 
         // Expect: four vertices flipped with bit masks 1,2,4,8 respectively
         Assert.That(oldLayer[0, 0], Is.EqualTo(0x0F ^ 0x01)); // 0x0E
@@ -62,8 +62,8 @@ public class CompactDualGridMapTests
         map[0, 0] = 1; // flip once
         map[0, 0] = 0; // flip back
 
-        var defaultLayer = map.GetReadOnlyVisualLayer(0);
-        var newLayer = map.GetReadOnlyVisualLayer(1);
+        var defaultLayer = map.GetVisualLayer(0);
+        var newLayer = map.GetVisualLayer(1);
 
         for (int y = 0; y <= map.Height; y++)
         for (int x = 0; x <= map.Width; x++)

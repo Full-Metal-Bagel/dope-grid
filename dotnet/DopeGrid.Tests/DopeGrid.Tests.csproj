@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="../../Assets/Tests/DopeGrid/**/*.cs"/>
+    <Compile Include="../../Assets/Tests/**/*.cs"/>
     <Link Include="..\..\.editorconfig"/>
   </ItemGroup>
 
