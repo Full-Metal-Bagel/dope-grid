@@ -86,7 +86,7 @@ public readonly struct CompactDualGridMap<T> : IDualGridMap<T, ValueGridShape4Bi
         return GetOrCreateVisualLayer(value);
     }
 
-    public ValueGridShape4Bits GetOrCreateVisualLayer(T value)
+    private ValueGridShape4Bits GetOrCreateVisualLayer(T value)
     {
         if (!_worldValueVisualLayersMap.TryGetValue(value, out var layerIndex))
         {
