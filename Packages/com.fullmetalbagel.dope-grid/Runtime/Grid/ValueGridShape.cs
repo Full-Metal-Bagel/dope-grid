@@ -10,7 +10,7 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
     public int Height { get; }
 
     private readonly T[] _values = Array.Empty<T>();
-    private readonly T _emptyValue = default;
+    public T EmptyValue { get; } = default;
     public Span<T> Values => _values.AsSpan();
 
     public int Size => Width * Height;
@@ -19,7 +19,7 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
     {
         Width = width;
         Height = height;
-        _emptyValue = emptyValue;
+        EmptyValue = emptyValue;
         if (Size > 0)
         {
             _values = ArrayPool<T>.Rent(Size);
@@ -33,17 +33,17 @@ public readonly struct ValueGridShape<T> : IReadOnlyGridShape<T>, IGridShape<T>,
         set => _values[this.GetIndex(x, y)] = value;
     }
 
-    public bool IsOccupied(int x, int y) => !this[x, y].Equals(_emptyValue);
+    public bool IsOccupied(int x, int y) => !this[x, y].Equals(EmptyValue);
 
     public void Clear()
     {
-        Array.Fill(_values, _emptyValue, 0, Size);
+        Array.Fill(_values, EmptyValue, 0, Size);
     }
 
     public void CopyTo(ValueGridShape<T> other) => _values.AsSpan(0, Size).CopyTo(other._values);
     public ValueGridShape<T> Clone()
     {
-        var clone = new ValueGridShape<T>(Width, Height, _emptyValue);
+        var clone = new ValueGridShape<T>(Width, Height, EmptyValue);
         CopyTo(clone);
         return clone;
     }
