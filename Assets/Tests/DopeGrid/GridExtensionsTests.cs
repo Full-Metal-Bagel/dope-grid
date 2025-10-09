@@ -367,7 +367,7 @@ public class GridExtensionsTests
         source[1, 1] = 20;
         using var target = new ValueGridShape<int>(2, 2);
 
-        source.CopyTo<ValueGridShape<int>, ValueGridShape<int>, int>(0, 0, 2, 2, target);
+        source.WriteTo<ValueGridShape<int>, ValueGridShape<int>, int>(0, 0, 2, 2, target);
 
         Assert.That(target[0, 0], Is.EqualTo(10));
         Assert.That(target[1, 1], Is.EqualTo(20));
@@ -379,10 +379,10 @@ public class GridExtensionsTests
         using var source = new ValueGridShape<int>(5, 5);
         using var target = new ValueGridShape<int>(2, 2);
 
-        Assert.Throws<ArgumentException>(() => source.CopyTo<ValueGridShape<int>, ValueGridShape<int>, int>(-1, 0, 2, 2, target));
-        Assert.Throws<ArgumentException>(() => source.CopyTo<ValueGridShape<int>, ValueGridShape<int>, int>(0, -1, 2, 2, target));
-        Assert.Throws<ArgumentException>(() => source.CopyTo<ValueGridShape<int>, ValueGridShape<int>, int>(0, 0, -1, 2, target));
-        Assert.Throws<ArgumentException>(() => source.CopyTo<ValueGridShape<int>, ValueGridShape<int>, int>(0, 0, 2, -1, target));
+        Assert.Throws<ArgumentException>(() => source.WriteTo<ValueGridShape<int>, ValueGridShape<int>, int>(-1, 0, 2, 2, target));
+        Assert.Throws<ArgumentException>(() => source.WriteTo<ValueGridShape<int>, ValueGridShape<int>, int>(0, -1, 2, 2, target));
+        Assert.Throws<ArgumentException>(() => source.WriteTo<ValueGridShape<int>, ValueGridShape<int>, int>(0, 0, -1, 2, target));
+        Assert.Throws<ArgumentException>(() => source.WriteTo<ValueGridShape<int>, ValueGridShape<int>, int>(0, 0, 2, -1, target));
     }
 
     [Test]
@@ -391,7 +391,7 @@ public class GridExtensionsTests
         using var source = new ValueGridShape<int>(5, 5);
         using var target = new ValueGridShape<int>(10, 10);
 
-        Assert.Throws<ArgumentException>(() => source.CopyTo<ValueGridShape<int>, ValueGridShape<int>, int>(4, 4, 2, 2, target));
+        Assert.Throws<ArgumentException>(() => source.WriteTo<ValueGridShape<int>, ValueGridShape<int>, int>(4, 4, 2, 2, target));
     }
 
     [Test]
@@ -402,7 +402,7 @@ public class GridExtensionsTests
         source[3, 3] = 99;
         using var target = new ValueGridShape<int>(2, 2);
 
-        source.CopyTo<ValueGridShape<int>, ValueGridShape<int>, int>(2, 2, 2, 2, target);
+        source.WriteTo<ValueGridShape<int>, ValueGridShape<int>, int>(2, 2, 2, 2, target);
 
         Assert.That(target[0, 0], Is.EqualTo(42));
         Assert.That(target[1, 1], Is.EqualTo(99));

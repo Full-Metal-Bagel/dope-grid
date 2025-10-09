@@ -36,7 +36,7 @@ public class UncoveredLinesTests
 
         using var target = new ValueGridShape<int>(3, 3);
 
-        source.CopyTo<ValueGridShape<int>, ValueGridShape<int>, int>(target);
+        source.WriteTo<ValueGridShape<int>, ValueGridShape<int>, int>(target);
 
         Assert.That(target[0, 0], Is.EqualTo(10));
         Assert.That(target[1, 1], Is.EqualTo(20));
@@ -56,7 +56,7 @@ public class UncoveredLinesTests
 
         using var target = new ValueGridShape<int>(3, 3);
 
-        source.CopyTo<ValueGridShape<int>, ValueGridShape<int>, int>(3, 3, target);
+        source.WriteTo<ValueGridShape<int>, ValueGridShape<int>, int>(3, 3, target);
 
         Assert.That(target[0, 0], Is.EqualTo(0));
         Assert.That(target[1, 1], Is.EqualTo(11));
