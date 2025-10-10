@@ -110,3 +110,4 @@ InitTestScene*.unity*
 .DS_Store
 
 Packages/**/*.uid
+Packages/**/*.uid.meta
