@@ -43,7 +43,11 @@ public static class ReadOnlyGridShapeExtensions
     [Pure, MustUseReturnValue]
     public static int GetIndex<TShape>(this TShape shape, int x, int y)
         where TShape : IReadOnlyGridShape
-        => y * shape.Width + x;
+    {
+        if (x < 0 || x >= shape.Width) throw new ArgumentOutOfRangeException(nameof(x));
+        if (y < 0 || y >= shape.Height) throw new ArgumentOutOfRangeException(nameof(y));
+        return y * shape.Width + x;
+    }
 
     [Pure, MustUseReturnValue]
     public static TValue GetCellValue<TShape, TValue>(this TShape shape, int x, int y, TValue _ = default!)
