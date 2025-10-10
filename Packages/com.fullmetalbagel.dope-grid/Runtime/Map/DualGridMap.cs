@@ -91,12 +91,16 @@ public sealed class DualGridMap<T> : IDisposable
         public bool MoveNext()
         {
             _x++;
-            if (_x >= _map.Width)
+            while (_y < _map.Height)
             {
-                _x = 0;
+                if (_x < _map.Width)
+                {
+                    return true;
+                }
                 _y++;
+                _x = 0;
             }
-            return _y < _map.Height;
+            return false;
         }
     }
 }

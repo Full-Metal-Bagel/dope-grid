@@ -44,9 +44,9 @@ public static class ReadOnlyGridShapeExtensions
     public static int GetIndex<TShape>(this TShape shape, int x, int y)
         where TShape : IReadOnlyGridShape
     {
-        var index = y * shape.Width + x;
-        if (index < 0 || index >= shape.Size()) throw new ArgumentOutOfRangeException(nameof(x));
-        return index;
+        if (x < 0 || x >= shape.Width) throw new ArgumentOutOfRangeException(nameof(x));
+        if (y < 0 || y >= shape.Height) throw new ArgumentOutOfRangeException(nameof(y));
+        return y * shape.Width + x;
     }
 
     [Pure, MustUseReturnValue]

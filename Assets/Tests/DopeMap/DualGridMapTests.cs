@@ -329,6 +329,60 @@ public class DualGridMapTests
     }
 
     [Test]
+    public void Enumerator_ZeroWidth_ShouldNotIterate()
+    {
+        // Bug: The current implementation will incorrectly iterate when width is 0
+        // For a 0xN map, it should enumerate 0 items, but due to the bug in MoveNext:
+        // - Initial: _x = -1, _y = 0
+        // - MoveNext: _x++  → _x = 0
+        //   - if (_x >= Width) where Width = 0 → true
+        //   - _x = 0, _y++ → _y = 1
+        //   - return _y < Height → 1 < 5 = true (incorrectly yields item)
+        // This causes it to iterate Height-1 times (4) instead of 0 times
+        using var map = new DualGridMap<int>(0, 5, defaultValue: 42);
+
+        var count = 0;
+        foreach (var (value, x, y) in map)
+        {
+            count++;
+        }
+
+        // Correct assertion: A map with zero width should not iterate at all
+        // This test WILL FAIL with current implementation (actual count = 4)
+        Assert.That(count, Is.EqualTo(0), "Map with zero width should not iterate");
+    }
+
+    [Test]
+    public void Enumerator_ZeroHeight_ShouldNotIterate()
+    {
+        using var map = new DualGridMap<int>(5, 0, defaultValue: 42);
+
+        var count = 0;
+        foreach (var (value, x, y) in map)
+        {
+            count++;
+        }
+
+        // This correctly enumerates 0 items (passes)
+        Assert.That(count, Is.EqualTo(0), "Map with zero height should not iterate");
+    }
+
+    [Test]
+    public void Enumerator_ZeroWidthAndHeight_ShouldNotIterate()
+    {
+        using var map = new DualGridMap<int>(0, 0, defaultValue: 42);
+
+        var count = 0;
+        foreach (var (value, x, y) in map)
+        {
+            count++;
+        }
+
+        // This correctly enumerates 0 items (passes)
+        Assert.That(count, Is.EqualTo(0), "Empty map should not iterate");
+    }
+
+    [Test]
     public void Expand_ExpandsMapBounds()
     {
         using var map = new DualGridMap<int>(3, 3, defaultValue: 0);
@@ -476,10 +530,10 @@ public class DualGridMapTests
 
         var vertexBound = map.VertexBound;
 
-        Assert.That(vertexBound.MinX, Is.EqualTo(5));   // WorldBound.MinX
-        Assert.That(vertexBound.MinY, Is.EqualTo(10));  // WorldBound.MinY
-        Assert.That(vertexBound.MaxX, Is.EqualTo(9));   // WorldBound.MaxX + 1 = 8 + 1
-        Assert.That(vertexBound.MaxY, Is.EqualTo(14));  // WorldBound.MaxY + 1 = 13 + 1
+        Assert.That(vertexBound.MinX, Is.EqualTo(5));
+        Assert.That(vertexBound.MinY, Is.EqualTo(10));
+        Assert.That(vertexBound.MaxX, Is.EqualTo(9));
+        Assert.That(vertexBound.MaxY, Is.EqualTo(14));
     }
 
     [Test]
@@ -489,9 +543,9 @@ public class DualGridMapTests
 
         var worldBound = map.WorldBound;
 
-        Assert.That(worldBound.MinX, Is.EqualTo(5));    // VertexBound.MinX + 1
-        Assert.That(worldBound.MinY, Is.EqualTo(10));   // VertexBound.MinY + 1
-        Assert.That(worldBound.MaxX, Is.EqualTo(8));    // VertexBound.MaxX - 1
-        Assert.That(worldBound.MaxY, Is.EqualTo(13));   // VertexBound.MaxY - 1
+        Assert.That(worldBound.MinX, Is.EqualTo(5));
+        Assert.That(worldBound.MinY, Is.EqualTo(10));
+        Assert.That(worldBound.MaxX, Is.EqualTo(8));
+        Assert.That(worldBound.MaxY, Is.EqualTo(13));
     }
 }
