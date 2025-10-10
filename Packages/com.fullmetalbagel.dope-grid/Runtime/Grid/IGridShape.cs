@@ -13,7 +13,7 @@ public static class GridShapeExtension
         where TGrid : IGridShape<TValue>
         => grid[x, y] = value;
 
-    public static void CopyTo<TSourceGrid, TTargetGrid, TValue>(this TSourceGrid source, TTargetGrid target)
+    public static void WriteTo<TSourceGrid, TTargetGrid, TValue>(this TSourceGrid source, TTargetGrid target)
         where TSourceGrid : IReadOnlyGridShape<TValue>
         where TTargetGrid : IGridShape<TValue>
     {
@@ -24,14 +24,14 @@ public static class GridShapeExtension
         }
     }
 
-    public static void CopyTo<TSourceGrid, TTargetGrid, TValue>(this TSourceGrid source, int width, int height, TTargetGrid target)
+    public static void WriteTo<TSourceGrid, TTargetGrid, TValue>(this TSourceGrid source, int width, int height, TTargetGrid target, TValue _ = default!)
         where TSourceGrid : IReadOnlyGridShape<TValue>
         where TTargetGrid : IGridShape<TValue>
     {
-        source.CopyTo<TSourceGrid, TTargetGrid, TValue>(0, 0, width, height, target);
+        source.WriteTo(0, 0, width, height, target, _);
     }
 
-    public static void CopyTo<TSourceGrid, TTargetGrid, TValue>(this TSourceGrid source, int offsetX, int offsetY, int width, int height, TTargetGrid target)
+    public static void WriteTo<TSourceGrid, TTargetGrid, TValue>(this TSourceGrid source, int offsetX, int offsetY, int width, int height, TTargetGrid target, TValue _ = default!)
         where TSourceGrid : IReadOnlyGridShape<TValue>
         where TTargetGrid : IGridShape<TValue>
     {
@@ -174,16 +174,16 @@ public static class GridShapeExtension
         var (x, y, width, height) = input.GetTrimmedBound(_);
         if (output.Width != width || output.Height != height)
             throw new ArgumentException("output shape is not fit");
-        input.CopyTo<TInputShape, TOutputShape, TValue>(x, y, width, height, output);
+        input.WriteTo<TInputShape, TOutputShape, TValue>(x, y, width, height, output);
     }
 }
 
 public static class BoolGridShapeExtension
 {
-    public static void CopyTo<TSourceGrid, TTargetGrid>(this TSourceGrid source, TTargetGrid target)
+    public static void WriteTo<TSourceGrid, TTargetGrid>(this TSourceGrid source, TTargetGrid target)
         where TSourceGrid : IReadOnlyGridShape<bool>
         where TTargetGrid : IGridShape<bool>
-        => source.CopyTo<TSourceGrid, TTargetGrid, bool>(target);
+        => source.WriteTo<TSourceGrid, TTargetGrid, bool>(target);
 
     public static void SetCellValue<TGrid>(this TGrid grid, int x, int y, bool value)
         where TGrid : IGridShape<bool>

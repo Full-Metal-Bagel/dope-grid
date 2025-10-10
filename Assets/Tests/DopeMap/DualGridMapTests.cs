@@ -1,227 +1,252 @@
-using DopeGrid.Map;
 using NUnit.Framework;
 
-namespace DopeGrid.Tests;
+namespace DopeGrid.Map.Tests;
 
 [TestFixture]
 public class DualGridMapTests
 {
-    private static byte ExpectedMaskForVertex(int vx, int vy, int width, int height, int[,] world, int defaultValue, int target)
+    [Test]
+    public void Constructor_CreatesMapWithCorrectDimensions()
     {
-        // Sequential counter layout per vertex nibble (matching SetWorldValue's bit ordering):
-        // bit 0: (vx,   vy  ) bottom-right (BR)
-        // bit 1: (vx-1, vy  ) bottom-left  (BL)
-        // bit 2: (vx,   vy-1) top-right    (TR)
-        // bit 3: (vx-1, vy-1) top-left     (TL)
-        byte mask = 0;
+        using var map = new DualGridMap<int>(3, 4);
 
-        bool IsEqual(int cx, int cy)
+        Assert.That(map.Width, Is.EqualTo(5)); // 3 + 1 padding on each side
+        Assert.That(map.Height, Is.EqualTo(6)); // 4 + 1 padding on each side
+        Assert.That(map.MinX, Is.EqualTo(-1));
+        Assert.That(map.MinY, Is.EqualTo(-1));
+        Assert.That(map.MaxX, Is.EqualTo(4));
+        Assert.That(map.MaxY, Is.EqualTo(5));
+    }
+
+    [Test]
+    public void Constructor_WithNegativeMinXY_CreatesMapWithCorrectBounds()
+    {
+        using var map = new DualGridMap<int>(3, 4, minX: -5, minY: -3);
+
+        // minX - 1, minY - 1 to minX + width + 1, minY + height + 1
+        Assert.That(map.MinX, Is.EqualTo(-6));
+        Assert.That(map.MinY, Is.EqualTo(-4));
+        Assert.That(map.MaxX, Is.EqualTo(-1)); // -5 + 3 + 1
+        Assert.That(map.MaxY, Is.EqualTo(2));  // -3 + 4 + 1
+    }
+
+    [Test]
+    public void Constructor_WithBound_CreatesMapWithCorrectBounds()
+    {
+        var bound = new MapBound(MinX: 0, MinY: 0, MaxX: 10, MaxY: 10);
+        using var map = new DualGridMap<int>(bound);
+
+        Assert.That(map.MinX, Is.EqualTo(0));
+        Assert.That(map.MinY, Is.EqualTo(0));
+        Assert.That(map.MaxX, Is.EqualTo(10));
+        Assert.That(map.MaxY, Is.EqualTo(10));
+        Assert.That(map.Width, Is.EqualTo(10));
+        Assert.That(map.Height, Is.EqualTo(10));
+    }
+
+    [Test]
+    public void Indexer_SetAndGet_WorksCorrectly()
+    {
+        using var map = new DualGridMap<int>(3, 3, defaultValue: 0);
+
+        map[0, 0] = 42;
+
+        Assert.That(map[0, 0], Is.EqualTo(42));
+        Assert.That(map[1, 1], Is.EqualTo(0));
+    }
+
+    [Test]
+    public void IsOccupied_ReturnsTrueForNonDefaultValues()
+    {
+        using var map = new DualGridMap<int>(3, 3, defaultValue: 0);
+
+        map[0, 0] = 5;
+
+        Assert.That(map.IsOccupied(0, 0), Is.True);
+        Assert.That(map.IsOccupied(1, 1), Is.False);
+    }
+
+    [Test]
+    public void GetVertexNeighbors_ReturnsCorrectValues()
+    {
+        using var map = new DualGridMap<int>(5, 5, defaultValue: 0);
+
+        // Set up a 2x2 grid pattern around vertex (1, 1)
+        map[0, 0] = 1; // Bottom-left
+        map[1, 0] = 2; // Bottom-right
+        map[0, 1] = 3; // Top-left
+        map[1, 1] = 4; // Top-right
+
+        var (bl, br, tl, tr) = map.GetVertexNeighbors(1, 1);
+
+        Assert.That(bl, Is.EqualTo(1)); // [x-1, y-1] = [0, 0]
+        Assert.That(br, Is.EqualTo(2)); // [x, y-1] = [1, 0]
+        Assert.That(tl, Is.EqualTo(3)); // [x-1, y] = [0, 1]
+        Assert.That(tr, Is.EqualTo(4)); // [x, y] = [1, 1]
+    }
+
+    [Test]
+    public void GetVertexNeighbors_AtOrigin_WorksCorrectly()
+    {
+        using var map = new DualGridMap<int>(3, 3, defaultValue: 0);
+
+        map[-1, -1] = 10;
+        map[0, -1] = 20;
+        map[-1, 0] = 30;
+        map[0, 0] = 40;
+
+        var (bl, br, tl, tr) = map.GetVertexNeighbors(0, 0);
+
+        Assert.That(bl, Is.EqualTo(10));
+        Assert.That(br, Is.EqualTo(20));
+        Assert.That(tl, Is.EqualTo(30));
+        Assert.That(tr, Is.EqualTo(40));
+    }
+
+    [Test]
+    public void GetVertexNeighbors_AllDefaultValues_ReturnsDefaults()
+    {
+        using var map = new DualGridMap<int>(3, 3, defaultValue: 0);
+
+        var (bl, br, tl, tr) = map.GetVertexNeighbors(1, 1);
+
+        Assert.That(bl, Is.EqualTo(0));
+        Assert.That(br, Is.EqualTo(0));
+        Assert.That(tl, Is.EqualTo(0));
+        Assert.That(tr, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void Bound_ReturnsCorrectMapBound()
+    {
+        using var map = new DualGridMap<int>(3, 3, minX: 5, minY: 10);
+
+        var bound = map.Bound;
+
+        Assert.That(bound.MinX, Is.EqualTo(4));   // 5 - 1
+        Assert.That(bound.MinY, Is.EqualTo(9));   // 10 - 1
+        Assert.That(bound.MaxX, Is.EqualTo(9));   // 5 + 3 + 1
+        Assert.That(bound.MaxY, Is.EqualTo(14));  // 10 + 3 + 1
+    }
+
+    [Test]
+    public void ExpandBoundFunc_CanBeSet()
+    {
+        using var map = new DualGridMap<int>(3, 3);
+
+        var customFunc = new ExpandableMap<int>.ExpandFunc(MapBound.Intersection);
+        map.ExpandBoundFunc = customFunc;
+
+        // Verify the custom expand function is set
+        Assert.That(map.ExpandBoundFunc, Is.Not.Null);
+    }
+
+    [Test]
+    public void Dispose_ReleasesResources()
+    {
+        var map = new DualGridMap<int>(3, 3);
+        map[0, 0] = 42;
+
+        map.Dispose();
+
+        // No assertion needed - just verify no exception
+        Assert.Pass();
+    }
+
+    [Test]
+    public void Dispose_MultipleTimesDoesNotThrow()
+    {
+        var map = new DualGridMap<int>(3, 3);
+
+        map.Dispose();
+        map.Dispose();
+
+        Assert.Pass();
+    }
+
+    [Test]
+    public void Contains_ReturnsTrueForValidIndices()
+    {
+        using var map = new DualGridMap<int>(3, 3);
+
+        Assert.That(map.Contains(0, 0), Is.True);
+        Assert.That(map.Contains(2, 2), Is.True);
+        Assert.That(map.Contains(-1, -1), Is.True); // Padding
+        Assert.That(map.Contains(3, 3), Is.True);   // Padding
+        Assert.That(map.Contains(4, 4), Is.False);  // Out of bounds
+        Assert.That(map.Contains(-2, 0), Is.False); // Out of bounds
+    }
+
+    [Test]
+    public void Contains_WithNegativeBounds_WorksCorrectly()
+    {
+        using var map = new DualGridMap<int>(3, 3, minX: -5, minY: -5);
+
+        Assert.That(map.Contains(-6, -6), Is.True);  // Padding at min corner
+        Assert.That(map.Contains(-5, -5), Is.True);  // Start of actual grid
+        Assert.That(map.Contains(-3, -3), Is.True);  // End of actual grid
+        Assert.That(map.Contains(-2, -2), Is.True);  // Padding at max corner
+        Assert.That(map.Contains(-1, -1), Is.False); // Out of bounds
+        Assert.That(map.Contains(-7, -5), Is.False); // Out of bounds
+    }
+
+    [Test]
+    public void Enumerator_EnumeratesAllCells()
+    {
+        using var map = new DualGridMap<int>(2, 2, defaultValue: 0);
+        map[0, 0] = 1;
+        map[1, 1] = 5;
+
+        var count = 0;
+        foreach (var (value, x, y) in map)
         {
-            if ((uint)cx >= (uint)width || (uint)cy >= (uint)height)
-                return defaultValue == target;
-            return world[cx, cy] == target;
+            Assert.That(value, Is.EqualTo(map[x, y]));
+            count++;
         }
 
-        if (IsEqual(vx,     vy    )) mask |= 1 << 0; // BR
-        if (IsEqual(vx - 1, vy    )) mask |= 1 << 1; // BL
-        if (IsEqual(vx,     vy - 1)) mask |= 1 << 2; // TR
-        if (IsEqual(vx - 1, vy - 1)) mask |= 1 << 3; // TL
-
-        return mask;
+        // 2x2 grid + 1 padding on each side = 4x4 = 16 cells
+        Assert.That(count, Is.EqualTo(16));
     }
 
     [Test]
-    public void Constructor_InitializesDefaultLayerToAllOnesNibble()
+    public void Enumerator_WithPadding_IncludesPaddedCells()
     {
-        const int w = 3, h = 2, def = 0;
-        var grid = new DualGridMap<int>(w, h, def);
+        using var map = new DualGridMap<int>(2, 2, defaultValue: 0);
+        map[-1, -1] = 99; // Padding cell
 
-        var defaultLayer = grid.GetVisualLayer(def);
-        Assert.That(defaultLayer.Width, Is.EqualTo(w + 1));
-        Assert.That(defaultLayer.Height, Is.EqualTo(h + 1));
-
-        for (int y = 0; y <= h; y++)
-        for (int x = 0; x <= w; x++)
+        var paddingCellFound = false;
+        foreach (var (value, x, y) in map)
         {
-            Assert.That(defaultLayer[x, y], Is.EqualTo(0x0F), $"Vertex ({x},{y}) should be 0x0F");
-        }
-    }
-
-    [Test]
-    public void NonDefaultLayer_Initially_AllZeros()
-    {
-        const int w = 4, h = 3, def = 0, other = 7;
-        var grid = new DualGridMap<int>(w, h, def);
-
-        var otherLayer = grid.GetVisualLayer(other);
-        for (int y = 0; y <= h; y++)
-        for (int x = 0; x <= w; x++)
-        {
-            Assert.That(otherLayer[x, y], Is.EqualTo(0));
-        }
-    }
-
-    [Test]
-    public void SetWorldValue_InteriorCell_UpdatesFourAdjacentVertices()
-    {
-        const int w = 5, h = 5, def = 0, val = 2;
-        var grid = new DualGridMap<int>(w, h, def);
-        int[,] world = new int[w, h];
-
-        int cx = 2, cy = 2;
-        grid[cx, cy] = val;
-        world[cx, cy] = val;
-
-        var defLayer = grid.GetVisualLayer(def);
-        var valLayer = grid.GetVisualLayer(val);
-
-        for (int vy = cy; vy <= cy + 1; vy++)
-        for (int vx = cx; vx <= cx + 1; vx++)
-        {
-            var expectedDef = ExpectedMaskForVertex(vx, vy, w, h, world, def, def);
-            var expectedVal = ExpectedMaskForVertex(vx, vy, w, h, world, def, val);
-            Assert.That(defLayer[vx, vy], Is.EqualTo(expectedDef), $"Default layer mismatch at vertex ({vx},{vy})");
-            Assert.That(valLayer[vx, vy], Is.EqualTo(expectedVal), $"Value layer mismatch at vertex ({vx},{vy})");
+            if (x == -1 && y == -1 && value == 99)
+            {
+                paddingCellFound = true;
+            }
         }
 
-        // Unaffected vertex remains at 0x0F for default, 0 for value
-        Assert.That(defLayer[0, 0], Is.EqualTo(0x0F));
-        Assert.That(valLayer[0, 0], Is.EqualTo(0));
+        Assert.That(paddingCellFound, Is.True);
     }
 
     [Test]
-    public void SetWorldValue_CornerCell_HandlesOutOfBoundsAsDefault()
+    public void Enumerator_OrderIsRowMajor()
     {
-        const int w = 3, h = 3, def = 0, val = 1;
-        var grid = new DualGridMap<int>(w, h, def);
-        int[,] world = new int[w, h];
+        using var map = new DualGridMap<int>(2, 2, defaultValue: 0);
+        map[-1, -1] = 1;
+        map[0, -1] = 2;
+        map[1, -1] = 3;
+        map[2, -1] = 4;
 
-        int cx = 0, cy = 0;
-        grid[cx, cy] = val;
-        world[cx, cy] = val;
-
-        var defLayer = grid.GetVisualLayer(def);
-        var valLayer = grid.GetVisualLayer(val);
-
-        for (int vy = cy; vy <= cy + 1; vy++)
-        for (int vx = cx; vx <= cx + 1; vx++)
+        var firstRowValues = new System.Collections.Generic.List<int>();
+        var y = -1;
+        foreach (var (value, x, currentY) in map)
         {
-            var expectedDef = ExpectedMaskForVertex(vx, vy, w, h, world, def, def);
-            var expectedVal = ExpectedMaskForVertex(vx, vy, w, h, world, def, val);
-            Assert.That(defLayer[vx, vy], Is.EqualTo(expectedDef), $"Default layer mismatch at vertex ({vx},{vy})");
-            Assert.That(valLayer[vx, vy], Is.EqualTo(expectedVal), $"Value layer mismatch at vertex ({vx},{vy})");
+            if (currentY == y)
+            {
+                firstRowValues.Add(value);
+            }
+            if (currentY > y) break;
         }
-    }
 
-    [Test]
-    public void SetWorldValue_ToggleBackToDefault_RevertsVertices()
-    {
-        const int w = 4, h = 4, def = 0, val = 3;
-        var grid = new DualGridMap<int>(w, h, def);
-        int[,] world = new int[w, h];
-
-        grid[1, 1] = val;
-        world[1, 1] = val;
-        grid[1, 1] = def;
-        world[1, 1] = def;
-
-        var defLayer = grid.GetVisualLayer(def);
-        var valLayer = grid.GetVisualLayer(val);
-
-        for (int y = 0; y <= h; y++)
-        for (int x = 0; x <= w; x++)
-        {
-            Assert.That(defLayer[x, y], Is.EqualTo(0x0F), $"Default layer should revert to 0x0F at ({x},{y})");
-            Assert.That(valLayer[x, y], Is.EqualTo(0), $"Value layer should revert to 0 at ({x},{y})");
-        }
-    }
-
-    [Test]
-    public void MultipleAdjacentCells_ComposesNibbleBits()
-    {
-        // Explanation of this case in ASCII:
-        // - World: 4x3, default=0 (D), target value=9 (V)
-        // - We set two adjacent cells to V: (1,1) and (2,1)
-        // - Visual layers are vertex grids (w+1)x(h+1); each vertex stores a 4-bit nibble
-        //   Bit layout at a vertex (vx, vy) under sequential mapping: BR=1, BL=2, TR=4, TL=8
-        //       BR -> (vx,   vy  )
-        //       BL -> (vx-1, vy  )
-        //       TR -> (vx,   vy-1)
-        //       TL -> (vx-1, vy-1)
-        //
-        // Local region around the shared vertex (2,1):
-        //
-        //      x=1  x=2
-        //     +---+---+
-        // y=0 | D | D |
-        //     +---*---+  *=>(2,1)
-        // y=1 | V | V |
-        //     +---+---+
-        //
-        // Therefore at vertex (2,1):
-        //   Default layer bits: BL(2) | BR(1) = 3 (0b0011)
-        //   Value layer bits:   TL(8) | TR(4) = 12 (0b1100)
-        // The assertions below check these exact masks.
-        const int w = 4, h = 3, def = 0, val = 9;
-        var grid = new DualGridMap<int>(w, h, def);
-
-        grid[1, 1] = val;
-        grid[2, 1] = val;
-
-        var defLayer = grid.GetVisualLayer(def);
-        var valLayer = grid.GetVisualLayer(val);
-
-        // Check around shared vertex (2,1)
-        int vx = 2, vy = 1;
-        Assert.That(defLayer[vx, vy], Is.EqualTo(0b1100));
-        Assert.That(valLayer[vx, vy], Is.EqualTo(0b0011));
-    }
-
-    [Test]
-    public void SwitchingBetweenNonDefaultValues_MovesBitsBetweenLayers()
-    {
-        const int w = 3, h = 3, def = 0, a = 2, b = 5;
-        var grid = new DualGridMap<int>(w, h, def);
-        int[,] world = new int[w, h];
-
-        grid[1, 1] = a;
-        world[1, 1] = a;
-
-        grid[1, 1] = b;
-        world[1, 1] = b;
-
-        var aLayer = grid.GetVisualLayer(a);
-        var bLayer = grid.GetVisualLayer(b);
-
-        for (int vy = 1; vy <= 2; vy++)
-        for (int vx = 1; vx <= 2; vx++)
-        {
-            // a's bits should be cleared; b's bits should be set
-            var expectedA = ExpectedMaskForVertex(vx, vy, w, h, world, def, a);
-            var expectedB = ExpectedMaskForVertex(vx, vy, w, h, world, def, b);
-            Assert.That(aLayer[vx, vy], Is.EqualTo(expectedA));
-            Assert.That(bLayer[vx, vy], Is.EqualTo(expectedB));
-        }
-    }
-
-    [Test]
-    public void ZeroSizeWorld_HasSingleVertex()
-    {
-        const int w = 0, h = 0, def = 0;
-        var grid = new DualGridMap<int>(w, h, def);
-        var defLayer = grid.GetVisualLayer(def);
-
-        Assert.That(defLayer.Width, Is.EqualTo(1));
-        Assert.That(defLayer.Height, Is.EqualTo(1));
-        Assert.That(defLayer[0, 0], Is.EqualTo(0x0F));
-    }
-
-    [Test]
-    public void GetWorldValue_ReturnsLatest()
-    {
-        var grid = new DualGridMap<int>(2, 2, 0);
-        Assert.That(grid[1, 1], Is.EqualTo(0));
-        grid[1, 1] = 7;
-        Assert.That(grid[1, 1], Is.EqualTo(7));
+        // Row-major: first row should be (-1,-1), (0,-1), (1,-1), (2,-1)
+        Assert.That(firstRowValues, Is.EqualTo(new[] { 1, 2, 3, 4 }));
     }
 }
