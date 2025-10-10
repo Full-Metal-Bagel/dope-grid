@@ -108,3 +108,5 @@ InitTestScene*.unity*
 
 !dotnet/
 .DS_Store
+
+Packages/**/*.uid
