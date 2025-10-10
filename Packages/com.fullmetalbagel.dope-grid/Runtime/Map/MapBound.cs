@@ -39,10 +39,6 @@ public readonly record struct MapBound(int MinX, int MinY, int MaxX, int MaxY)
 
     public static MapBound ExpandToInclude(MapBound bound, int x, int y)
     {
-        var minX = x < bound.MinX ? x : bound.MinX;
-        var minY = y < bound.MinY ? y : bound.MinY;
-        var maxX = x > bound.MaxX ? x : bound.MaxX;
-        var maxY = y > bound.MaxY ? y : bound.MaxY;
-        return new MapBound(minX, minY, maxX, maxY);
+        return Union(bound, new MapBound(MinX: x, MinY: y, MaxX: x + 1, MaxY: y + 1));
     }
 }

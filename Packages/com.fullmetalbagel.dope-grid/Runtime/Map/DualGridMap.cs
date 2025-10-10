@@ -8,22 +8,24 @@ public sealed class DualGridMap<T> : IDisposable
     private ExpandableMap<T> _map = null!;
     public ExpandableMap<T>.ExpandFunc ExpandBoundFunc { get; set; } = MapBound.Union;
 
-    public MapBound Bound => _map.Bound;
-    public int Width => _map.Width;
-    public int Height => _map.Height;
-    public int MinX => _map.MinX;
-    public int MinY => _map.MinY;
-    public int MaxX => _map.MaxX;
-    public int MaxY => _map.MaxY;
+    public MapBound VertexBound => new(MinX: MinX, MinY: MinY, MaxX: MaxX + 1, MaxY: MaxY + 1);
+    public MapBound WorldBound => new(MinX: MinX, MinY: MinY, MaxX: MaxX, MaxY: MaxY);
+
+    public int Width => MaxX - MinX;
+    public int Height => MaxY - MinY;
+    public int MinX => _map.MinX + 1;
+    public int MinY => _map.MinY + 1;
+    public int MaxX => _map.MaxX - 1;
+    public int MaxY => _map.MaxY - 1;
 
     public DualGridMap(int width, int height, int minX = 0, int minY = 0, T defaultValue = default)
-        :this(new MapBound(MinX: minX - 1, MinY: minY - 1, MaxX: minX + width + 1, MaxY: minY + height + 1), defaultValue)
+        : this(new MapBound(MinX: minX, MinY: minY, MaxX: minX + width, MaxY: minY + height), defaultValue)
     {
     }
 
     public DualGridMap(MapBound bound, T defaultValue = default)
     {
-        _map = new ExpandableMap<T>(bound, defaultValue);
+        _map = new ExpandableMap<T>(GetExpandedBound(bound), defaultValue);
     }
 
     public bool IsOccupied(int x, int y) => _map.IsOccupied(x, y);
@@ -37,7 +39,7 @@ public sealed class DualGridMap<T> : IDisposable
 
     public void Expand(MapBound newBound)
     {
-        _map.Expand(newBound);
+        _map.Expand(GetExpandedBound(newBound));
     }
 
     public (T BL, T BR, T TL, T TR) GetVertexNeighbors(int x, int y)
@@ -45,7 +47,15 @@ public sealed class DualGridMap<T> : IDisposable
         return (this[x - 1, y - 1], this[x, y - 1], this[x - 1, y], this[x, y]);
     }
 
-    public ExpandableMap<T>.Enumerator GetEnumerator() => _map.GetEnumerator();
+    private static MapBound GetExpandedBound(MapBound bound)
+    {
+        return new MapBound(
+            MinX: bound.MinX - 1,
+            MinY: bound.MinY - 1,
+            MaxX: bound.MaxX + 1,
+            MaxY: bound.MaxY + 1
+        );
+    }
 
     public void Dispose()
     {
