@@ -21,19 +21,19 @@ public readonly record struct MapBound(int MinX, int MinY, int MaxX, int MaxY)
 
     public static MapBound Union(MapBound bound1, MapBound bound2)
     {
-        var minX = bound1.MinX < bound2.MinX ? bound1.MinX : bound2.MinX;
-        var minY = bound1.MinY < bound2.MinY ? bound1.MinY : bound2.MinY;
-        var maxX = bound1.MaxX > bound2.MaxX ? bound1.MaxX : bound2.MaxX;
-        var maxY = bound1.MaxY > bound2.MaxY ? bound1.MaxY : bound2.MaxY;
+        var minX = System.Math.Min(bound1.MinX, bound2.MinX);
+        var minY = System.Math.Min(bound1.MinY, bound2.MinY);
+        var maxX = System.Math.Max(bound1.MaxX, bound2.MaxX);
+        var maxY = System.Math.Max(bound1.MaxY, bound2.MaxY);
         return new MapBound(minX, minY, maxX, maxY);
     }
 
     public static MapBound Intersection(MapBound bound1, MapBound bound2)
     {
-        var minX = bound1.MinX < bound2.MinX ? bound2.MinX : bound1.MinX;
-        var minY = bound1.MinY < bound2.MinY ? bound2.MinY : bound1.MinY;
-        var maxX = bound1.MaxX > bound2.MaxX ? bound2.MaxX : bound1.MaxX;
-        var maxY = bound1.MaxY > bound2.MaxY ? bound2.MaxY : bound1.MaxY;
+        var minX = System.Math.Max(bound1.MinX, bound2.MinX);
+        var minY = System.Math.Max(bound1.MinY, bound2.MinY);
+        var maxX = System.Math.Min(bound1.MaxX, bound2.MaxX);
+        var maxY = System.Math.Min(bound1.MaxY, bound2.MaxY);
         return new MapBound(minX, minY, maxX, maxY);
     }
 

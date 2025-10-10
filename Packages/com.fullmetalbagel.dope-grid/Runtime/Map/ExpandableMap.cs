@@ -45,8 +45,8 @@ public sealed class ExpandableMap<T> : IDisposable
     public void Expand(MapBound newBound)
     {
         var currentBound = Bound;
-        newBound = ExpandBoundFunc(currentBound, newBound);
-        newBound = MapBound.Union(currentBound, newBound);
+        var bound = ExpandBoundFunc(currentBound, newBound);
+        newBound = MapBound.Union(bound, MapBound.Union(currentBound, newBound));
         if (newBound == currentBound) return;
 
         if (_threadId != Environment.CurrentManagedThreadId)
@@ -74,6 +74,7 @@ public sealed class ExpandableMap<T> : IDisposable
     public void Dispose()
     {
         _world.Dispose();
+        _world = default;
     }
 
     public ref struct Enumerator
@@ -93,11 +94,9 @@ public sealed class ExpandableMap<T> : IDisposable
         {
             get
             {
-                var worldX = _x;
-                var worldY = _y;
-                var mapX = _map.MinX + worldX;
-                var mapY = _map.MinY + worldY;
-                return (_map._world[worldX, worldY], mapX, mapY);
+                var mapX = _map.MinX + _x;
+                var mapY = _map.MinY + _y;
+                return (_map._world[_x, _y], mapX, mapY);
             }
         }
 

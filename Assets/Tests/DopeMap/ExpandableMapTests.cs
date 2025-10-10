@@ -133,7 +133,10 @@ public class ExpandableMapTests
 
         // With Intersection, the bound should be clamped to overlap
         // But Union is always applied after ExpandFunc, so final bound is Union
-        Assert.That(map.Bound.MinX, Is.LessThanOrEqualTo(0));
+        Assert.That(map.Bound.MinX, Is.EqualTo(-2));
+        Assert.That(map.Bound.MinY, Is.EqualTo(-2));
+        Assert.That(map.Bound.Width, Is.EqualTo(12));
+        Assert.That(map.Bound.Height, Is.EqualTo(12));
     }
 
     [Test]
