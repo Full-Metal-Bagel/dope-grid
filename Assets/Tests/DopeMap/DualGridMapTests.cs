@@ -190,66 +190,143 @@ public class DualGridMapTests
         Assert.That(map.Contains(-7, -5), Is.False); // Out of bounds
     }
 
-    // TODO: Re-enable when DualGridMap implements GetEnumerator
-    // [Test]
-    // public void Enumerator_EnumeratesAllCells()
-    // {
-    //     using var map = new DualGridMap<int>(2, 2, defaultValue: 0);
-    //     map[0, 0] = 1;
-    //     map[1, 1] = 5;
-    //
-    //     var count = 0;
-    //     foreach (var (value, x, y) in map)
-    //     {
-    //         Assert.That(value, Is.EqualTo(map[x, y]));
-    //         count++;
-    //     }
-    //
-    //     // 2x2 grid + 1 padding on each side = 4x4 = 16 cells
-    //     Assert.That(count, Is.EqualTo(16));
-    // }
-    //
-    // [Test]
-    // public void Enumerator_WithPadding_IncludesPaddedCells()
-    // {
-    //     using var map = new DualGridMap<int>(2, 2, defaultValue: 0);
-    //     map[-1, -1] = 99; // Padding cell
-    //
-    //     var paddingCellFound = false;
-    //     foreach (var (value, x, y) in map)
-    //     {
-    //         if (x == -1 && y == -1 && value == 99)
-    //         {
-    //             paddingCellFound = true;
-    //         }
-    //     }
-    //
-    //     Assert.That(paddingCellFound, Is.True);
-    // }
-    //
-    // [Test]
-    // public void Enumerator_OrderIsRowMajor()
-    // {
-    //     using var map = new DualGridMap<int>(2, 2, defaultValue: 0);
-    //     map[-1, -1] = 1;
-    //     map[0, -1] = 2;
-    //     map[1, -1] = 3;
-    //     map[2, -1] = 4;
-    //
-    //     var firstRowValues = new System.Collections.Generic.List<int>();
-    //     var y = -1;
-    //     foreach (var (value, x, currentY) in map)
-    //     {
-    //         if (currentY == y)
-    //         {
-    //             firstRowValues.Add(value);
-    //         }
-    //         if (currentY > y) break;
-    //     }
-    //
-    //     // Row-major: first row should be (-1,-1), (0,-1), (1,-1), (2,-1)
-    //     Assert.That(firstRowValues, Is.EqualTo(new[] { 1, 2, 3, 4 }));
-    // }
+    [Test]
+    public void Enumerator_EnumeratesAllCells()
+    {
+        using var map = new DualGridMap<int>(2, 2, defaultValue: 0);
+        map[0, 0] = 1;
+        map[1, 1] = 5;
+
+        var count = 0;
+        foreach (var (value, x, y) in map)
+        {
+            Assert.That(value, Is.EqualTo(map[x, y]));
+            count++;
+        }
+
+        // WorldBound is 2x2 = 4 cells
+        Assert.That(count, Is.EqualTo(4));
+    }
+
+    [Test]
+    public void Enumerator_OrderIsRowMajor()
+    {
+        using var map = new DualGridMap<int>(2, 2, defaultValue: 0);
+        map[0, 0] = 1;
+        map[1, 0] = 2;
+        map[0, 1] = 3;
+        map[1, 1] = 4;
+
+        var allValues = new System.Collections.Generic.List<int>();
+        foreach (var (value, x, y) in map)
+        {
+            allValues.Add(value);
+        }
+
+        // Row-major: (0,0), (1,0), (0,1), (1,1)
+        Assert.That(allValues, Is.EqualTo(new[] { 1, 2, 3, 4 }));
+    }
+
+    [Test]
+    public void Enumerator_WithNegativeMinXY_EnumeratesCorrectly()
+    {
+        using var map = new DualGridMap<int>(2, 2, minX: -5, minY: -3, defaultValue: 0);
+        map[-5, -3] = 10;
+        map[-4, -3] = 20;
+        map[-5, -2] = 30;
+        map[-4, -2] = 40;
+
+        var coordinates = new System.Collections.Generic.List<(int x, int y)>();
+        foreach (var (value, x, y) in map)
+        {
+            coordinates.Add((x, y));
+            Assert.That(value, Is.EqualTo(map[x, y]));
+        }
+
+        // Should enumerate WorldBound from (-5,-3) to (-4,-2)
+        Assert.That(coordinates, Is.EqualTo(new[] { (-5, -3), (-4, -3), (-5, -2), (-4, -2) }));
+    }
+
+    [Test]
+    public void Enumerator_OnlyEnumeratesWorldBound_NotPadding()
+    {
+        using var map = new DualGridMap<int>(2, 2, defaultValue: 0);
+
+        // Set values in padding cells (VertexBound but outside WorldBound)
+        // VertexBound is (-1, -1, 3, 3), WorldBound is (0, 0, 2, 2)
+        map[-1, -1] = 99; // Padding cell - should NOT be enumerated
+
+        var foundPadding = false;
+        foreach (var (value, x, y) in map)
+        {
+            if (x == -1 || y == -1)
+            {
+                foundPadding = true;
+            }
+        }
+
+        Assert.That(foundPadding, Is.False, "Enumerator should not include padding cells");
+    }
+
+    [Test]
+    public void Enumerator_AfterExpand_EnumeratesNewBounds()
+    {
+        using var map = new DualGridMap<int>(2, 2, defaultValue: 0);
+        map[0, 0] = 1;
+
+        // Expand to larger bounds
+        map.Expand(new MapBound(MinX: 0, MinY: 0, MaxX: 5, MaxY: 5));
+
+        var count = 0;
+        foreach (var (value, x, y) in map)
+        {
+            count++;
+            // Check bounds
+            Assert.That(x, Is.GreaterThanOrEqualTo(0));
+            Assert.That(x, Is.LessThan(5));
+            Assert.That(y, Is.GreaterThanOrEqualTo(0));
+            Assert.That(y, Is.LessThan(5));
+        }
+
+        // With Union, should expand to (0,0,5,5) = 25 cells
+        Assert.That(count, Is.EqualTo(25));
+        Assert.That(map[0, 0], Is.EqualTo(1), "Original value should be preserved");
+    }
+
+    [Test]
+    public void Enumerator_EmptyMap_EnumeratesDefaultValues()
+    {
+        using var map = new DualGridMap<int>(3, 3, defaultValue: 42);
+
+        var count = 0;
+        foreach (var (value, x, y) in map)
+        {
+            Assert.That(value, Is.EqualTo(42));
+            count++;
+        }
+
+        Assert.That(count, Is.EqualTo(9)); // 3x3 = 9 cells
+    }
+
+    [Test]
+    public void Enumerator_ReturnsCorrectCoordinates()
+    {
+        using var map = new DualGridMap<int>(3, 2, minX: 10, minY: 20, defaultValue: 0);
+
+        var expectedCoordinates = new[]
+        {
+            (10, 20), (11, 20), (12, 20),  // First row
+            (10, 21), (11, 21), (12, 21)   // Second row
+        };
+
+        var actualCoordinates = new System.Collections.Generic.List<(int, int)>();
+        foreach (var (value, x, y) in map)
+        {
+            actualCoordinates.Add((x, y));
+        }
+
+        Assert.That(actualCoordinates, Is.EqualTo(expectedCoordinates));
+    }
 
     [Test]
     public void Expand_ExpandsMapBounds()
