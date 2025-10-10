@@ -1,9 +1,6 @@
-using System;
-using DopeGrid;
-using DopeGrid.Map;
 using NUnit.Framework;
 
-namespace DopeGrid.Tests;
+namespace DopeGrid.Map.Tests;
 
 [TestFixture]
 public class DualGridMapTests
@@ -165,5 +162,91 @@ public class DualGridMapTests
         map.Dispose();
 
         Assert.Pass();
+    }
+
+    [Test]
+    public void Contains_ReturnsTrueForValidIndices()
+    {
+        using var map = new DualGridMap<int>(3, 3);
+
+        Assert.That(map.Contains(0, 0), Is.True);
+        Assert.That(map.Contains(2, 2), Is.True);
+        Assert.That(map.Contains(-1, -1), Is.True); // Padding
+        Assert.That(map.Contains(3, 3), Is.True);   // Padding
+        Assert.That(map.Contains(4, 4), Is.False);  // Out of bounds
+        Assert.That(map.Contains(-2, 0), Is.False); // Out of bounds
+    }
+
+    [Test]
+    public void Contains_WithNegativeBounds_WorksCorrectly()
+    {
+        using var map = new DualGridMap<int>(3, 3, minX: -5, minY: -5);
+
+        Assert.That(map.Contains(-6, -6), Is.True);  // Padding at min corner
+        Assert.That(map.Contains(-5, -5), Is.True);  // Start of actual grid
+        Assert.That(map.Contains(-3, -3), Is.True);  // End of actual grid
+        Assert.That(map.Contains(-2, -2), Is.True);  // Padding at max corner
+        Assert.That(map.Contains(-1, -1), Is.False); // Out of bounds
+        Assert.That(map.Contains(-7, -5), Is.False); // Out of bounds
+    }
+
+    [Test]
+    public void Enumerator_EnumeratesAllCells()
+    {
+        using var map = new DualGridMap<int>(2, 2, defaultValue: 0);
+        map[0, 0] = 1;
+        map[1, 1] = 5;
+
+        var count = 0;
+        foreach (var (value, x, y) in map)
+        {
+            Assert.That(value, Is.EqualTo(map[x, y]));
+            count++;
+        }
+
+        // 2x2 grid + 1 padding on each side = 4x4 = 16 cells
+        Assert.That(count, Is.EqualTo(16));
+    }
+
+    [Test]
+    public void Enumerator_WithPadding_IncludesPaddedCells()
+    {
+        using var map = new DualGridMap<int>(2, 2, defaultValue: 0);
+        map[-1, -1] = 99; // Padding cell
+
+        var paddingCellFound = false;
+        foreach (var (value, x, y) in map)
+        {
+            if (x == -1 && y == -1 && value == 99)
+            {
+                paddingCellFound = true;
+            }
+        }
+
+        Assert.That(paddingCellFound, Is.True);
+    }
+
+    [Test]
+    public void Enumerator_OrderIsRowMajor()
+    {
+        using var map = new DualGridMap<int>(2, 2, defaultValue: 0);
+        map[-1, -1] = 1;
+        map[0, -1] = 2;
+        map[1, -1] = 3;
+        map[2, -1] = 4;
+
+        var firstRowValues = new System.Collections.Generic.List<int>();
+        var y = -1;
+        foreach (var (value, x, currentY) in map)
+        {
+            if (currentY == y)
+            {
+                firstRowValues.Add(value);
+            }
+            if (currentY > y) break;
+        }
+
+        // Row-major: first row should be (-1,-1), (0,-1), (1,-1), (2,-1)
+        Assert.That(firstRowValues, Is.EqualTo(new[] { 1, 2, 3, 4 }));
     }
 }

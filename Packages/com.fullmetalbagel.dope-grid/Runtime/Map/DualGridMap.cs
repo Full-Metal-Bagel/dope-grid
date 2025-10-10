@@ -2,7 +2,7 @@
 
 namespace DopeGrid.Map;
 
-public sealed class DualGridMap<T> : IGridShape<T>, IReadOnlyGridShape<T>, IDisposable
+public sealed class DualGridMap<T> : IDisposable
     where T : unmanaged, IEquatable<T>
 {
     private ExpandableMap<T> _map = null!;
@@ -17,6 +17,7 @@ public sealed class DualGridMap<T> : IGridShape<T>, IReadOnlyGridShape<T>, IDisp
     public int MaxY => _map.MaxY;
 
     public bool IsOccupied(int x, int y) => _map.IsOccupied(x, y);
+    public bool Contains(int x, int y) => _map.Contains(x, y);
 
     public T this[int x, int y]
     {
@@ -38,6 +39,8 @@ public sealed class DualGridMap<T> : IGridShape<T>, IReadOnlyGridShape<T>, IDisp
     {
         return (this[x - 1, y - 1], this[x, y - 1], this[x - 1, y], this[x, y]);
     }
+
+    public ExpandableMap<T>.Enumerator GetEnumerator() => _map.GetEnumerator();
 
     public void Dispose()
     {

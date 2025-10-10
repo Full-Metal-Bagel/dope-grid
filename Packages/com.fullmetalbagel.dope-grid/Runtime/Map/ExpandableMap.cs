@@ -2,7 +2,7 @@ using System;
 
 namespace DopeGrid.Map;
 
-public sealed class ExpandableMap<T> : IReadOnlyGridShape<T>, IDisposable
+public sealed class ExpandableMap<T> : IDisposable
     where T : unmanaged, IEquatable<T>
 {
     private ValueGridShape<T> _world;
@@ -69,8 +69,47 @@ public sealed class ExpandableMap<T> : IReadOnlyGridShape<T>, IDisposable
         MinY = newBound.MinY;
     }
 
+    public Enumerator GetEnumerator() => new(this);
+
     public void Dispose()
     {
         _world.Dispose();
+    }
+
+    public ref struct Enumerator
+    {
+        private readonly ExpandableMap<T> _map;
+        private int _x;
+        private int _y;
+
+        internal Enumerator(ExpandableMap<T> map)
+        {
+            _map = map;
+            _x = -1;
+            _y = 0;
+        }
+
+        public (T value, int x, int y) Current
+        {
+            get
+            {
+                var worldX = _x;
+                var worldY = _y;
+                var mapX = _map.MinX + worldX;
+                var mapY = _map.MinY + worldY;
+                return (_map._world[worldX, worldY], mapX, mapY);
+            }
+        }
+
+        public bool MoveNext()
+        {
+            _x++;
+            if (_x >= _map.Width)
+            {
+                _x = 0;
+                _y++;
+            }
+            return _y < _map.Height;
+        }
     }
 }

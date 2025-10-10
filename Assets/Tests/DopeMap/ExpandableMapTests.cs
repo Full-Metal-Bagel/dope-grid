@@ -1,9 +1,6 @@
-using System;
-using DopeGrid;
-using DopeGrid.Map;
 using NUnit.Framework;
 
-namespace DopeGrid.Tests;
+namespace DopeGrid.Map.Tests;
 
 [TestFixture]
 public class ExpandableMapTests
@@ -176,5 +173,81 @@ public class ExpandableMapTests
 
         // No assertion needed - just verify no exception
         Assert.Pass();
+    }
+
+    [Test]
+    public void Enumerator_EnumeratesAllCells()
+    {
+        using var map = new ExpandableMap<int>(3, 2, defaultValue: 0);
+        map[0, 0] = 1;
+        map[1, 0] = 2;
+        map[2, 0] = 3;
+        map[0, 1] = 4;
+        map[1, 1] = 5;
+        map[2, 1] = 6;
+
+        var count = 0;
+        foreach (var (value, x, y) in map)
+        {
+            Assert.That(value, Is.EqualTo(map[x, y]));
+            count++;
+        }
+
+        Assert.That(count, Is.EqualTo(6)); // 3x2 = 6 cells
+    }
+
+    [Test]
+    public void Enumerator_WithNegativeBounds_UsesWorldCoordinates()
+    {
+        var bound = new MapBound(MinX: -1, MinY: -1, MaxX: 2, MaxY: 2);
+        using var map = new ExpandableMap<int>(bound, defaultValue: 0);
+        map[-1, -1] = 10;
+        map[0, 0] = 20;
+        map[1, 1] = 30;
+
+        var values = new System.Collections.Generic.List<(int value, int x, int y)>();
+        foreach (var item in map)
+        {
+            values.Add(item);
+        }
+
+        Assert.That(values.Count, Is.EqualTo(9)); // 3x3 = 9 cells
+        Assert.That(values[0], Is.EqualTo((10, -1, -1))); // First cell
+        Assert.That(values.Exists(v => v == (20, 0, 0)), Is.True);
+        Assert.That(values.Exists(v => v == (30, 1, 1)), Is.True);
+    }
+
+    [Test]
+    public void Enumerator_EmptyMap_EnumeratesDefaultValues()
+    {
+        using var map = new ExpandableMap<int>(2, 2, defaultValue: 99);
+
+        var count = 0;
+        foreach (var (value, x, y) in map)
+        {
+            Assert.That(value, Is.EqualTo(99));
+            count++;
+        }
+
+        Assert.That(count, Is.EqualTo(4)); // 2x2 = 4 cells
+    }
+
+    [Test]
+    public void Enumerator_OrderIsRowMajor()
+    {
+        using var map = new ExpandableMap<int>(2, 2, defaultValue: 0);
+        map[0, 0] = 1;
+        map[1, 0] = 2;
+        map[0, 1] = 3;
+        map[1, 1] = 4;
+
+        var values = new System.Collections.Generic.List<int>();
+        foreach (var (value, _, _) in map)
+        {
+            values.Add(value);
+        }
+
+        // Row-major: (0,0), (1,0), (0,1), (1,1)
+        Assert.That(values, Is.EqualTo(new[] { 1, 2, 3, 4 }));
     }
 }
