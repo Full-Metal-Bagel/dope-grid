@@ -33,17 +33,13 @@ public sealed class ExpandableMap<T> : IReadOnlyGridShape<T>, IDisposable
         MinY = bound.MinY;
     }
 
-    public bool IsOccupied(int x, int y) => _world.IsOccupied(x, y);
+    public bool IsOccupied(int x, int y) => _world.IsOccupied(x - MinX, y - MinY);
+    public bool Contains(int x, int y) => _world.Contains(x - MinX, y - MinY);
 
     public T this[int x, int y]
     {
-        get => _world[x, y];
-        set
-        {
-            var bound = MapBound.ExpandToInclude(Bound, x, y);
-            if (bound != Bound) Expand(bound);
-            _world[x, y] = value;
-        }
+        get => _world[x - MinX, y - MinY];
+        set => _world[x - MinX, y - MinY] = value;
     }
 
     public void Expand(MapBound newBound)
@@ -59,7 +55,15 @@ public sealed class ExpandableMap<T> : IReadOnlyGridShape<T>, IDisposable
         var offsetX = currentBound.MinX - newBound.MinX;
         var offsetY = currentBound.MinY - newBound.MinY;
         var world = new ValueGridShape<T>(newBound.Width, newBound.Height, _world.EmptyValue);
-        _world.WriteTo(offsetX: offsetX, offsetY: offsetY, width: newBound.Width, height: newBound.Height, world, default(T));
+
+        // Copy existing data to the new world at the offset position
+        for (int y = 0; y < _world.Height; y++)
+        for (int x = 0; x < _world.Width; x++)
+        {
+            world[offsetX + x, offsetY + y] = _world[x, y];
+        }
+
+        _world.Dispose();
         _world = world;
         MinX = newBound.MinX;
         MinY = newBound.MinY;
